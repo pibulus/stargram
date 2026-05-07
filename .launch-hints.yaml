@@ -1,0 +1,30 @@
+# Launch hints for Launch Arsenal.
+# Edit aggressively. These fields should pin the app's real audience, problem, and promise.
+name: Stargram
+slug: stargram
+app_type: web-app
+audience: people who already feel the problem
+problem: >-
+  the default tools ask for too much tracking, too much polish theater, or too
+  much trust
+promise: Your horoscope as shareable cosmic art.
+cta: Reply if you want the link.
+differentiators: []
+proof_points:
+  - "\U0001F319 12 Zodiac Signs - All signs supported with emoji + date ranges"
+  - "\U0001F4C5 3 Reading Types - Daily, weekly, monthly horoscopes"
+  - "\U0001F3A8 11 Cosmic Themes - Purple oracle, neon dreams, stardust shimmer"
+  - "\U0001F308 6 Gradient Effects - Unicorn, fire, cyberpunk, vaporwave, sunset, ocean"
+objections:
+  - 'Still wants a human pass on audience, proof, and the sharpest angle.'
+keywords:
+  seed:
+    - Stargram
+    - stargram
+    - web app
+  audience: people who already feel the problem
+  intent:
+    - launch faster
+    - clearer first draft
+manual_notes:
+  - Edit this aggressively. Keep only the lines that feel native to the app.
