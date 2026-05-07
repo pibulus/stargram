@@ -3,8 +3,8 @@ import tailwind from "$fresh/plugins/tailwind.ts";
 
 export default defineConfig({
   server: {
-    hostname: "0.0.0.0", // Allow local network access for phone testing
-    port: 8002,
+    hostname: Deno.env.get("HOST") ?? "0.0.0.0",
+    port: Number(Deno.env.get("PORT") ?? "8002"),
   },
   plugins: [tailwind()],
 });
