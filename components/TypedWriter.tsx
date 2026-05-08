@@ -40,6 +40,7 @@ export function TypedWriter({
   const soundsRef = useRef<SimpleTypeWriter | null>(null);
   const lastContentRef = useRef<string>(""); // Track what we last typed
   const trailTimeoutRef = useRef<number | null>(null);
+  const speedIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Initialize keyboard sounds (quieter)
@@ -73,6 +74,11 @@ export function TypedWriter({
     // Cleanup previous instance
     if (typedRef.current) {
       typedRef.current.destroy();
+    }
+
+    if (speedIntervalRef.current) {
+      clearInterval(speedIntervalRef.current);
+      speedIntervalRef.current = null;
     }
 
     if (trailTimeoutRef.current) {
@@ -155,7 +161,7 @@ export function TypedWriter({
       onBegin: (self: Typed) => {
         // Override typeSpeed dynamically for human feel
         const originalSpeed = speed;
-        setInterval(() => {
+        speedIntervalRef.current = globalThis.setInterval(() => {
           if (self && !self.typingComplete) {
             // Vary speed between 70-130% of base speed
             const variation = 0.7 + Math.random() * 0.6;
@@ -166,6 +172,10 @@ export function TypedWriter({
       },
       onComplete: () => {
         observer.disconnect();
+        if (speedIntervalRef.current) {
+          clearInterval(speedIntervalRef.current);
+          speedIntervalRef.current = null;
+        }
 
         // Add persistent blinking cursor after typing completes
         if (showCompletionCursor && elementRef.current) {
@@ -185,6 +195,10 @@ export function TypedWriter({
       observer.disconnect();
       if (typedRef.current) {
         typedRef.current.destroy();
+      }
+      if (speedIntervalRef.current) {
+        clearInterval(speedIntervalRef.current);
+        speedIntervalRef.current = null;
       }
       if (trailTimeoutRef.current) {
         clearTimeout(trailTimeoutRef.current);

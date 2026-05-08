@@ -168,7 +168,13 @@ export default function HoroscopeDisplay(
         headerLines.push(span);
       } else if (line.trim()) {
         // Body in terminal green
-        const span = `<span style="color: #00FF41;">${escapeHtml(line)}</span>`;
+        const isDividerLine = /^[\s═★:·.\-]+$/.test(line);
+        const bodyLayout = isDividerLine
+          ? "display: block; white-space: pre; overflow: hidden;"
+          : "display: block; white-space: pre-wrap; overflow-wrap: anywhere;";
+        const span = `<span style="color: #00FF41; ${bodyLayout}">${
+          escapeHtml(line)
+        }</span>`;
         colorizedLines.push(span);
         bodyLines.push(span);
       } else {

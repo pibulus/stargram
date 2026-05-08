@@ -185,7 +185,13 @@ export function applyColorToArt(
         line.length,
         lines.length,
       );
-      const span = `<span style="color: ${color};">${escapeHtml(line)}</span>`;
+      const isDividerLine = /^[\s═★:·.\-]+$/.test(line);
+      const bodyLayout = isDividerLine
+        ? "display: block; white-space: pre; overflow: hidden;"
+        : "display: block; white-space: pre-wrap; overflow-wrap: anywhere;";
+      const span = `<span style="color: ${color}; ${bodyLayout}">${
+        escapeHtml(line)
+      }</span>`;
       colorizedLines.push(span);
       bodyLines.push(span);
     } else {

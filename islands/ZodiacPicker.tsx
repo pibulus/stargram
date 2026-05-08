@@ -370,6 +370,7 @@ export default function ZodiacPicker() {
   // Selector panel parallax (middle layer)
   const selectorParallaxX = mouseX.value * 6;
   const selectorParallaxY = mouseY.value * 6;
+  const isHoroscopeMode = currentMode.value === "horoscope";
 
   return (
     <div class="relative w-full min-w-0 overflow-x-hidden">
@@ -432,10 +433,16 @@ export default function ZodiacPicker() {
       <div class="w-full min-w-0 min-h-[100dvh] flex items-start sm:items-center justify-center px-2 sm:px-6 py-4 sm:py-8 md:py-12 overflow-x-hidden">
         <div
           key={flickerTrigger.value}
-          class={`w-full min-w-0 max-w-[calc(100vw-1rem)] sm:max-w-6xl border-[3px] sm:border-4 rounded-[18px] sm:rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-visible terminal-shell ${
+          class={`w-full min-w-0 max-w-[calc(100vw-1rem)] ${
+            isHoroscopeMode ? "sm:max-w-4xl" : "sm:max-w-6xl"
+          } border-[3px] sm:border-4 rounded-[18px] sm:rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-visible terminal-shell ${
             flickerTrigger.value > 0 ? "crt-flicker" : ""
           }`}
-          style={`background: rgba(2, 4, 12, 0.95); border-color: ${accentGlowColor}80; box-shadow: 0 0 30px ${accentGlowColor}24, 0 18px 60px rgba(0,0,0,0.68), inset 0 0 64px rgba(0,0,0,0.6); animation: cosmicFloat 12s ease-in-out infinite; transform: perspective(1000px) rotateX(${parallaxRotateX}deg) rotateY(${parallaxRotateY}deg) translate3d(${parallaxX}px, ${parallaxY}px, 0); transition: transform 0.3s ease-out; min-height: min(700px, calc(100dvh - 2rem)); width: 100%; overflow: visible;`}
+          style={`background: rgba(2, 4, 12, 0.95); border-color: ${accentGlowColor}80; box-shadow: 0 0 30px ${accentGlowColor}24, 0 18px 60px rgba(0,0,0,0.68), inset 0 0 64px rgba(0,0,0,0.6); animation: cosmicFloat 12s ease-in-out infinite; transform: perspective(1000px) rotateX(${parallaxRotateX}deg) rotateY(${parallaxRotateY}deg) translate3d(${parallaxX}px, ${parallaxY}px, 0); transition: transform 0.3s ease-out; min-height: ${
+            isHoroscopeMode
+              ? "min(660px, calc(100dvh - 2rem))"
+              : "min(700px, calc(100dvh - 2rem))"
+          }; width: 100%; overflow: visible;`}
         >
           {/* Terminal title bar */}
           <div
@@ -458,8 +465,14 @@ export default function ZodiacPicker() {
           </div>
 
           <div
-            class="min-w-0 p-4 sm:p-8 lg:p-12 terminal-content-wrapper"
-            style="min-height: min(600px, calc(100dvh - 7rem)); overflow: visible;"
+            class={`min-w-0 terminal-content-wrapper ${
+              isHoroscopeMode ? "p-4 sm:p-7 lg:p-9" : "p-4 sm:p-8 lg:p-12"
+            }`}
+            style={`min-height: ${
+              isHoroscopeMode
+                ? "min(560px, calc(100dvh - 7rem))"
+                : "min(600px, calc(100dvh - 7rem))"
+            }; overflow: visible;`}
           >
             {currentMode.value === "picker"
               ? (
@@ -756,7 +769,7 @@ export default function ZodiacPicker() {
                             text={splitHoroscopeAscii(horoscopePlainText.value)
                               .header}
                             htmlText={horoscopeHeaderHtml.value}
-                            speed={8}
+                            speed={3}
                             enabled
                             showCompletionCursor={false}
                             className="font-mono leading-tight min-w-0 max-w-full overflow-hidden"
@@ -768,17 +781,17 @@ export default function ZodiacPicker() {
                           text={splitHoroscopeAscii(horoscopePlainText.value)
                             .body}
                           htmlText={horoscopeBodyHtml.value}
-                          speed={20}
+                          speed={8}
                           enabled
                           showCompletionCursor
-                          className="font-mono leading-relaxed min-w-0 max-w-full overflow-hidden break-words"
-                          style={`color: ${accentColor}; font-size: 15px;`}
+                          className="font-mono min-w-0 max-w-full overflow-hidden break-words text-[14px] sm:text-[15px] leading-[1.52] sm:leading-relaxed"
+                          style={`color: ${accentColor};`}
                         />
 
                         {/* Navigation */}
                         <div class="space-y-4">
                           <div
-                            class="flex flex-wrap gap-3 pt-6 border-t"
+                            class="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 pt-5 sm:pt-6 border-t"
                             style={`border-color: ${accentGlowColor}30;`}
                           >
                             <button
