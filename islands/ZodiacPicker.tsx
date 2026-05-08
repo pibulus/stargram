@@ -3,12 +3,11 @@
 // ===================================================================
 
 import { signal } from "@preact/signals";
-import { useEffect, useMemo, useRef } from "preact/hooks";
+import { useEffect, useMemo } from "preact/hooks";
 import {
   saveZodiacSign,
   ZODIAC_SIGNS,
   type ZodiacSign,
-  getZodiacEmoji,
 } from "../utils/zodiac.ts";
 import { sounds } from "../utils/sounds.ts";
 import { renderFigletText } from "../utils/asciiArtGenerator.ts";
@@ -35,9 +34,15 @@ const mouseY = signal<number>(0);
 // Horoscope mode states
 type Mode = "picker" | "horoscope";
 type Period = "daily" | "weekly" | "monthly";
+type DossierMetaItem = {
+  label: string;
+  value: string;
+  special?: "number" | "energy" | "color" | "vibe";
+  hex?: string;
+};
+
 const currentMode = signal<Mode>("picker");
 const currentPeriod = signal<Period>("daily");
-const horoscopeData = signal<any>(null);
 const isLoadingHoroscope = signal(false);
 const horoscopeHtml = signal("");
 const horoscopePlainText = signal("");
@@ -179,15 +184,15 @@ export default function ZodiacPicker() {
   // Parallax mouse tracking
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2; // Normalize to -1 to 1
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      const x = (e.clientX / globalThis.innerWidth - 0.5) * 2;
+      const y = (e.clientY / globalThis.innerHeight - 0.5) * 2;
       mouseX.value = x;
       mouseY.value = y;
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    globalThis.addEventListener("mousemove", handleMouseMove);
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
+      globalThis.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
 
@@ -232,15 +237,13 @@ export default function ZodiacPicker() {
         const ascii = generateHoroscopeAscii(sign, horoscopeText, period, date);
         horoscopePlainText.value = ascii;
 
-        // Split and colorize
-        const { header, body } = splitHoroscopeAscii(ascii);
+        // Colorize
         const colorized = applyColorToArt(ascii, "trinity");
 
         horoscopeHtml.value = colorized.fullHtml;
         horoscopeHeaderHtml.value = colorized.headerHtml;
         horoscopeBodyHtml.value = colorized.bodyHtml;
 
-        horoscopeData.value = data.data;
         showHoroscope.value = true;
         sounds.success();
       } else {
@@ -269,7 +272,6 @@ export default function ZodiacPicker() {
   const handleBackToPicker = () => {
     sounds.click();
     currentMode.value = "picker";
-    horoscopeData.value = null;
     horoscopeHtml.value = "";
     showHoroscope.value = false;
   };
@@ -304,7 +306,8 @@ export default function ZodiacPicker() {
       { name: "Solar Gold", hex: "#F59E0B" },
       { name: "Void Indigo", hex: "#6366F1" },
     ];
-    const luckyColor = luckyColors[Math.floor(Math.random() * luckyColors.length)];
+    const luckyColor =
+      luckyColors[Math.floor(Math.random() * luckyColors.length)];
 
     const vibes = [
       "Main character energy",
@@ -321,16 +324,33 @@ export default function ZodiacPicker() {
     return { luckyNumber, cosmicEnergy, luckyColor, cosmicVibe };
   }, [previewSign?.name]);
 
-  const dossierMeta = previewSign && cosmicExtras
+  const dossierMeta: DossierMetaItem[] = previewSign && cosmicExtras
     ? [
       { label: "Element", value: previewSign.element.toUpperCase() },
       { label: "Modality", value: previewSign.modality.toUpperCase() },
       { label: "Ruling Planet", value: previewSign.rulingPlanet.toUpperCase() },
       { label: "Solar Dates", value: previewSign.dates.toUpperCase() },
-      { label: "Lucky №", value: String(cosmicExtras.luckyNumber), special: "number" },
-      { label: "Cosmic Energy", value: `${cosmicExtras.cosmicEnergy}%`, special: "energy" },
-      { label: "Lucky Color", value: cosmicExtras.luckyColor.name, special: "color", hex: cosmicExtras.luckyColor.hex },
-      { label: "Today's Vibe", value: cosmicExtras.cosmicVibe, special: "vibe" },
+      {
+        label: "Lucky №",
+        value: String(cosmicExtras.luckyNumber),
+        special: "number",
+      },
+      {
+        label: "Cosmic Energy",
+        value: `${cosmicExtras.cosmicEnergy}%`,
+        special: "energy",
+      },
+      {
+        label: "Lucky Color",
+        value: cosmicExtras.luckyColor.name,
+        special: "color",
+        hex: cosmicExtras.luckyColor.hex,
+      },
+      {
+        label: "Today's Vibe",
+        value: cosmicExtras.cosmicVibe,
+        special: "vibe",
+      },
     ]
     : [];
   const dossierCursorColor = previewSign ? accentColor : accentGlowColor;
@@ -412,7 +432,9 @@ export default function ZodiacPicker() {
       <div class="w-full min-h-[90dvh] flex items-center justify-center px-3 sm:px-6 py-12 md:py-16">
         <div
           key={flickerTrigger.value}
-          class={`w-full max-w-6xl border-[3px] sm:border-4 rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden terminal-shell ${flickerTrigger.value > 0 ? 'crt-flicker' : ''}`}
+          class={`w-full max-w-6xl border-[3px] sm:border-4 rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden terminal-shell ${
+            flickerTrigger.value > 0 ? "crt-flicker" : ""
+          }`}
           style={`background: rgba(2, 4, 12, 0.95); border-color: ${accentGlowColor}80; box-shadow: 0 0 45px ${accentGlowColor}2e, 0 25px 90px rgba(0,0,0,0.7), inset 0 0 80px rgba(0,0,0,0.6); animation: cosmicFloat 12s ease-in-out infinite; transform: perspective(1000px) rotateX(${parallaxRotateX}deg) rotateY(${parallaxRotateY}deg) translate3d(${parallaxX}px, ${parallaxY}px, 0); transition: transform 0.3s ease-out; min-height: 700px; max-height: 85vh; width: 100%; overflow: hidden;`}
         >
           {/* Terminal title bar */}
@@ -435,378 +457,407 @@ export default function ZodiacPicker() {
             </div>
           </div>
 
-          <div class="p-5 sm:p-8 lg:p-12 terminal-content-wrapper" style="min-height: 600px; max-height: calc(85vh - 100px); overflow: hidden;">
-            {currentMode.value === "picker" ? (
-              // PICKER MODE - Zodiac grid + dossier
-              <div class="flex flex-col lg:flex-row gap-10 lg:gap-12">
-                <div
-                  class="flex-1"
-                  style={`animation: cosmicFloat 16s ease-in-out infinite; animation-delay: 0.7s; transform: translate3d(${selectorParallaxX}px, ${selectorParallaxY}px, 0); transition: transform 0.3s ease-out;`}
-                >
-                <div class="mb-5">
-                  <pre
-                    class="font-mono text-[9px] sm:text-[10px] md:text-xs leading-[1.1] whitespace-pre mb-2"
-                    style={`color: ${accentColor}; text-shadow: 0 0 14px ${accentColor}88;`}
+          <div
+            class="p-5 sm:p-8 lg:p-12 terminal-content-wrapper"
+            style="min-height: 600px; max-height: calc(85vh - 100px); overflow: hidden;"
+          >
+            {currentMode.value === "picker"
+              ? (
+                // PICKER MODE - Zodiac grid + dossier
+                <div class="flex flex-col lg:flex-row gap-10 lg:gap-12">
+                  <div
+                    class="flex-1"
+                    style={`animation: cosmicFloat 16s ease-in-out infinite; animation-delay: 0.7s; transform: translate3d(${selectorParallaxX}px, ${selectorParallaxY}px, 0); transition: transform 0.3s ease-out;`}
                   >
+                    <div class="mb-5">
+                      <pre
+                        class="font-mono text-[9px] sm:text-[10px] md:text-xs leading-[1.1] whitespace-pre mb-2"
+                        style={`color: ${accentColor}; text-shadow: 0 0 14px ${accentColor}88;`}
+                      >
                     {PICKER_TITLE_ASCII}
-                  </pre>
-                  <div class="w-full text-center">
-                    <p
-                      class="font-mono uppercase tracking-[0.4em] text-[10px] sm:text-xs"
-                      style={`color: ${accentGlowColor}; letter-spacing: clamp(0.2em, 2vw, 0.5em);`}
+                      </pre>
+                      <div class="w-full text-center">
+                        <p
+                          class="font-mono uppercase tracking-[0.4em] text-[10px] sm:text-xs"
+                          style={`color: ${accentGlowColor}; letter-spacing: clamp(0.2em, 2vw, 0.5em);`}
+                        >
+                          {PICKER_HINT_TEXT}
+                        </p>
+                      </div>
+                    </div>
+
+                    <pre
+                      class="font-mono text-xs sm:text-sm tracking-[0.35em] uppercase"
+                      style={`color: ${accentGlowColor}88;`}
                     >
-                      {PICKER_HINT_TEXT}
-                    </p>
-                  </div>
-                </div>
-
-                <pre
-                  class="font-mono text-xs sm:text-sm tracking-[0.35em] uppercase"
-                  style={`color: ${accentGlowColor}88;`}
-                >
                   {ASCII_DIVIDER}
-                </pre>
+                    </pre>
 
-                <div
-                  class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-3"
-                  role="listbox"
-                  aria-label="Select your zodiac sign"
-                >
-                  {ZODIAC_SIGNS.map((zodiac) => {
-                    const isSelected = selectedSign.value === zodiac.name;
-                    const isHovered = hoveredSign.value === zodiac.name;
-                    const cardTitle = getSignTitle(zodiac.name);
-                    const elementLabel = zodiac.element.toUpperCase();
-                    const titleColor = isSelected || isHovered
-                      ? accentColor
-                      : `${accentColor}AA`;
-                    const borderColor = isSelected || isHovered
-                      ? accentColor
-                      : `${accentGlowColor}44`;
-                    const backgroundColor = isSelected
-                      ? "rgba(0, 30, 8, 0.92)"
-                      : isHovered
-                      ? "rgba(0, 0, 0, 0.6)"
-                      : "rgba(0, 0, 0, 0.45)";
-                    const glow = isSelected
-                      ? `inset 0 0 8px ${accentColor}40, 0 0 32px ${accentColor}80, 0 12px 35px rgba(0,0,0,0.55), 0 0 2px ${accentColor}ff`
-                      : isHovered
-                      ? `inset 0 0 6px ${accentColor}30, 0 0 16px ${accentColor}40, 0 8px 22px rgba(0,0,0,0.5)`
-                      : "0 6px 18px rgba(0,0,0,0.55)";
+                    <div
+                      class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-3"
+                      role="listbox"
+                      aria-label="Select your zodiac sign"
+                    >
+                      {ZODIAC_SIGNS.map((zodiac) => {
+                        const isSelected = selectedSign.value === zodiac.name;
+                        const isHovered = hoveredSign.value === zodiac.name;
+                        const cardTitle = getSignTitle(zodiac.name);
+                        const elementLabel = zodiac.element.toUpperCase();
+                        const titleColor = isSelected || isHovered
+                          ? accentColor
+                          : `${accentColor}AA`;
+                        const borderColor = isSelected || isHovered
+                          ? accentColor
+                          : `${accentGlowColor}44`;
+                        const backgroundColor = isSelected
+                          ? "rgba(0, 30, 8, 0.92)"
+                          : isHovered
+                          ? "rgba(0, 0, 0, 0.6)"
+                          : "rgba(0, 0, 0, 0.45)";
+                        const glow = isSelected
+                          ? `inset 0 0 8px ${accentColor}40, 0 0 32px ${accentColor}80, 0 12px 35px rgba(0,0,0,0.55), 0 0 2px ${accentColor}ff`
+                          : isHovered
+                          ? `inset 0 0 6px ${accentColor}30, 0 0 16px ${accentColor}40, 0 8px 22px rgba(0,0,0,0.5)`
+                          : "0 6px 18px rgba(0,0,0,0.55)";
 
-                    return (
-                      <button
-                        key={zodiac.name}
-                        type="button"
-                        onClick={() => handleSignClick(zodiac.name)}
-                        onMouseEnter={() => hoveredSign.value = zodiac.name}
-                        onMouseLeave={() => hoveredSign.value = null}
-                        onFocus={() => hoveredSign.value = zodiac.name}
-                        onBlur={() => hoveredSign.value = null}
-                        role="option"
-                        aria-selected={isSelected}
-                        class="group w-full text-left font-mono border-[3px] rounded-2xl px-4 py-4 transition-all duration-150 hover:scale-[1.02] hover:-translate-y-0.5"
-                        style={`
+                        return (
+                          <button
+                            key={zodiac.name}
+                            type="button"
+                            onClick={() => handleSignClick(zodiac.name)}
+                            onMouseEnter={() => hoveredSign.value = zodiac.name}
+                            onMouseLeave={() => hoveredSign.value = null}
+                            onFocus={() => hoveredSign.value = zodiac.name}
+                            onBlur={() => hoveredSign.value = null}
+                            role="option"
+                            aria-selected={isSelected}
+                            class="group w-full text-left font-mono border-[3px] rounded-2xl px-4 py-4 transition-all duration-150 hover:scale-[1.02] hover:-translate-y-0.5"
+                            style={`
                         border-color: ${borderColor};
                         background: ${backgroundColor};
                         color: ${PRIMARY_TERMINAL_COLOR};
                         box-shadow: ${glow};
                         transform-style: preserve-3d;
                       `}
-                      >
-                        <div class="flex items-center">
-                          <p
-                            class="text-[11px] sm:text-sm uppercase tracking-[0.4em] whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-150"
-                            style={`letter-spacing: 0.38em; color: ${titleColor}; text-shadow: ${
-                              isHovered
-                                ? `-2px 0 ${accentColor}, 2px 0 ${accentGlowColor}, 0 0 12px ${titleColor}40`
-                                : `0 0 12px ${titleColor}40`
-                            };`}
                           >
-                            {cardTitle}
-                          </p>
-                        </div>
-                        <div
-                          class="mt-2 text-[10px] sm:text-xs uppercase tracking-[0.28em]"
-                          style={`color: ${accentGlowColor}CC;`}
-                        >
-                          {zodiac.dates.toUpperCase()} • {elementLabel}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Preview Pane */}
-              <div
-                class="w-full lg:w-[320px] xl:w-[360px] border-[3px] rounded-3xl p-5 bg-black/35"
-                style={`border-color: ${accentGlowColor}40; box-shadow: inset 0 0 32px ${accentGlowColor}22; transform: perspective(1000px) rotateX(${dossierRotateX}deg) rotateY(${dossierRotateY}deg) translate3d(${dossierParallaxX}px, ${dossierParallaxY}px, 0); transition: transform 0.3s ease-out; transform-style: preserve-3d;`}
-              >
-                <div
-                  class="text-xs uppercase tracking-[0.4em] mb-4 font-bold"
-                  style={`color: ${accentGlowColor}; text-shadow: 0 0 8px ${accentGlowColor}60;`}
-                >
-                  {previewSign ? "COSMIC DOSSIER" : "SIGNAL STANDBY"}
-                </div>
-
-                {previewSign
-                  ? (
-                    <div class="space-y-4">
-                      <pre
-                        class="font-mono text-[9px] leading-[1.05] whitespace-pre"
-                        style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}33;`}
-                      >
-                      {previewAscii}
-                      </pre>
-
-                      <p
-                        class="font-mono text-sm leading-relaxed"
-                        style={`color: ${accentGlowColor}B8; opacity: 0.9;`}
-                      >
-                        {previewSign.bio}
-                      </p>
-
-                      <div class="grid grid-cols-1 gap-3 text-[10px] uppercase tracking-[0.35em]">
-                        {dossierMeta.map((item: any) => (
-                          <div
-                            key={item.label}
-                            class="flex justify-between items-center pb-1"
-                            style={`border-bottom: 1px solid ${accentGlowColor}44;`}
-                          >
-                            <span style={`color: ${accentGlowColor}B0;`}>
-                              {item.label}
-                            </span>
-                            <span class="flex items-center gap-2" style={`color: ${accentColor};`}>
-                              {item.special === "color" && item.hex && (
-                                <span
-                                  class="inline-block w-3 h-3 rounded-full border border-white/30"
-                                  style={`background: ${item.hex}; box-shadow: 0 0 6px ${item.hex}80;`}
-                                />
-                              )}
-                              {item.value}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div>
-                        <p
-                          class="text-[10px] uppercase tracking-[0.4em] mb-1 font-semibold"
-                          style={`color: ${accentGlowColor}; text-shadow: 0 0 6px ${accentGlowColor}50;`}
-                        >
-                          Signature Move
-                        </p>
-                        <p
-                          class="font-mono text-sm leading-relaxed"
-                          style={`color: ${accentColor}C0; opacity: 0.92;`}
-                        >
-                          {previewSign.signatureMove}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p
-                          class="text-[10px] uppercase tracking-[0.4em] mb-1 font-semibold"
-                          style={`color: ${accentGlowColor}; text-shadow: 0 0 6px ${accentGlowColor}50;`}
-                        >
-                          Recharge Protocol
-                        </p>
-                        <p
-                          class="font-mono text-sm leading-relaxed"
-                          style={`color: ${accentGlowColor}C0; opacity: 0.92;`}
-                        >
-                          {previewSign.recharge}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p
-                          class="text-[10px] uppercase tracking-[0.4em] mb-1 font-semibold"
-                          style={`color: ${accentGlowColor}; text-shadow: 0 0 6px ${accentGlowColor}50;`}
-                        >
-                          Keywords
-                        </p>
-                        <ul class="space-y-1 text-[11px] uppercase tracking-[0.35em]">
-                          {previewSign.keywords.map((keyword) => (
-                            <li
-                              key={keyword}
-                              class="font-mono"
-                              style={`color: ${accentGlowColor};`}
+                            <div class="flex items-center">
+                              <p
+                                class="text-[11px] sm:text-sm uppercase tracking-[0.4em] whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-150"
+                                style={`letter-spacing: 0.38em; color: ${titleColor}; text-shadow: ${
+                                  isHovered
+                                    ? `-2px 0 ${accentColor}, 2px 0 ${accentGlowColor}, 0 0 12px ${titleColor}40`
+                                    : `0 0 12px ${titleColor}40`
+                                };`}
+                              >
+                                {cardTitle}
+                              </p>
+                            </div>
+                            <div
+                              class="mt-2 text-[10px] sm:text-xs uppercase tracking-[0.28em]"
+                              style={`color: ${accentGlowColor}CC;`}
                             >
-                              • {keyword.toUpperCase()}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div>
-                        <p
-                          class="text-[10px] uppercase tracking-[0.4em] mb-1 font-semibold"
-                          style={`color: ${accentGlowColor}; text-shadow: 0 0 6px ${accentGlowColor}50;`}
-                        >
-                          Motto
-                        </p>
-                        <p
-                          class="font-mono text-sm italic"
-                          style={`color: ${accentColor}B8; opacity: 0.95;`}
-                        >
-                          "{previewSign.motto}"
-                        </p>
-                      </div>
-
-                      {selectedSign.value && (
-                        <p
-                          class="pt-2 font-mono text-[11px] tracking-[0.25em] uppercase border-t"
-                          style={`color: ${accentGlowColor}AA; border-color: ${accentGlowColor}28;`}
-                        >
-                          {`> LOCKED :: ${selectedSign.value.toUpperCase()}`}
-                        </p>
-                      )}
-
-                      <span
-                        class="inline-block h-4 w-2 cursor-blink"
-                        style={`background: ${dossierCursorColor};`}
-                      />
+                              {zodiac.dates.toUpperCase()} • {elementLabel}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
-                  )
-                  : (
-                    <div class="space-y-3">
-                      <pre
-                        class="font-mono text-[9px] leading-[1.05] whitespace-pre"
-                        style={`color: ${accentColor};`}
-                      >
-                      {previewAscii}
-                      </pre>
-                      <p
-                        class="font-mono text-sm leading-relaxed"
-                        style={`color: ${accentGlowColor}B8; opacity: 0.9;`}
-                      >
-                        Hover a sign to load intel. Tap to lock your signal and
-                        fetch the horoscope stream.
-                      </p>
-                      <p
-                        class="font-mono text-[11px] uppercase tracking-[0.35em]"
-                        style={`color: ${accentGlowColor}A0; opacity: 0.85;`}
-                      >
-                        No sign selected
-                      </p>
-                      <span
-                        class="inline-block h-4 w-2 cursor-blink"
-                        style={`background: ${dossierCursorColor};`}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              // HOROSCOPE MODE - Full-width horoscope display
-              <div class="w-full max-w-4xl mx-auto">
-                {isLoadingHoroscope.value ? (
-                  // Boot sequence
-                  <div class="space-y-4">
-                    {bootMessages.value.map((msg, i) => (
-                      <p
-                        key={i}
-                        class="font-mono text-sm"
-                        style={`color: ${accentColor}; animation: fadeIn 0.3s ease-in;`}
-                      >
-                        {msg}
-                      </p>
-                    ))}
-                    <span
-                      class="inline-block h-4 w-2 cursor-blink"
-                      style={`background: ${accentColor};`}
-                    />
                   </div>
-                ) : horoscopeHtml.value && showHoroscope.value ? (
-                  // Horoscope content with typewriter
-                  <div class="space-y-6">
-                    {/* Fast-typing header */}
-                    <div class="border-b pb-4" style={`border-color: ${accentGlowColor}30;`}>
-                      <TypedWriter
-                        text={splitHoroscopeAscii(horoscopePlainText.value).header}
-                        htmlText={horoscopeHeaderHtml.value}
-                        speed={8}
-                        enabled
-                        showCompletionCursor={false}
-                        className="font-mono leading-tight"
-                        style="color: #FFD700; font-size: 14px; letter-spacing: 0.02em;"
-                      />
-                    </div>
-                    {/* Slower-typing body */}
-                    <TypedWriter
-                      text={splitHoroscopeAscii(horoscopePlainText.value).body}
-                      htmlText={horoscopeBodyHtml.value}
-                      speed={20}
-                      enabled
-                      showCompletionCursor
-                      className="font-mono leading-relaxed"
-                      style={`color: ${accentColor}; font-size: 15px;`}
-                    />
 
-                    {/* Navigation */}
-                    <div class="space-y-4">
-                      <div class="flex flex-wrap gap-3 pt-6 border-t" style={`border-color: ${accentGlowColor}30;`}>
+                  {/* Preview Pane */}
+                  <div
+                    class="w-full lg:w-[320px] xl:w-[360px] border-[3px] rounded-3xl p-5 bg-black/35"
+                    style={`border-color: ${accentGlowColor}40; box-shadow: inset 0 0 32px ${accentGlowColor}22; transform: perspective(1000px) rotateX(${dossierRotateX}deg) rotateY(${dossierRotateY}deg) translate3d(${dossierParallaxX}px, ${dossierParallaxY}px, 0); transition: transform 0.3s ease-out; transform-style: preserve-3d;`}
+                  >
+                    <div
+                      class="text-xs uppercase tracking-[0.4em] mb-4 font-bold"
+                      style={`color: ${accentGlowColor}; text-shadow: 0 0 8px ${accentGlowColor}60;`}
+                    >
+                      {previewSign ? "COSMIC DOSSIER" : "SIGNAL STANDBY"}
+                    </div>
+
+                    {previewSign
+                      ? (
+                        <div class="space-y-4">
+                          <pre
+                            class="font-mono text-[9px] leading-[1.05] whitespace-pre"
+                            style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}33;`}
+                          >
+                      {previewAscii}
+                          </pre>
+
+                          <p
+                            class="font-mono text-sm leading-relaxed"
+                            style={`color: ${accentGlowColor}B8; opacity: 0.9;`}
+                          >
+                            {previewSign.bio}
+                          </p>
+
+                          <div class="grid grid-cols-1 gap-3 text-[10px] uppercase tracking-[0.35em]">
+                            {dossierMeta.map((item) => (
+                              <div
+                                key={item.label}
+                                class="flex justify-between items-center pb-1"
+                                style={`border-bottom: 1px solid ${accentGlowColor}44;`}
+                              >
+                                <span style={`color: ${accentGlowColor}B0;`}>
+                                  {item.label}
+                                </span>
+                                <span
+                                  class="flex items-center gap-2"
+                                  style={`color: ${accentColor};`}
+                                >
+                                  {item.special === "color" && item.hex && (
+                                    <span
+                                      class="inline-block w-3 h-3 rounded-full border border-white/30"
+                                      style={`background: ${item.hex}; box-shadow: 0 0 6px ${item.hex}80;`}
+                                    />
+                                  )}
+                                  {item.value}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div>
+                            <p
+                              class="text-[10px] uppercase tracking-[0.4em] mb-1 font-semibold"
+                              style={`color: ${accentGlowColor}; text-shadow: 0 0 6px ${accentGlowColor}50;`}
+                            >
+                              Signature Move
+                            </p>
+                            <p
+                              class="font-mono text-sm leading-relaxed"
+                              style={`color: ${accentColor}C0; opacity: 0.92;`}
+                            >
+                              {previewSign.signatureMove}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p
+                              class="text-[10px] uppercase tracking-[0.4em] mb-1 font-semibold"
+                              style={`color: ${accentGlowColor}; text-shadow: 0 0 6px ${accentGlowColor}50;`}
+                            >
+                              Recharge Protocol
+                            </p>
+                            <p
+                              class="font-mono text-sm leading-relaxed"
+                              style={`color: ${accentGlowColor}C0; opacity: 0.92;`}
+                            >
+                              {previewSign.recharge}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p
+                              class="text-[10px] uppercase tracking-[0.4em] mb-1 font-semibold"
+                              style={`color: ${accentGlowColor}; text-shadow: 0 0 6px ${accentGlowColor}50;`}
+                            >
+                              Keywords
+                            </p>
+                            <ul class="space-y-1 text-[11px] uppercase tracking-[0.35em]">
+                              {previewSign.keywords.map((keyword) => (
+                                <li
+                                  key={keyword}
+                                  class="font-mono"
+                                  style={`color: ${accentGlowColor};`}
+                                >
+                                  • {keyword.toUpperCase()}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div>
+                            <p
+                              class="text-[10px] uppercase tracking-[0.4em] mb-1 font-semibold"
+                              style={`color: ${accentGlowColor}; text-shadow: 0 0 6px ${accentGlowColor}50;`}
+                            >
+                              Motto
+                            </p>
+                            <p
+                              class="font-mono text-sm italic"
+                              style={`color: ${accentColor}B8; opacity: 0.95;`}
+                            >
+                              "{previewSign.motto}"
+                            </p>
+                          </div>
+
+                          {selectedSign.value && (
+                            <p
+                              class="pt-2 font-mono text-[11px] tracking-[0.25em] uppercase border-t"
+                              style={`color: ${accentGlowColor}AA; border-color: ${accentGlowColor}28;`}
+                            >
+                              {`> LOCKED :: ${selectedSign.value.toUpperCase()}`}
+                            </p>
+                          )}
+
+                          <span
+                            class="inline-block h-4 w-2 cursor-blink"
+                            style={`background: ${dossierCursorColor};`}
+                          />
+                        </div>
+                      )
+                      : (
+                        <div class="space-y-3">
+                          <pre
+                            class="font-mono text-[9px] leading-[1.05] whitespace-pre"
+                            style={`color: ${accentColor};`}
+                          >
+                      {previewAscii}
+                          </pre>
+                          <p
+                            class="font-mono text-sm leading-relaxed"
+                            style={`color: ${accentGlowColor}B8; opacity: 0.9;`}
+                          >
+                            Hover a sign to load intel. Tap to lock your signal
+                            and fetch the horoscope stream.
+                          </p>
+                          <p
+                            class="font-mono text-[11px] uppercase tracking-[0.35em]"
+                            style={`color: ${accentGlowColor}A0; opacity: 0.85;`}
+                          >
+                            No sign selected
+                          </p>
+                          <span
+                            class="inline-block h-4 w-2 cursor-blink"
+                            style={`background: ${dossierCursorColor};`}
+                          />
+                        </div>
+                      )}
+                  </div>
+                </div>
+              )
+              : (
+                // HOROSCOPE MODE - Full-width horoscope display
+                <div class="w-full max-w-4xl mx-auto">
+                  {isLoadingHoroscope.value
+                    ? (
+                      // Boot sequence
+                      <div class="space-y-4">
+                        {bootMessages.value.map((msg, i) => (
+                          <p
+                            key={i}
+                            class="font-mono text-sm"
+                            style={`color: ${accentColor}; animation: fadeIn 0.3s ease-in;`}
+                          >
+                            {msg}
+                          </p>
+                        ))}
+                        <span
+                          class="inline-block h-4 w-2 cursor-blink"
+                          style={`background: ${accentColor};`}
+                        />
+                      </div>
+                    )
+                    : horoscopeHtml.value && showHoroscope.value
+                    ? (
+                      // Horoscope content with typewriter
+                      <div class="space-y-6">
+                        {/* Fast-typing header */}
+                        <div
+                          class="border-b pb-4"
+                          style={`border-color: ${accentGlowColor}30;`}
+                        >
+                          <TypedWriter
+                            text={splitHoroscopeAscii(horoscopePlainText.value)
+                              .header}
+                            htmlText={horoscopeHeaderHtml.value}
+                            speed={8}
+                            enabled
+                            showCompletionCursor={false}
+                            className="font-mono leading-tight"
+                            style="color: #FFD700; font-size: 14px; letter-spacing: 0.02em;"
+                          />
+                        </div>
+                        {/* Slower-typing body */}
+                        <TypedWriter
+                          text={splitHoroscopeAscii(horoscopePlainText.value)
+                            .body}
+                          htmlText={horoscopeBodyHtml.value}
+                          speed={20}
+                          enabled
+                          showCompletionCursor
+                          className="font-mono leading-relaxed"
+                          style={`color: ${accentColor}; font-size: 15px;`}
+                        />
+
+                        {/* Navigation */}
+                        <div class="space-y-4">
+                          <div
+                            class="flex flex-wrap gap-3 pt-6 border-t"
+                            style={`border-color: ${accentGlowColor}30;`}
+                          >
+                            <button
+                              type="button"
+                              onClick={handleBackToPicker}
+                              class="px-4 py-2 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105"
+                              style={`background: rgba(0,0,0,0.6); border-color: ${accentGlowColor}; color: ${accentGlowColor}; box-shadow: 0 0 12px ${accentGlowColor}40;`}
+                            >
+                              ← BACK
+                            </button>
+                            {(["daily", "weekly", "monthly"] as Period[]).map((
+                              period,
+                            ) => (
+                              <button
+                                key={period}
+                                type="button"
+                                onClick={() => handlePeriodChange(period)}
+                                class={`px-4 py-2 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105 ${
+                                  currentPeriod.value === period
+                                    ? "font-bold"
+                                    : ""
+                                }`}
+                                style={currentPeriod.value === period
+                                  ? `background: ${accentColor}30; border-color: ${accentColor}; color: ${accentColor}; box-shadow: 0 0 16px ${accentColor}60;`
+                                  : `background: rgba(0,0,0,0.4); border-color: ${accentGlowColor}60; color: ${accentGlowColor}; box-shadow: 0 0 8px ${accentGlowColor}20;`}
+                              >
+                                {period}
+                              </button>
+                            ))}
+                          </div>
+                          {/* Ko-fi terminal button */}
+                          <div
+                            class="flex justify-center pt-2 border-t"
+                            style={`border-color: ${accentGlowColor}15;`}
+                          >
+                            <a
+                              href="https://ko-fi.com/madebypablo"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="px-4 py-2 border-2 rounded-xl font-mono text-xs uppercase tracking-wider transition-all hover:scale-105"
+                              style={`background: rgba(255, 192, 203, 0.05); border-color: rgba(255, 192, 203, 0.3); color: rgba(255, 192, 203, 0.9); box-shadow: 0 0 8px rgba(255, 192, 203, 0.2);`}
+                              onClick={() => sounds.click()}
+                            >
+                              <span style="opacity: 0.7;">{">"}</span>☕ SUPPORT
+                              CREATOR
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                    : (
+                      // Error state
+                      <div class="text-center py-12">
+                        <p
+                          class="font-mono text-lg"
+                          style={`color: ${accentColor};`}
+                        >
+                          Failed to load horoscope
+                        </p>
                         <button
                           type="button"
                           onClick={handleBackToPicker}
-                          class="px-4 py-2 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105"
-                          style={`background: rgba(0,0,0,0.6); border-color: ${accentGlowColor}; color: ${accentGlowColor}; box-shadow: 0 0 12px ${accentGlowColor}40;`}
+                          class="mt-4 px-6 py-3 border-2 rounded-xl font-mono uppercase"
+                          style={`border-color: ${accentGlowColor}; color: ${accentGlowColor};`}
                         >
-                          ← BACK
+                          ← Back
                         </button>
-                        {(["daily", "weekly", "monthly"] as Period[]).map((period) => (
-                          <button
-                            key={period}
-                            type="button"
-                            onClick={() => handlePeriodChange(period)}
-                            class={`px-4 py-2 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105 ${
-                              currentPeriod.value === period ? "font-bold" : ""
-                            }`}
-                            style={
-                              currentPeriod.value === period
-                                ? `background: ${accentColor}30; border-color: ${accentColor}; color: ${accentColor}; box-shadow: 0 0 16px ${accentColor}60;`
-                                : `background: rgba(0,0,0,0.4); border-color: ${accentGlowColor}60; color: ${accentGlowColor}; box-shadow: 0 0 8px ${accentGlowColor}20;`
-                            }
-                          >
-                            {period}
-                          </button>
-                        ))}
                       </div>
-                      {/* Ko-fi terminal button */}
-                      <div class="flex justify-center pt-2 border-t" style={`border-color: ${accentGlowColor}15;`}>
-                        <a
-                          href="https://ko-fi.com/madebypablo"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="px-4 py-2 border-2 rounded-xl font-mono text-xs uppercase tracking-wider transition-all hover:scale-105"
-                          style={`background: rgba(255, 192, 203, 0.05); border-color: rgba(255, 192, 203, 0.3); color: rgba(255, 192, 203, 0.9); box-shadow: 0 0 8px rgba(255, 192, 203, 0.2);`}
-                          onClick={() => sounds.click()}
-                        >
-                          <span style="opacity: 0.7;">{'>'} </span>☕ SUPPORT CREATOR
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  // Error state
-                  <div class="text-center py-12">
-                    <p class="font-mono text-lg" style={`color: ${accentColor};`}>
-                      Failed to load horoscope
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleBackToPicker}
-                      class="mt-4 px-6 py-3 border-2 rounded-xl font-mono uppercase"
-                      style={`border-color: ${accentGlowColor}; color: ${accentGlowColor};`}
-                    >
-                      ← Back
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                    )}
+                </div>
+              )}
           </div>
         </div>
       </div>

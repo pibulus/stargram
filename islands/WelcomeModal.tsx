@@ -127,7 +127,8 @@ export function WelcomeModal() {
 
               <div class="space-y-4 font-mono">
                 <p class="text-sm" style="color: rgba(139, 92, 246, 0.9);">
-                  <span style="color: #00FF41;">$</span> Horoscopes that look as good as they read
+                  <span style="color: #00FF41;">$</span>{" "}
+                  Horoscopes that look as good as they read
                 </p>
 
                 {/* AI-Free Badge */}
@@ -135,10 +136,16 @@ export function WelcomeModal() {
                   class="p-4 border-2 rounded-xl"
                   style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3);"
                 >
-                  <p class="text-sm font-bold text-center" style="color: #EC4899;">
+                  <p
+                    class="text-sm font-bold text-center"
+                    style="color: #EC4899;"
+                  >
                     🚫🤖 100% AI-FREE ZONE
                   </p>
-                  <p class="text-xs text-center mt-2" style="color: rgba(139, 92, 246, 0.8);">
+                  <p
+                    class="text-xs text-center mt-2"
+                    style="color: rgba(139, 92, 246, 0.8);"
+                  >
                     Real horoscopes from actual astrologers.<br />
                     Downloaded from the stars. No robots.
                   </p>
@@ -147,13 +154,16 @@ export function WelcomeModal() {
                 {/* Features as terminal commands */}
                 <div class="space-y-2 text-xs sm:text-sm">
                   <p style="color: rgba(139, 92, 246, 0.7);">
-                    <span style="color: #00FF41;">{'>'}</span> Pick your sign (daily/weekly/monthly)
+                    <span style="color: #00FF41;">{">"}</span>{" "}
+                    Pick your sign (daily/weekly/monthly)
                   </p>
                   <p style="color: rgba(139, 92, 246, 0.7);">
-                    <span style="color: #00FF41;">{'>'}</span> Watch cosmic typewriter effect
+                    <span style="color: #00FF41;">{">"}</span>{" "}
+                    Watch cosmic typewriter effect
                   </p>
                   <p style="color: rgba(139, 92, 246, 0.7);">
-                    <span style="color: #00FF41;">{'>'}</span> Get random lucky numbers + vibes
+                    <span style="color: #00FF41;">{">"}</span>{" "}
+                    Get random lucky numbers + vibes
                   </p>
                 </div>
 
@@ -165,11 +175,14 @@ export function WelcomeModal() {
                   style="background: rgba(139, 92, 246, 0.2); color: #8B5CF6; border-color: #8B5CF6; box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);"
                   aria-label="Start exploring horoscopes"
                 >
-                  <span style="color: #00FF41;">{'>'} </span>CHECK THE STARS
+                  <span style="color: #00FF41;">{">"}</span>CHECK THE STARS
                 </button>
 
                 {/* Footer */}
-                <p class="text-center text-xs" style="color: rgba(139, 92, 246, 0.6);">
+                <p
+                  class="text-center text-xs"
+                  style="color: rgba(139, 92, 246, 0.6);"
+                >
                   Quick. Free. Yours.
                 </p>
               </div>
