@@ -159,18 +159,18 @@ export function applyColorToArt(
       headerLineIndex++;
       const isTitleLine = headerLineIndex === 1;
       const baseStyle =
-        `color: ${headerColor}; display: block; font-family: 'JetBrains Mono', 'SF Mono', 'Courier New', monospace;`;
+        `color: ${headerColor}; display: block; max-width: 100%; overflow: hidden; white-space: pre; font-family: 'JetBrains Mono', 'SF Mono', 'Courier New', monospace;`;
 
       if (isTitleLine) {
         const span =
-          `<span style="${baseStyle} font-weight: 900; letter-spacing: 0.18em; font-size: clamp(18px, 4vw, 32px); text-transform: uppercase;">${
+          `<span style="${baseStyle} font-weight: 900; letter-spacing: 0.04em; font-size: clamp(8px, 2.4vw, 20px); text-transform: uppercase; line-height: 1.05;">${
             escapeHtml(line)
           }</span>`;
         headerLines.push(span);
         colorizedLines.push(span);
       } else {
         const span =
-          `<span style="${baseStyle} font-weight: 700; letter-spacing: 0.04em; font-size: clamp(14px, 3vw, 24px); text-transform: none; white-space: pre; line-height: 1.15;">${
+          `<span style="${baseStyle} font-weight: 700; letter-spacing: 0; font-size: clamp(6px, 1.9vw, 22px); text-transform: none; line-height: 1.1;">${
             escapeHtml(line)
           }</span>`;
         headerLines.push(span);

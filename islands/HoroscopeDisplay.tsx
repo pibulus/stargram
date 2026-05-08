@@ -84,8 +84,9 @@ export default function HoroscopeDisplay(
 
   // Generate ASCII art when horoscope data or font changes
   useEffect(() => {
-    if (horoscopeData.value?.horoscope_data) {
-      const text = horoscopeData.value.horoscope_data;
+    const text = horoscopeData.value?.horoscope_data ??
+      horoscopeData.value?.horoscope;
+    if (text) {
       const metaLabel = getDisplayMeta(
         horoscopeData.value,
         currentPeriod.value,
@@ -154,13 +155,13 @@ export default function HoroscopeDisplay(
         headerLineIndex++;
         const isTitleLine = headerLineIndex === 1;
         const baseStyle =
-          "color: #FFD700; display: block; font-family: 'JetBrains Mono', 'SF Mono', 'Courier New', monospace;";
+          "color: #FFD700; display: block; max-width: 100%; overflow: hidden; white-space: pre; font-family: 'JetBrains Mono', 'SF Mono', 'Courier New', monospace;";
 
         const span = isTitleLine
-          ? `<span style="${baseStyle} font-weight: 900; letter-spacing: 0.18em; font-size: clamp(18px, 4vw, 32px); text-transform: uppercase;">${
+          ? `<span style="${baseStyle} font-weight: 900; letter-spacing: 0.04em; font-size: clamp(8px, 2.4vw, 20px); text-transform: uppercase; line-height: 1.05;">${
             escapeHtml(line)
           }</span>`
-          : `<span style="${baseStyle} font-weight: 700; letter-spacing: 0.04em; font-size: clamp(14px, 3vw, 24px); text-transform: none; white-space: pre; line-height: 1.15;">${
+          : `<span style="${baseStyle} font-weight: 700; letter-spacing: 0; font-size: clamp(6px, 1.9vw, 22px); text-transform: none; line-height: 1.1;">${
             escapeHtml(line)
           }</span>`;
         colorizedLines.push(span);
@@ -298,9 +299,14 @@ export default function HoroscopeDisplay(
         return;
       }
 
-      if (data.success) {
+      const horoscopeText = data.data?.horoscope_data ?? data.data?.horoscope;
+      if (data.success && horoscopeText) {
         colorEffect.value = pickRandomColorEffect();
-        horoscopeData.value = data.data;
+        horoscopeData.value = {
+          ...data.data,
+          horoscope: horoscopeText,
+          horoscope_data: horoscopeText,
+        };
         analytics.trackHoroscopeViewed(zodiacSign, period, colorEffect.value);
         sounds.success();
       } else {

@@ -24,7 +24,14 @@ export default function BackgroundCanvas() {
     if (!container) return;
 
     // Configuration
-    const particleCount = 700;
+    const prefersReducedMotion = globalThis.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const particleCount = prefersReducedMotion
+      ? 0
+      : globalThis.innerWidth < 640
+      ? 280
+      : 700;
     const particlePropCount = 9;
     const particlePropsLength = particleCount * particlePropCount;
     let rangeY = 400; // Updated dynamically on resize for broader spread
@@ -208,10 +215,18 @@ export default function BackgroundCanvas() {
 
     resize();
     globalThis.addEventListener("resize", resize);
-    draw();
+
+    if (prefersReducedMotion) {
+      ctxB.fillStyle = backgroundColor;
+      ctxB.fillRect(0, 0, canvasA.width, canvasA.height);
+    } else {
+      draw();
+    }
 
     return () => {
-      cancelAnimationFrame(animationId);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
       globalThis.removeEventListener("resize", resize);
       container.removeChild(canvasB);
     };

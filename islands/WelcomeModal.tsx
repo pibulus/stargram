@@ -76,8 +76,8 @@ export function WelcomeModal() {
     <>
       {/* Backdrop */}
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style="background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(18px);"
+        class="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto px-3 sm:px-4"
+        style="background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(18px); padding-top: max(1rem, env(safe-area-inset-top)); padding-bottom: max(1rem, env(safe-area-inset-bottom));"
         role="dialog"
         aria-modal="true"
         aria-labelledby="welcome-modal-title"
@@ -89,7 +89,7 @@ export function WelcomeModal() {
         >
           {/* Terminal shell */}
           <div
-            class="border-4 rounded-3xl overflow-hidden"
+            class="border-[3px] sm:border-4 rounded-[18px] sm:rounded-3xl overflow-y-auto"
             style="background: rgba(2, 4, 12, 0.98); border-color: #8B5CF6; box-shadow: 0 0 45px rgba(139, 92, 246, 0.3), 0 25px 90px rgba(0,0,0,0.7), inset 0 0 80px rgba(0,0,0,0.6);"
           >
             {/* Terminal title bar */}
@@ -111,10 +111,10 @@ export function WelcomeModal() {
             </div>
 
             {/* Terminal content */}
-            <div class="p-8 space-y-6">
+            <div class="p-4 sm:p-8 space-y-5 sm:space-y-6">
               {/* ASCII Title */}
               <pre
-                class="font-mono text-center text-xs sm:text-sm leading-tight mb-4"
+                class="font-mono text-center text-[5px] min-[390px]:text-[5.7px] sm:text-sm leading-tight mb-3 sm:mb-4 overflow-hidden"
                 style="color: #8B5CF6; text-shadow: 0 0 12px rgba(139, 92, 246, 0.6);"
               >{`
 ███████╗████████╗ █████╗ ██████╗  ██████╗ ██████╗  █████╗ ███╗   ███╗
@@ -171,7 +171,7 @@ export function WelcomeModal() {
                 <button
                   type="button"
                   onClick={markWelcomeSeen}
-                  class="w-full px-6 py-4 border-3 rounded-xl font-mono font-bold text-base transition-all hover:scale-105 active:scale-95"
+                  class="w-full min-h-[52px] px-5 sm:px-6 py-4 border-3 rounded-xl font-mono font-bold text-sm sm:text-base transition-all hover:scale-105 active:scale-95"
                   style="background: rgba(139, 92, 246, 0.2); color: #8B5CF6; border-color: #8B5CF6; box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);"
                   aria-label="Start exploring horoscopes"
                 >

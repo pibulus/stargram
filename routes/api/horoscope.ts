@@ -31,6 +31,24 @@ interface HoroscopeParams {
   day?: string; // For daily only: "today" | "tomorrow" | "yesterday" | "YYYY-MM-DD"
 }
 
+type ExternalHoroscopePayload = {
+  data?: {
+    date?: string;
+    week?: string;
+    month?: string;
+    period?: string;
+    sign?: string;
+    horoscope?: string;
+    horoscope_data?: string;
+  };
+  success?: boolean;
+  error?: string;
+};
+
+const VALID_DAYS = new Set(["today", "tomorrow", "yesterday"]);
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const UPSTREAM_TIMEOUT_MS = 8000;
+
 /**
  * Determine correct day parameter for API based on Melbourne timezone
  * Melbourne is 15-16 hours ahead of US (where API is hosted)
@@ -39,8 +57,20 @@ interface HoroscopeParams {
  * - Before 6pm Melbourne → Use "tomorrow" (Melbourne is ahead)
  * - After 6pm Melbourne → Use "today" (calendars sync up)
  */
-function getDayParamForTimezone(): string {
-  const hour = new Date().getHours();
+function getMelbourneHour(date = new Date()): number {
+  const hour = new Intl.DateTimeFormat("en-AU", {
+    timeZone: "Australia/Melbourne",
+    hour: "2-digit",
+    hour12: false,
+  })
+    .formatToParts(date)
+    .find((part) => part.type === "hour")?.value ?? "0";
+
+  return Number(hour) % 24;
+}
+
+function getDayParamForTimezone(date = new Date()): string {
+  const hour = getMelbourneHour(date);
 
   if (hour >= 0 && hour < 18) {
     // Morning/afternoon Melbourne = ahead of US, use "tomorrow"
@@ -51,10 +81,45 @@ function getDayParamForTimezone(): string {
   }
 }
 
+function normalizeHoroscopePayload(
+  payload: ExternalHoroscopePayload,
+  period: HoroscopeParams["period"],
+) {
+  const upstreamData = payload.data;
+  const horoscopeText = upstreamData?.horoscope_data ?? upstreamData?.horoscope;
+
+  if (!upstreamData || !horoscopeText) {
+    throw new Error(payload.error || "Unexpected horoscope API response");
+  }
+
+  return {
+    success: true,
+    data: {
+      ...upstreamData,
+      period: upstreamData.period ?? period,
+      horoscope: horoscopeText,
+      horoscope_data: horoscopeText,
+    },
+  };
+}
+
 export const handler = async (
   req: Request,
   _ctx: FreshContext,
 ): Promise<Response> => {
+  if (req.method !== "GET") {
+    return new Response(
+      JSON.stringify({ error: "Method not allowed" }),
+      {
+        status: 405,
+        headers: {
+          "Content-Type": "application/json",
+          "Allow": "GET",
+        },
+      },
+    );
+  }
+
   const url = new URL(req.url);
   const sign = url.searchParams.get("sign")?.toLowerCase();
   const period =
@@ -82,6 +147,18 @@ export const handler = async (
   if (period === "daily") {
     // Use custom day or auto-detect timezone
     const day = customDay || getDayParamForTimezone();
+    if (!VALID_DAYS.has(day) && !DATE_RE.test(day)) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Invalid day. Must be today, tomorrow, yesterday, or YYYY-MM-DD",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
     params.append("day", day);
     apiUrl = `${HOROSCOPE_API_BASE}/daily?${params}`;
   } else if (period === "weekly") {
@@ -102,13 +179,19 @@ export const handler = async (
 
   try {
     // Fetch from horoscope API
-    const response = await fetch(apiUrl);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+    const response = await fetch(apiUrl, { signal: controller.signal })
+      .finally(() => clearTimeout(timeout));
 
     if (!response.ok) {
       throw new Error(`API returned ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = normalizeHoroscopePayload(
+      await response.json(),
+      period,
+    );
 
     // Return the horoscope data
     return new Response(

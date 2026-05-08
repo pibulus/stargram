@@ -94,8 +94,8 @@ export default function InstallPrompt() {
 
   return (
     <div
-      class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 z-40 animate-terminal-slide"
-      style="max-width: 380px; margin-left: auto; margin-right: auto;"
+      class="fixed left-3 right-3 sm:left-auto sm:right-6 z-40 animate-terminal-slide"
+      style="bottom: max(1rem, env(safe-area-inset-bottom)); max-width: 380px; margin-left: auto; margin-right: auto;"
     >
       <div
         class="border-3 rounded-2xl overflow-hidden terminal-prompt"
@@ -122,7 +122,7 @@ export default function InstallPrompt() {
           <button
             type="button"
             onClick={handleDismiss}
-            class="w-6 h-6 flex items-center justify-center rounded font-bold transition-all hover:scale-110"
+            class="-mr-2 w-11 h-11 sm:mr-0 sm:w-7 sm:h-7 flex items-center justify-center rounded font-bold text-xl sm:text-base transition-all hover:scale-110"
             style="color: rgba(0, 255, 65, 0.6);"
             aria-label="Dismiss"
           >

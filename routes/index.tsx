@@ -7,9 +7,8 @@ import WelcomeChecker from "../islands/WelcomeChecker.tsx";
 export default function Home() {
   return (
     <div
-      id="main-content"
-      class="min-h-[100dvh] w-full flex flex-col relative overflow-hidden global-flicker"
-      style="background: linear-gradient(135deg, #0a0a0a 0%, #151515 50%, #0a0a0a 100%); position: fixed; inset: 0;"
+      class="min-h-[100dvh] w-full flex flex-col relative overflow-x-hidden global-flicker"
+      style="background: linear-gradient(135deg, #0a0a0a 0%, #151515 50%, #0a0a0a 100%);"
     >
       {/* Animated canvas background */}
       <BackgroundCanvas />
