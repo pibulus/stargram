@@ -723,7 +723,7 @@ export default function ZodiacPicker() {
               )
               : (
                 // HOROSCOPE MODE - Full-width horoscope display
-                <div class="w-full min-w-0 max-w-4xl mx-auto overflow-hidden">
+                <div class="w-full min-w-0 max-w-4xl mx-auto overflow-x-hidden">
                   {isLoadingHoroscope.value
                     ? (
                       // Boot sequence

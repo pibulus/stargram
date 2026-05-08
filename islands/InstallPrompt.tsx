@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { sounds } from "../utils/sounds.ts";
 
 const PROMPT_DISMISSED_KEY = "stargram-install-dismissed";
-const PROMPT_DELAY_MS = 10000; // Show after 10 seconds
+const PROMPT_DELAY_MS = 45000; // Give the first horoscope flow room before asking.
 
 export default function InstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
