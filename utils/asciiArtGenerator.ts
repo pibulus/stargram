@@ -4,12 +4,12 @@
 // Converts horoscope text and sign names to ASCII art
 // Uses figlet (real fonts!) for text-to-ASCII transformation
 
-import figlet, { FigletOptions } from "npm:figlet";
-import AnsiShadowFont from "npm:figlet/importable-fonts/ANSI Shadow.js";
-import SmallSlantFont from "npm:figlet/importable-fonts/Small Slant.js";
-import MiniFont from "npm:figlet/importable-fonts/Mini.js";
-import StandardFont from "npm:figlet/importable-fonts/Standard.js";
-import SmallFont from "npm:figlet/importable-fonts/Small.js";
+import figlet, { FigletOptions } from "npm:figlet@1.11.0";
+import AnsiShadowFont from "npm:figlet@1.11.0/importable-fonts/ANSI Shadow.js";
+import SmallSlantFont from "npm:figlet@1.11.0/importable-fonts/Small Slant.js";
+import MiniFont from "npm:figlet@1.11.0/importable-fonts/Mini.js";
+import StandardFont from "npm:figlet@1.11.0/importable-fonts/Standard.js";
+import SmallFont from "npm:figlet@1.11.0/importable-fonts/Small.js";
 
 const FIGLET_FONT_DATA = {
   "ANSI Shadow": AnsiShadowFont,
