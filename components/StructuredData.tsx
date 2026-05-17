@@ -22,7 +22,7 @@ export function StructuredData({ horoscope }: StructuredDataProps) {
     "name": "Stargram",
     "url": "https://stargram.app",
     "description":
-      "Get your daily, weekly, or monthly horoscope styled as shareable cosmic art.",
+      "A little mystical horoscope terminal: simple, fast, a bit haunted, a bit funny, grounded in real cosmic signals where possible.",
     "applicationCategory": "LifestyleApplication",
     "offers": {
       "@type": "Offer",

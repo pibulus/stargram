@@ -25,7 +25,7 @@ export default function App({ Component }: PageProps) {
         </title>
         <meta
           name="description"
-          content="Get your daily, weekly, or monthly horoscope styled as shareable cosmic art. Pick your sign, apply gradients, export as beautiful images."
+          content="A little mystical horoscope terminal: simple, fast, a bit haunted, a bit funny, grounded in real cosmic signals where possible."
         />
 
         {/* Canonical URL */}
@@ -50,7 +50,7 @@ export default function App({ Component }: PageProps) {
         />
         <meta
           property="og:description"
-          content="Daily horoscopes styled as shareable cosmic art. Pick your sign, apply gradients, export."
+          content="A little mystical horoscope terminal: simple, fast, a bit haunted, a bit funny, grounded in real cosmic signals where possible."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://stargram.app" />
@@ -73,7 +73,7 @@ export default function App({ Component }: PageProps) {
         />
         <meta
           name="twitter:description"
-          content="Daily horoscopes styled as shareable cosmic art. Pick your sign, apply gradients, export."
+          content="A little mystical horoscope terminal: simple, fast, a bit haunted, a bit funny, grounded in real cosmic signals where possible."
         />
         <meta
           name="twitter:image"

@@ -2,6 +2,9 @@
 
 **Your horoscope as shareable cosmic art.**
 
+Stargram is a little mystical terminal: simple, fast, a bit haunted, a bit
+funny, but grounded in real cosmic signals where possible.
+
 Pick your sign. Get daily, weekly, or monthly readings. Apply cosmic gradients.
 Export as images. Share the vibe.
 

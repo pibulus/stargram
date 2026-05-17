@@ -1,7 +1,7 @@
 {
   "name": "Stargram",
   "short_name": "Stargram",
-  "description": "Your daily horoscope as shareable cosmic art. Pick your sign, apply gradients, export as beautiful images.",
+  "description": "A little mystical horoscope terminal: simple, fast, a bit haunted, a bit funny, grounded in real cosmic signals where possible.",
   "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#0a0e27",
