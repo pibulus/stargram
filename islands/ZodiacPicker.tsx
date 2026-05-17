@@ -549,7 +549,10 @@ export default function ZodiacPicker() {
                             key={zodiac.name}
                             type="button"
                             onClick={() => handleSignClick(zodiac.name)}
-                            onMouseEnter={() => hoveredSign.value = zodiac.name}
+                            onMouseEnter={() => {
+                              hoveredSign.value = zodiac.name;
+                              sounds.hoverSign(zodiac.element);
+                            }}
                             onMouseLeave={() => hoveredSign.value = null}
                             onFocus={() => hoveredSign.value = zodiac.name}
                             onBlur={() => hoveredSign.value = null}
@@ -812,6 +815,7 @@ export default function ZodiacPicker() {
                             <button
                               type="button"
                               onClick={handleBackToPicker}
+                              onMouseEnter={() => sounds.hover()}
                               class="min-h-[44px] px-4 py-2.5 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105"
                               style={`background: rgba(0,0,0,0.6); border-color: ${accentGlowColor}; color: ${accentGlowColor}; box-shadow: 0 0 12px ${accentGlowColor}40;`}
                             >
@@ -824,6 +828,7 @@ export default function ZodiacPicker() {
                                 key={period}
                                 type="button"
                                 onClick={() => handlePeriodChange(period)}
+                                onMouseEnter={() => sounds.hover()}
                                 class={`min-h-[44px] px-4 py-2.5 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105 ${
                                   currentPeriod.value === period
                                     ? "font-bold"
@@ -848,6 +853,7 @@ export default function ZodiacPicker() {
                               rel="noopener noreferrer"
                               class="inline-flex min-h-[44px] items-center px-4 py-2.5 border-2 rounded-xl font-mono text-xs uppercase tracking-wider transition-all hover:scale-105"
                               style={`background: rgba(255, 192, 203, 0.05); border-color: rgba(255, 192, 203, 0.3); color: rgba(255, 192, 203, 0.9); box-shadow: 0 0 8px rgba(255, 192, 203, 0.2);`}
+                              onMouseEnter={() => sounds.hover()}
                               onClick={() => sounds.click()}
                             >
                               <span style="opacity: 0.7;">{">"}</span>☕ SUPPORT

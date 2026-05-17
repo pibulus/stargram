@@ -5,6 +5,7 @@
 import { useEffect, useRef } from "preact/hooks";
 import Typed from "typed.js";
 import SimpleTypeWriter from "../utils/simple-typewriter.js";
+import { sounds } from "../utils/sounds.ts";
 
 interface TypedWriterProps {
   /** Plain text to type */
@@ -113,6 +114,7 @@ export function TypedWriter({
             keyCode: newChar.charCodeAt(0),
           });
         }
+        sounds.transmissionTick(newChar);
 
         if (elementRef.current) {
           elementRef.current.classList.remove("typing-trail");
@@ -175,6 +177,10 @@ export function TypedWriter({
         if (speedIntervalRef.current) {
           clearInterval(speedIntervalRef.current);
           speedIntervalRef.current = null;
+        }
+
+        if (showCompletionCursor) {
+          sounds.transmissionComplete();
         }
 
         // Add persistent blinking cursor after typing completes

@@ -8,11 +8,14 @@ type ToneOptions = {
   gain?: number;
   type?: OscillatorType;
   detune?: number;
+  bend?: number;
 };
 
 type WebkitAudioGlobal = typeof globalThis & {
   webkitAudioContext?: typeof AudioContext;
 };
+
+type ZodiacElement = "fire" | "earth" | "air" | "water";
 
 export class SoundEngine {
   private audioContext: AudioContext | null = null;
@@ -66,6 +69,17 @@ export class SoundEngine {
     return min + Math.random() * (max - min);
   }
 
+  private canPlayHover(minDelay = 120) {
+    const now = typeof performance !== "undefined"
+      ? performance.now()
+      : Date.now();
+
+    if (now - this.lastHoverAt < minDelay) return false;
+
+    this.lastHoverAt = now;
+    return true;
+  }
+
   private pickNote(offset = 0) {
     const index = Math.floor(Math.random() * this.sparkleScale.length);
     return this.sparkleScale[
@@ -80,6 +94,7 @@ export class SoundEngine {
     gain = 0.035,
     type = "sine",
     detune = 0,
+    bend = 1,
   }: ToneOptions = {}) {
     this.ensureAudioContext();
     if (!this.audioContext) return;
@@ -99,6 +114,12 @@ export class SoundEngine {
       frequency + this.randomBetween(-8, 8),
       startAt,
     );
+    if (bend !== 1) {
+      oscillator.frequency.exponentialRampToValueAtTime(
+        Math.max(30, frequency * bend + this.randomBetween(-5, 5)),
+        startAt + duration,
+      );
+    }
     oscillator.detune.setValueAtTime(
       detune + this.randomBetween(-7, 7),
       startAt,
@@ -158,18 +179,50 @@ export class SoundEngine {
   }
 
   hover() {
-    const now = typeof performance !== "undefined"
-      ? performance.now()
-      : Date.now();
+    if (!this.canPlayHover()) return;
 
-    if (now - this.lastHoverAt < 120) return;
-
-    this.lastHoverAt = now;
     this.playBlip({
       frequency: this.pickNote(2),
       duration: 0.032,
       gain: 0.014,
       type: "sine",
+      bend: 1.04,
+    });
+  }
+
+  hoverSign(element: ZodiacElement = "air") {
+    if (!this.canPlayHover(95)) return;
+
+    const voice: Record<ZodiacElement, ToneOptions> = {
+      fire: {
+        frequency: this.pickNote(4),
+        gain: 0.018,
+        type: "triangle",
+        bend: 1.12,
+      },
+      earth: {
+        frequency: this.pickNote(-3),
+        gain: 0.017,
+        type: "sine",
+        bend: 0.94,
+      },
+      air: {
+        frequency: this.pickNote(3),
+        gain: 0.014,
+        type: "sine",
+        bend: 1.18,
+      },
+      water: {
+        frequency: this.pickNote(1),
+        gain: 0.016,
+        type: "triangle",
+        bend: 0.88,
+      },
+    };
+
+    this.playBlip({
+      duration: 0.045,
+      ...voice[element],
     });
   }
 
@@ -191,13 +244,26 @@ export class SoundEngine {
   success() {
     const base = this.pickNote(-1);
     this.playPattern([
-      { frequency: base, duration: 0.07, gain: 0.036, type: "triangle" },
-      { frequency: base * 1.25, duration: 0.08, delay: 0.07, gain: 0.03 },
+      {
+        frequency: base,
+        duration: 0.07,
+        gain: 0.034,
+        type: "triangle",
+        bend: 1.03,
+      },
+      {
+        frequency: base * 1.25,
+        duration: 0.08,
+        delay: 0.07,
+        gain: 0.027,
+        bend: 1.06,
+      },
       {
         frequency: base * 1.5,
         duration: 0.13,
         delay: 0.14,
-        gain: 0.024,
+        gain: 0.02,
+        bend: 1.08,
       },
     ]);
   }
@@ -263,9 +329,10 @@ export class SoundEngine {
   bootStep() {
     this.playBlip({
       frequency: this.pickNote(),
-      duration: 0.04,
-      gain: 0.016,
-      type: "square",
+      duration: 0.038,
+      gain: 0.014,
+      type: Math.random() > 0.5 ? "triangle" : "sine",
+      bend: Math.random() > 0.5 ? 1.08 : 0.95,
     });
   }
 
@@ -286,13 +353,26 @@ export class SoundEngine {
   selectSign() {
     const base = this.pickNote(1);
     this.playPattern([
-      { frequency: base, duration: 0.055, gain: 0.036, type: "triangle" },
-      { frequency: base * 1.25, duration: 0.07, delay: 0.055, gain: 0.029 },
+      {
+        frequency: base,
+        duration: 0.055,
+        gain: 0.034,
+        type: "triangle",
+        bend: 0.98,
+      },
+      {
+        frequency: base * 1.25,
+        duration: 0.07,
+        delay: 0.055,
+        gain: 0.026,
+        bend: 1.04,
+      },
       {
         frequency: base * 2,
         duration: 0.12,
         delay: 0.12,
         gain: 0.018,
+        bend: 1.1,
       },
     ]);
   }
@@ -300,9 +380,58 @@ export class SoundEngine {
   openPortal() {
     const base = this.pickNote(-1);
     this.playPattern([
-      { frequency: base * 0.75, duration: 0.08, gain: 0.03, type: "triangle" },
-      { frequency: base, duration: 0.08, delay: 0.065, gain: 0.032 },
-      { frequency: base * 1.5, duration: 0.14, delay: 0.14, gain: 0.024 },
+      {
+        frequency: base * 0.75,
+        duration: 0.08,
+        gain: 0.028,
+        type: "triangle",
+        bend: 1.05,
+      },
+      {
+        frequency: base,
+        duration: 0.08,
+        delay: 0.065,
+        gain: 0.03,
+        bend: 1.08,
+      },
+      {
+        frequency: base * 1.5,
+        duration: 0.14,
+        delay: 0.14,
+        gain: 0.021,
+        bend: 1.12,
+      },
+    ]);
+  }
+
+  transmissionTick(char = "") {
+    const isLineBreak = char === "\n";
+    const isPunctuation = /[.!?]/.test(char);
+
+    if (!isLineBreak && !isPunctuation && Math.random() > 0.035) return;
+    if (!char.trim() && !isLineBreak) return;
+
+    this.playBlip({
+      frequency: this.pickNote(isPunctuation ? 4 : 2),
+      duration: isPunctuation ? 0.065 : 0.028,
+      gain: isPunctuation ? 0.016 : 0.008,
+      type: "sine",
+      bend: isLineBreak ? 0.9 : 1.1,
+    });
+  }
+
+  transmissionComplete() {
+    const base = this.pickNote(1);
+    this.playPattern([
+      { frequency: base * 0.75, duration: 0.06, gain: 0.015 },
+      { frequency: base, duration: 0.08, delay: 0.065, gain: 0.017 },
+      {
+        frequency: base * 1.5,
+        duration: 0.16,
+        delay: 0.145,
+        gain: 0.014,
+        bend: 1.06,
+      },
     ]);
   }
 

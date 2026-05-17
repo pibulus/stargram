@@ -684,6 +684,7 @@ export function TerminalDisplay({
                   key={value}
                   type="button"
                   class={value === currentPeriod ? "is-active" : ""}
+                  onMouseEnter={() => sounds.hover()}
                   onClick={() => {
                     if (value !== currentPeriod) {
                       sounds.click();

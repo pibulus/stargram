@@ -178,6 +178,7 @@ export function WelcomeModal() {
                 <button
                   type="button"
                   onClick={handleStart}
+                  onMouseEnter={() => sounds.hover()}
                   class="w-full min-h-[52px] px-5 sm:px-6 py-4 border-3 rounded-xl font-mono font-bold text-sm sm:text-base transition-all hover:scale-105 active:scale-95"
                   style="background: rgba(139, 92, 246, 0.2); color: #8B5CF6; border-color: #8B5CF6; box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);"
                   aria-label="Start exploring horoscopes"
