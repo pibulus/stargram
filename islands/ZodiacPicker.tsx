@@ -428,6 +428,21 @@ export default function ZodiacPicker() {
             position: relative;
             z-index: 10;
           }
+
+          @media (hover: none), (max-width: 767px) {
+            .terminal-shell,
+            .selector-panel-motion,
+            .dossier-panel-motion {
+              animation: none !important;
+              transform: none !important;
+              transition: none !important;
+            }
+
+            .terminal-shell::before {
+              animation: none !important;
+              opacity: 0.28;
+            }
+          }
         `}
       </style>
       <div class="w-full min-w-0 min-h-[100dvh] flex items-start sm:items-center justify-center px-2 sm:px-6 py-4 sm:py-8 md:py-12 overflow-x-hidden">
@@ -479,7 +494,7 @@ export default function ZodiacPicker() {
                 // PICKER MODE - Zodiac grid + dossier
                 <div class="flex min-w-0 flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-12">
                   <div
-                    class="min-w-0 flex-1"
+                    class="min-w-0 flex-1 selector-panel-motion"
                     style={`animation: cosmicFloat 16s ease-in-out infinite; animation-delay: 0.7s; transform: translate3d(${selectorParallaxX}px, ${selectorParallaxY}px, 0); transition: transform 0.3s ease-out;`}
                   >
                     <div class="mb-5">
@@ -503,7 +518,7 @@ export default function ZodiacPicker() {
                     >{ASCII_DIVIDER}</pre>
 
                     <div
-                      class="mt-5 sm:mt-8 grid grid-cols-1 md:grid-cols-2 gap-3"
+                      class="mt-4 sm:mt-8 grid grid-cols-2 gap-2 sm:gap-3"
                       role="listbox"
                       aria-label="Select your zodiac sign"
                     >
@@ -540,7 +555,7 @@ export default function ZodiacPicker() {
                             onBlur={() => hoveredSign.value = null}
                             role="option"
                             aria-selected={isSelected}
-                            class="group w-full min-h-[58px] text-left font-mono border-[3px] rounded-xl sm:rounded-2xl px-4 py-3 sm:py-4 transition-all duration-150 hover:scale-[1.02] hover:-translate-y-0.5"
+                            class="group w-full min-h-[64px] text-left font-mono border-[3px] rounded-xl sm:rounded-2xl px-3 py-3 sm:px-4 sm:py-4 transition-all duration-150 hover:scale-[1.02] hover:-translate-y-0.5"
                             style={`
                         border-color: ${borderColor};
                         background: ${backgroundColor};
@@ -551,8 +566,8 @@ export default function ZodiacPicker() {
                           >
                             <div class="flex items-center">
                               <p
-                                class="text-[11px] sm:text-sm uppercase whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-150"
-                                style={`letter-spacing: clamp(0.2em, 1.5vw, 0.38em); color: ${titleColor}; text-shadow: ${
+                                class="text-[10px] min-[390px]:text-[11px] sm:text-sm uppercase tracking-[0.14em] sm:tracking-[0.3em] whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-150"
+                                style={`color: ${titleColor}; text-shadow: ${
                                   isHovered
                                     ? `-2px 0 ${accentColor}, 2px 0 ${accentGlowColor}, 0 0 12px ${titleColor}40`
                                     : `0 0 12px ${titleColor}40`
@@ -562,7 +577,7 @@ export default function ZodiacPicker() {
                               </p>
                             </div>
                             <div
-                              class="mt-2 text-[10px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.28em]"
+                              class="mt-2 text-[8px] min-[390px]:text-[9px] sm:text-xs uppercase tracking-[0.06em] sm:tracking-[0.24em] leading-snug"
                               style={`color: ${accentGlowColor}CC;`}
                             >
                               {zodiac.dates.toUpperCase()} • {elementLabel}
@@ -575,7 +590,7 @@ export default function ZodiacPicker() {
 
                   {/* Preview Pane */}
                   <div
-                    class="w-full lg:w-[320px] xl:w-[360px] border-[3px] rounded-[18px] sm:rounded-3xl p-4 sm:p-5 bg-black/35"
+                    class="w-full lg:w-[320px] xl:w-[360px] border-[3px] rounded-[18px] sm:rounded-3xl p-4 sm:p-5 bg-black/35 dossier-panel-motion"
                     style={`border-color: ${accentGlowColor}40; box-shadow: inset 0 0 32px ${accentGlowColor}22; transform: perspective(1000px) rotateX(${dossierRotateX}deg) rotateY(${dossierRotateY}deg) translate3d(${dossierParallaxX}px, ${dossierParallaxY}px, 0); transition: transform 0.3s ease-out; transform-style: preserve-3d;`}
                   >
                     <div
@@ -716,8 +731,8 @@ export default function ZodiacPicker() {
                             class="font-mono text-sm leading-relaxed"
                             style={`color: ${accentGlowColor}B8; opacity: 0.9;`}
                           >
-                            Hover a sign to load intel. Tap to lock your signal
-                            and fetch the horoscope stream.
+                            Tap a sign to lock your signal and fetch the
+                            horoscope stream.
                           </p>
                           <p
                             class="font-mono text-[11px] uppercase tracking-[0.35em]"
