@@ -179,22 +179,10 @@ function generateHoroscopeAscii(
   horoscopeText: string,
   period: string,
   date: string,
-  context?: CosmicContext | null,
 ): string {
   const signUpper = signName.toUpperCase();
   const periodUpper = period.toUpperCase();
   const metaLine = date ? `${periodUpper} • ${date}` : periodUpper;
-  const contextLines = context
-    ? [
-      `${context.moon.phase.toUpperCase()} MOON • ${context.moon.illumination}% LIT • ${context.discordianDate.text}`,
-      context.spaceWeather
-        ? `NOAA KP ${context.spaceWeather.kp} • ${context.spaceWeather.label.toUpperCase()} SOLAR STATIC • SLACK ${context.slackRoll.die.toUpperCase()}=${context.slackRoll.value}`
-        : `NOAA STATIC QUIET CARRIER • SLACK ${context.slackRoll.die.toUpperCase()}=${context.slackRoll.value}`,
-      context.nearestVisitor
-        ? `JPL VISITOR ${context.nearestVisitor.name.trim()} • ${context.nearestVisitor.lunarDistance} LD`
-        : "",
-    ].filter(Boolean).join("\n")
-    : "";
 
   const figletTitle = renderFigletText(signUpper, {
     font: "ANSI Shadow",
@@ -208,7 +196,6 @@ function generateHoroscopeAscii(
 ${starBreaker}
 ${figletTitle}
 ${metaLine}
-${contextLines}
 [HEADER_END]`;
 
   return `${header}
@@ -258,6 +245,33 @@ function getFallbackLoadingLines(sign: string, period: Period) {
     `> slack roll: deferred`,
     `> routing ${sign.toUpperCase()} through zodiac channel...`,
     `> downloading ${period} horoscope transmission...`,
+  ];
+}
+
+function getSignalRows(context: CosmicContext) {
+  const spaceWeather = context.spaceWeather
+    ? `Kp ${context.spaceWeather.kp} / ${context.spaceWeather.label}${
+      context.spaceWeather.flux ? ` / F10.7 ${context.spaceWeather.flux}` : ""
+    }`
+    : "quiet carrier fallback";
+  const visitor = context.nearestVisitor
+    ? `${context.nearestVisitor.name.trim()} / ${context.nearestVisitor.lunarDistance} LD / ${context.nearestVisitor.relativeVelocityKmS} km/s`
+    : "no close pass under 20 LD";
+
+  return [
+    {
+      label: "Moon",
+      value:
+        `${context.moon.glyph} ${context.moon.phase} / ${context.moon.illumination}% lit`,
+    },
+    { label: "Eris", value: context.discordianDate.text },
+    { label: "NOAA", value: spaceWeather },
+    { label: "JPL", value: visitor },
+    {
+      label: "Slack",
+      value:
+        `${context.slackRoll.die}=${context.slackRoll.value} / glitch ${context.glitchLevel}/4`,
+    },
   ];
 }
 
@@ -335,7 +349,6 @@ export default function ZodiacPicker() {
           horoscopeText,
           period,
           date,
-          context,
         );
         horoscopePlainText.value = ascii;
 
@@ -482,6 +495,9 @@ export default function ZodiacPicker() {
   const cosmicElementClass = activeCosmicContext
     ? `cosmic-element-${activeCosmicContext.microTheme.element}`
     : "";
+  const signalRows = activeCosmicContext
+    ? getSignalRows(activeCosmicContext)
+    : [];
 
   return (
     <div class="relative w-full min-w-0 overflow-x-hidden">
@@ -621,6 +637,32 @@ export default function ZodiacPicker() {
             74% { opacity: 0.95; transform: translateX(-1px); }
           }
 
+          .cosmic-signal-plaque {
+            position: relative;
+            overflow: hidden;
+          }
+
+          .cosmic-signal-plaque::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+              linear-gradient(90deg, rgba(255, 255, 255, 0.04), transparent 42%, rgba(255, 255, 255, 0.03)),
+              repeating-linear-gradient(
+                0deg,
+                rgba(255, 255, 255, 0.035),
+                rgba(255, 255, 255, 0.035) 1px,
+                transparent 1px,
+                transparent 4px
+              );
+            opacity: 0.45;
+          }
+
+          .cosmic-signal-plaque.cosmic-signal-glitch::before {
+            animation: cosmicCorrupt 7s steps(2, end) infinite;
+          }
+
           .terminal-content-wrapper {
             position: relative;
             z-index: 10;
@@ -642,7 +684,8 @@ export default function ZodiacPicker() {
 
             .terminal-shell::after,
             .cosmic-charm,
-            .cosmic-corruption-text {
+            .cosmic-corruption-text,
+            .cosmic-signal-plaque.cosmic-signal-glitch::before {
               animation: none !important;
             }
           }
@@ -1043,6 +1086,84 @@ export default function ZodiacPicker() {
                             style="color: #FFD700; font-size: 14px; letter-spacing: 0.02em;"
                           />
                         </div>
+                        {activeCosmicContext && (
+                          <div
+                            class={`cosmic-signal-plaque border-2 rounded-xl p-3 sm:p-4 ${
+                              activeCosmicContext.glitchLevel >= 2
+                                ? "cosmic-signal-glitch"
+                                : ""
+                            }`}
+                            style={`background: rgba(0,0,0,0.34); border-color: ${accentGlowColor}42; box-shadow: inset 0 0 24px ${accentGlowColor}14, 0 0 16px ${accentColor}16;`}
+                          >
+                            <div class="relative z-10 flex flex-col sm:flex-row gap-4 sm:items-start">
+                              <div class="min-w-0 flex-1 space-y-3">
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                  <p
+                                    class="font-mono text-[10px] uppercase tracking-[0.34em]"
+                                    style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}66;`}
+                                  >
+                                    Signal Room
+                                  </p>
+                                  <p
+                                    class="font-mono text-[10px] uppercase tracking-[0.18em]"
+                                    style={`color: ${accentGlowColor}96;`}
+                                  >
+                                    live sky packet
+                                  </p>
+                                </div>
+                                <div class="grid gap-2 sm:grid-cols-2">
+                                  {signalRows.map((row) => (
+                                    <div
+                                      key={row.label}
+                                      class="min-w-0 border-b pb-1"
+                                      style={`border-color: ${accentGlowColor}22;`}
+                                    >
+                                      <p
+                                        class="font-mono text-[9px] uppercase tracking-[0.26em]"
+                                        style={`color: ${accentGlowColor}86;`}
+                                      >
+                                        {row.label}
+                                      </p>
+                                      <p
+                                        class="font-mono text-[11px] sm:text-xs leading-snug break-words"
+                                        style={`color: ${accentColor}D8;`}
+                                      >
+                                        {row.value}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                                {activeCosmicContext.glitchLevel > 0 && (
+                                  <p
+                                    class={`font-mono text-[10px] uppercase tracking-[0.2em] ${
+                                      activeCosmicContext.glitchLevel >= 2
+                                        ? "cosmic-corruption-text"
+                                        : ""
+                                    }`}
+                                    style={`color: ${accentGlowColor}AA;`}
+                                  >
+                                    packet glyphs:{" "}
+                                    {activeCosmicContext.corruptionGlyphs}
+                                  </p>
+                                )}
+                              </div>
+                              {activeCosmicContext.charm && (
+                                <div
+                                  class="shrink-0 border-t sm:border-t-0 sm:border-l pt-3 sm:pt-1 sm:pl-4 text-left sm:text-center"
+                                  style={`border-color: ${accentColor}33; color: ${accentColor};`}
+                                >
+                                  <pre class="cosmic-charm font-mono text-[10px] sm:text-xs leading-tight">{activeCosmicContext.charm.art}</pre>
+                                  <p
+                                    class="mt-2 font-mono text-[9px] uppercase tracking-[0.18em]"
+                                    style={`color: ${accentGlowColor}A8;`}
+                                  >
+                                    {activeCosmicContext.charm.name}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                         {/* Slower-typing body */}
                         <TypedWriter
                           text={splitHoroscopeAscii(horoscopePlainText.value)
