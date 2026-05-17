@@ -40,6 +40,44 @@ type DossierMetaItem = {
   special?: "number" | "energy" | "color" | "vibe";
   hex?: string;
 };
+type CosmicContext = {
+  moon: {
+    phase: string;
+    glyph: string;
+    illumination: number;
+    tone: "new" | "waxing" | "full" | "waning";
+  };
+  discordianDate: {
+    text: string;
+  };
+  slackRoll: {
+    die: string;
+    value: number;
+  };
+  spaceWeather: {
+    kp: number;
+    label: string;
+    flux: number | null;
+  } | null;
+  nearestVisitor: {
+    name: string;
+    closeApproach: string;
+    lunarDistance: number;
+    relativeVelocityKmS: number;
+  } | null;
+  glitchLevel: number;
+  corruptionGlyphs: string;
+  charm: {
+    name: string;
+    art: string;
+    trigger: string;
+  } | null;
+  microTheme: {
+    phase: "new" | "waxing" | "full" | "waning";
+    element: ZodiacSign["element"];
+  };
+  loadingLines: string[];
+};
 
 const currentMode = signal<Mode>("picker");
 const currentPeriod = signal<Period>("daily");
@@ -50,6 +88,7 @@ const horoscopeHeaderHtml = signal("");
 const horoscopeBodyHtml = signal("");
 const bootMessages = signal<string[]>([]);
 const showHoroscope = signal(false);
+const cosmicContext = signal<CosmicContext | null>(null);
 
 const PICKER_TITLE_ASCII = renderFigletText("STARGRAM", {
   font: "ANSI Shadow",
@@ -125,15 +164,37 @@ function getSignData(name: string): ZodiacSign | undefined {
   return ZODIAC_SIGNS.find((sign) => sign.name === name);
 }
 
+function rollClientNumber(max: number) {
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+    const buffer = new Uint32Array(1);
+    crypto.getRandomValues(buffer);
+    return buffer[0] % max + 1;
+  }
+
+  return Math.floor(Math.random() * max) + 1;
+}
+
 function generateHoroscopeAscii(
   signName: string,
   horoscopeText: string,
   period: string,
   date: string,
+  context?: CosmicContext | null,
 ): string {
   const signUpper = signName.toUpperCase();
   const periodUpper = period.toUpperCase();
   const metaLine = date ? `${periodUpper} • ${date}` : periodUpper;
+  const contextLines = context
+    ? [
+      `${context.moon.phase.toUpperCase()} MOON • ${context.moon.illumination}% LIT • ${context.discordianDate.text}`,
+      context.spaceWeather
+        ? `NOAA KP ${context.spaceWeather.kp} • ${context.spaceWeather.label.toUpperCase()} SOLAR STATIC • SLACK ${context.slackRoll.die.toUpperCase()}=${context.slackRoll.value}`
+        : `NOAA STATIC QUIET CARRIER • SLACK ${context.slackRoll.die.toUpperCase()}=${context.slackRoll.value}`,
+      context.nearestVisitor
+        ? `JPL VISITOR ${context.nearestVisitor.name.trim()} • ${context.nearestVisitor.lunarDistance} LD`
+        : "",
+    ].filter(Boolean).join("\n")
+    : "";
 
   const figletTitle = renderFigletText(signUpper, {
     font: "ANSI Shadow",
@@ -147,6 +208,7 @@ function generateHoroscopeAscii(
 ${starBreaker}
 ${figletTitle}
 ${metaLine}
+${contextLines}
 [HEADER_END]`;
 
   return `${header}
@@ -169,6 +231,34 @@ function splitHoroscopeAscii(ascii: string) {
   const header = ascii.slice(startIndex + startMarker.length, endIndex).trim();
   const body = ascii.slice(endIndex + endMarker.length).trim();
   return { header, body };
+}
+
+async function fetchCosmicContext(sign: string, period: Period) {
+  try {
+    const response = await fetch(
+      `/api/cosmic-context?sign=${sign}&period=${period}`,
+      { cache: "no-store" },
+    );
+    if (!response.ok) {
+      throw new Error(`Context API returned ${response.status}`);
+    }
+    const payload = await response.json();
+    return payload.success ? payload.data as CosmicContext : null;
+  } catch (error) {
+    console.warn("Cosmic context unavailable:", error);
+    return null;
+  }
+}
+
+function getFallbackLoadingLines(sign: string, period: Period) {
+  return [
+    "> opening chaos channel...",
+    "> moon phase: local signal obscured",
+    "> NOAA solar static: quiet carrier fallback",
+    `> slack roll: deferred`,
+    `> routing ${sign.toUpperCase()} through zodiac channel...`,
+    `> downloading ${period} horoscope transmission...`,
+  ];
 }
 
 export default function ZodiacPicker() {
@@ -209,14 +299,20 @@ export default function ZodiacPicker() {
 
   const fetchHoroscope = async (sign: string, period: Period) => {
     isLoadingHoroscope.value = true;
-    bootMessages.value = [
-      "> Initializing cosmic link...",
-      `> Loading ${sign.toUpperCase()} ${period} horoscope...`,
-    ];
+    cosmicContext.value = null;
+    bootMessages.value = ["> opening cosmic context socket..."];
+    sounds.bootStep();
 
-    // Boot sequence with delays
-    for (let i = 0; i < bootMessages.value.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
+    const context = await fetchCosmicContext(sign, period);
+    cosmicContext.value = context;
+
+    const loadingLines = context?.loadingLines ??
+      getFallbackLoadingLines(sign, period);
+    const bootDelay = context && context.glitchLevel >= 3 ? 190 : 250;
+
+    for (const line of loadingLines) {
+      await new Promise((resolve) => setTimeout(resolve, bootDelay));
+      bootMessages.value = [...bootMessages.value, line];
       sounds.bootStep();
     }
 
@@ -234,7 +330,13 @@ export default function ZodiacPicker() {
         const date = data.data.date || "";
 
         // Generate ASCII art
-        const ascii = generateHoroscopeAscii(sign, horoscopeText, period, date);
+        const ascii = generateHoroscopeAscii(
+          sign,
+          horoscopeText,
+          period,
+          date,
+          context,
+        );
         horoscopePlainText.value = ascii;
 
         // Colorize
@@ -291,14 +393,14 @@ export default function ZodiacPicker() {
     ? getSignAsciiArt(previewSign.name, 32)
     : IDLE_PREVIEW_ASCII;
 
-  // Random serendipitous content for dossier
+  // Chance-operation content for the dossier.
   const cosmicExtras = useMemo(() => {
     if (!previewSign) return null;
 
-    const luckyNumber = Math.floor(Math.random() * 999) + 1;
-    const cosmicEnergy = Math.floor(Math.random() * 30) + 70; // 70-100%
+    const dossierRoll = rollClientNumber(999);
+    const signalCharge = rollClientNumber(31) + 69; // 70-100%
 
-    const luckyColors = [
+    const rollColors = [
       { name: "Cosmic Purple", hex: "#8B5CF6" },
       { name: "Stellar Blue", hex: "#3B82F6" },
       { name: "Nova Pink", hex: "#EC4899" },
@@ -306,10 +408,9 @@ export default function ZodiacPicker() {
       { name: "Solar Gold", hex: "#F59E0B" },
       { name: "Void Indigo", hex: "#6366F1" },
     ];
-    const luckyColor =
-      luckyColors[Math.floor(Math.random() * luckyColors.length)];
+    const rollColor = rollColors[rollClientNumber(rollColors.length) - 1];
 
-    const vibes = [
+    const rollNotes = [
       "Main character energy",
       "Plot twist incoming",
       "Side quest unlocked",
@@ -319,9 +420,9 @@ export default function ZodiacPicker() {
       "Multiplayer advantage",
       "Critical hit ready",
     ];
-    const cosmicVibe = vibes[Math.floor(Math.random() * vibes.length)];
+    const rollNote = rollNotes[rollClientNumber(rollNotes.length) - 1];
 
-    return { luckyNumber, cosmicEnergy, luckyColor, cosmicVibe };
+    return { dossierRoll, signalCharge, rollColor, rollNote };
   }, [previewSign?.name]);
 
   const dossierMeta: DossierMetaItem[] = previewSign && cosmicExtras
@@ -331,24 +432,24 @@ export default function ZodiacPicker() {
       { label: "Ruling Planet", value: previewSign.rulingPlanet.toUpperCase() },
       { label: "Solar Dates", value: previewSign.dates.toUpperCase() },
       {
-        label: "Lucky №",
-        value: String(cosmicExtras.luckyNumber),
+        label: "Dossier Roll",
+        value: String(cosmicExtras.dossierRoll),
         special: "number",
       },
       {
-        label: "Cosmic Energy",
-        value: `${cosmicExtras.cosmicEnergy}%`,
+        label: "Signal Charge",
+        value: `${cosmicExtras.signalCharge}%`,
         special: "energy",
       },
       {
-        label: "Lucky Color",
-        value: cosmicExtras.luckyColor.name,
+        label: "Roll Color",
+        value: cosmicExtras.rollColor.name,
         special: "color",
-        hex: cosmicExtras.luckyColor.hex,
+        hex: cosmicExtras.rollColor.hex,
       },
       {
-        label: "Today's Vibe",
-        value: cosmicExtras.cosmicVibe,
+        label: "Roll Note",
+        value: cosmicExtras.rollNote,
         special: "vibe",
       },
     ]
@@ -371,6 +472,16 @@ export default function ZodiacPicker() {
   const selectorParallaxX = mouseX.value * 6;
   const selectorParallaxY = mouseY.value * 6;
   const isHoroscopeMode = currentMode.value === "horoscope";
+  const activeCosmicContext = cosmicContext.value;
+  const cosmicGlitchClass = activeCosmicContext
+    ? `cosmic-glitch-${activeCosmicContext.glitchLevel}`
+    : "";
+  const cosmicPhaseClass = activeCosmicContext
+    ? `cosmic-phase-${activeCosmicContext.microTheme.phase}`
+    : "";
+  const cosmicElementClass = activeCosmicContext
+    ? `cosmic-element-${activeCosmicContext.microTheme.element}`
+    : "";
 
   return (
     <div class="relative w-full min-w-0 overflow-x-hidden">
@@ -424,6 +535,92 @@ export default function ZodiacPicker() {
             border-radius: inherit;
           }
 
+          .terminal-shell.cosmic-phase-new {
+            filter: brightness(0.94) saturate(0.92);
+          }
+
+          .terminal-shell.cosmic-phase-full {
+            filter: brightness(1.06) saturate(1.12);
+          }
+
+          .terminal-shell.cosmic-phase-waxing {
+            filter: saturate(1.06);
+          }
+
+          .terminal-shell.cosmic-phase-waning {
+            filter: brightness(0.98) saturate(0.98);
+          }
+
+          .terminal-shell.cosmic-element-fire::after {
+            opacity: 0.34;
+          }
+
+          .terminal-shell.cosmic-element-water::after {
+            opacity: 0.18;
+            animation-duration: 9s;
+          }
+
+          .terminal-shell.cosmic-element-air::before {
+            opacity: 0.5;
+          }
+
+          .terminal-shell.cosmic-element-earth::before {
+            opacity: 0.32;
+          }
+
+          .terminal-shell.cosmic-glitch-2::after,
+          .terminal-shell.cosmic-glitch-3::after,
+          .terminal-shell.cosmic-glitch-4::after {
+            animation: scanlineScroll 5s linear infinite, cosmicCorrupt 9s steps(2, end) infinite;
+          }
+
+          .terminal-shell.cosmic-glitch-3::after {
+            opacity: 0.42;
+          }
+
+          .terminal-shell.cosmic-glitch-4::after {
+            opacity: 0.52;
+          }
+
+          @keyframes cosmicCorrupt {
+            0%, 88%, 100% {
+              transform: translate3d(0, 0, 0);
+              filter: none;
+            }
+            89% {
+              transform: translate3d(1px, 0, 0);
+              filter: hue-rotate(28deg);
+            }
+            90% {
+              transform: translate3d(-2px, 1px, 0);
+              filter: hue-rotate(-22deg);
+            }
+            91% {
+              transform: translate3d(0, 0, 0);
+              filter: none;
+            }
+          }
+
+          .cosmic-charm {
+            animation: charmFloat 4.8s ease-in-out infinite;
+            text-shadow: 0 0 12px currentColor;
+          }
+
+          @keyframes charmFloat {
+            0%, 100% { transform: translateY(0) rotate(-1deg); }
+            50% { transform: translateY(-6px) rotate(1deg); }
+          }
+
+          .cosmic-corruption-text {
+            animation: corruptionBlink 1.7s steps(2, end) infinite;
+          }
+
+          @keyframes corruptionBlink {
+            0%, 70%, 100% { opacity: 1; transform: translateX(0); }
+            72% { opacity: 0.72; transform: translateX(1px); }
+            74% { opacity: 0.95; transform: translateX(-1px); }
+          }
+
           .terminal-content-wrapper {
             position: relative;
             z-index: 10;
@@ -442,6 +639,12 @@ export default function ZodiacPicker() {
               animation: none !important;
               opacity: 0.28;
             }
+
+            .terminal-shell::after,
+            .cosmic-charm,
+            .cosmic-corruption-text {
+              animation: none !important;
+            }
           }
         `}
       </style>
@@ -450,7 +653,7 @@ export default function ZodiacPicker() {
           key={flickerTrigger.value}
           class={`w-full min-w-0 max-w-[calc(100vw-1rem)] ${
             isHoroscopeMode ? "sm:max-w-4xl" : "sm:max-w-6xl"
-          } border-[3px] sm:border-4 rounded-[18px] sm:rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-visible terminal-shell ${
+          } border-[3px] sm:border-4 rounded-[18px] sm:rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-visible terminal-shell ${cosmicGlitchClass} ${cosmicPhaseClass} ${cosmicElementClass} ${
             flickerTrigger.value > 0 ? "crt-flicker" : ""
           }`}
           style={`background: rgba(2, 4, 12, 0.95); border-color: ${accentGlowColor}80; box-shadow: 0 0 30px ${accentGlowColor}24, 0 18px 60px rgba(0,0,0,0.68), inset 0 0 64px rgba(0,0,0,0.6); animation: cosmicFloat 12s ease-in-out infinite; transform: perspective(1000px) rotateX(${parallaxRotateX}deg) rotateY(${parallaxRotateY}deg) translate3d(${parallaxX}px, ${parallaxY}px, 0); transition: transform 0.3s ease-out; min-height: ${
@@ -762,12 +965,58 @@ export default function ZodiacPicker() {
                         {bootMessages.value.map((msg, i) => (
                           <p
                             key={i}
-                            class="font-mono text-sm"
-                            style={`color: ${accentColor}; animation: fadeIn 0.3s ease-in;`}
+                            class={`font-mono text-sm ${
+                              msg.includes("packet corruption")
+                                ? "cosmic-corruption-text"
+                                : ""
+                            }`}
+                            style={`color: ${
+                              msg.includes("packet corruption")
+                                ? accentGlowColor
+                                : accentColor
+                            }; animation: fadeIn 0.3s ease-in;`}
                           >
                             {msg}
                           </p>
                         ))}
+                        {activeCosmicContext && (
+                          <div
+                            class="grid gap-2 sm:grid-cols-2 border-t pt-4 mt-4 font-mono text-[10px] sm:text-xs uppercase tracking-[0.16em]"
+                            style={`border-color: ${accentGlowColor}24; color: ${accentGlowColor}B8;`}
+                          >
+                            <p>
+                              {activeCosmicContext.moon.glyph}{" "}
+                              {activeCosmicContext.moon.phase} ·{" "}
+                              {activeCosmicContext.moon.illumination}%
+                            </p>
+                            <p>
+                              Kp {activeCosmicContext.spaceWeather?.kp ?? "?"} ·
+                              {" "}
+                              {activeCosmicContext.spaceWeather?.label ??
+                                "quiet fallback"}
+                            </p>
+                            <p>
+                              d23 · {activeCosmicContext.slackRoll.value}
+                            </p>
+                            <p>
+                              glitch · {activeCosmicContext.glitchLevel}/4
+                            </p>
+                          </div>
+                        )}
+                        {activeCosmicContext?.charm && (
+                          <div
+                            class="pt-2"
+                            style={`color: ${accentColor};`}
+                          >
+                            <pre class="cosmic-charm inline-block font-mono text-[11px] sm:text-xs leading-tight">{activeCosmicContext.charm.art}</pre>
+                            <p
+                              class="mt-2 font-mono text-[10px] uppercase tracking-[0.22em]"
+                              style={`color: ${accentGlowColor}A8;`}
+                            >
+                              {activeCosmicContext.charm.trigger}
+                            </p>
+                          </div>
+                        )}
                         <span
                           class="inline-block h-4 w-2 cursor-blink"
                           style={`background: ${accentColor};`}
