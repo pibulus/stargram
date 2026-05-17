@@ -217,7 +217,7 @@ export default function ZodiacPicker() {
     // Boot sequence with delays
     for (let i = 0; i < bootMessages.value.length; i++) {
       await new Promise((resolve) => setTimeout(resolve, 300));
-      sounds.click();
+      sounds.bootStep();
     }
 
     try {
@@ -261,7 +261,7 @@ export default function ZodiacPicker() {
   const handleSignClick = (sign: string) => {
     selectedSign.value = sign;
     saveZodiacSign(sign);
-    sounds.success();
+    sounds.selectSign();
     flickerTrigger.value = Date.now(); // Trigger flicker animation
 
     // Switch to horoscope mode and fetch data
@@ -278,7 +278,7 @@ export default function ZodiacPicker() {
 
   const handlePeriodChange = (period: Period) => {
     if (!selectedSign.value) return;
-    sounds.click();
+    sounds.periodChange();
     currentPeriod.value = period;
     flickerTrigger.value = Date.now();
     showHoroscope.value = false;

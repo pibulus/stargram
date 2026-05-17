@@ -1,5 +1,6 @@
 import { useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
+import { sounds } from "../utils/sounds.ts";
 
 /**
  * ✨ Terminal-styled Welcome Modal
@@ -48,9 +49,15 @@ export function markWelcomeSeen() {
 export function WelcomeModal() {
   const isOpen = welcomeModalOpen.value;
 
+  const handleStart = () => {
+    sounds.openPortal();
+    markWelcomeSeen();
+  };
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
+        sounds.click();
         markWelcomeSeen();
       }
     };
@@ -170,7 +177,7 @@ export function WelcomeModal() {
                 {/* Action button */}
                 <button
                   type="button"
-                  onClick={markWelcomeSeen}
+                  onClick={handleStart}
                   class="w-full min-h-[52px] px-5 sm:px-6 py-4 border-3 rounded-xl font-mono font-bold text-sm sm:text-base transition-all hover:scale-105 active:scale-95"
                   style="background: rgba(139, 92, 246, 0.2); color: #8B5CF6; border-color: #8B5CF6; box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);"
                   aria-label="Start exploring horoscopes"
