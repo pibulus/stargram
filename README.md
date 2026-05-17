@@ -81,7 +81,8 @@ Each theme follows the 60/30/10 color rule:
 
 ## 🔌 API Integration
 
-Uses the freehoroscopeapi.com API:
+Uses Stargram's bundled `scripts/horoscope.sh` oracle for daily readings, with
+freehoroscopeapi.com as the fallback and source for weekly/monthly readings:
 
 - No auth required
 - Daily, weekly, monthly endpoints

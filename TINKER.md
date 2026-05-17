@@ -329,7 +329,8 @@ export_png - When PNG downloaded (format)
 - **Theme system is universal**: Can be copied to other apps (already in
   asciifier, button_studio, etc.)
 - **No accounts needed**: Everything localStorage, privacy-first
-- **Horoscope API is free**: freehoroscopeapi.com, no auth required
+- **Horoscope source**: bundled `scripts/horoscope.sh` oracle for daily
+  readings; freehoroscopeapi.com remains the fallback and weekly/monthly source
 - **OG image must be 1200x630**: Twitter/Facebook requirement
 
 ### Pablo's Project Quirks:

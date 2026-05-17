@@ -39,6 +39,8 @@ type ExternalHoroscopePayload = {
     sign?: string;
     horoscope?: string;
     horoscope_data?: string;
+    source?: string;
+    tip?: string;
   };
   success?: boolean;
   error?: string;
@@ -47,6 +49,7 @@ type ExternalHoroscopePayload = {
 const VALID_DAYS = new Set(["today", "tomorrow", "yesterday"]);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const UPSTREAM_TIMEOUT_MS = 8000;
+const ORACLE_SCRIPT_TIMEOUT_MS = 12000;
 
 /**
  * Determine correct day parameter for API based on Melbourne timezone
@@ -102,6 +105,81 @@ function normalizeHoroscopePayload(
   };
 }
 
+function getOracleScriptPath(): string {
+  const configuredPath = Deno.env.get("HOROSCOPE_SCRIPT_PATH");
+  if (configuredPath) return configuredPath;
+
+  return decodeURIComponent(
+    new URL("../../scripts/horoscope.sh", import.meta.url).pathname,
+  );
+}
+
+async function fetchFromOracleScript(
+  sign: string,
+  day: string,
+): Promise<ReturnType<typeof normalizeHoroscopePayload> | null> {
+  const scriptPath = getOracleScriptPath();
+
+  try {
+    const scriptInfo = await Deno.stat(scriptPath);
+    if (!scriptInfo.isFile) return null;
+  } catch {
+    return null;
+  }
+
+  const command = new Deno.Command("bash", {
+    args: [scriptPath, "--json", "--day", day, sign],
+    stdout: "piped",
+    stderr: "piped",
+  });
+  const child = command.spawn();
+  let timedOut = false;
+
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    try {
+      child.kill("SIGTERM");
+    } catch {
+      // Process may already have exited.
+    }
+  }, ORACLE_SCRIPT_TIMEOUT_MS);
+
+  const output = await child.output()
+    .finally(() => clearTimeout(timeout));
+
+  const stdout = new TextDecoder().decode(output.stdout);
+  const stderr = new TextDecoder().decode(output.stderr).trim();
+
+  if (timedOut) {
+    throw new Error("Oracle script timed out");
+  }
+
+  if (!output.success) {
+    throw new Error(
+      stderr || `Oracle script exited with code ${output.code}`,
+    );
+  }
+
+  return normalizeHoroscopePayload(JSON.parse(stdout), "daily");
+}
+
+function jsonResponse(
+  body: unknown,
+  status = 200,
+  cacheControl?: string,
+): Response {
+  return new Response(
+    JSON.stringify(body),
+    {
+      status,
+      headers: {
+        "Content-Type": "application/json",
+        ...(cacheControl ? { "Cache-Control": cacheControl } : {}),
+      },
+    },
+  );
+}
+
 export const handler = async (
   req: Request,
   _ctx: FreshContext,
@@ -127,15 +205,12 @@ export const handler = async (
 
   // Validate sign
   if (!sign || !VALID_SIGNS.includes(sign)) {
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      {
         error: "Invalid zodiac sign",
         validSigns: VALID_SIGNS,
-      }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
       },
+      400,
     );
   }
 
@@ -147,32 +222,35 @@ export const handler = async (
     // Use custom day or auto-detect timezone
     const day = customDay || getDayParamForTimezone();
     if (!VALID_DAYS.has(day) && !DATE_RE.test(day)) {
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        {
           error:
             "Invalid day. Must be today, tomorrow, yesterday, or YYYY-MM-DD",
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
         },
+        400,
       );
     }
     params.append("day", day);
     apiUrl = `${HOROSCOPE_API_BASE}/daily?${params}`;
+
+    try {
+      const oracleData = await fetchFromOracleScript(sign, day);
+      if (oracleData) {
+        return jsonResponse(oracleData, 200, "public, max-age=3600");
+      }
+    } catch (error) {
+      console.warn("Horoscope oracle script failed, falling back:", error);
+    }
   } else if (period === "weekly") {
     apiUrl = `${HOROSCOPE_API_BASE}/weekly?${params}`;
   } else if (period === "monthly") {
     apiUrl = `${HOROSCOPE_API_BASE}/monthly?${params}`;
   } else {
-    return new Response(
-      JSON.stringify({
-        error: "Invalid period. Must be: daily, weekly, or monthly",
-      }),
+    return jsonResponse(
       {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
+        error: "Invalid period. Must be: daily, weekly, or monthly",
       },
+      400,
     );
   }
 
@@ -196,28 +274,16 @@ export const handler = async (
     );
 
     // Return the horoscope data
-    return new Response(
-      JSON.stringify(data),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=3600", // Cache for 1 hour
-        },
-      },
-    );
+    return jsonResponse(data, 200, "public, max-age=3600");
   } catch (error) {
     console.error("Horoscope API error:", error);
 
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      {
         error: "Failed to fetch horoscope",
         message: error instanceof Error ? error.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
       },
+      500,
     );
   }
 };
