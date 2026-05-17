@@ -81,7 +81,7 @@ Each theme follows the 60/30/10 color rule:
 
 ## 🔌 API Integration
 
-Uses the free horoscope-app-api.vercel.app API:
+Uses the freehoroscopeapi.com API:
 
 - No auth required
 - Daily, weekly, monthly endpoints
@@ -99,7 +99,7 @@ Uses the free horoscope-app-api.vercel.app API:
 
 ```bash
 # Deploy to Deno Deploy
-deployctl deploy --production --token=$DENO_DEPLOY_TOKEN
+deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
 
 # Or push to GitHub (auto-deploys if connected)
 git push origin main

@@ -52,6 +52,7 @@ self.addEventListener("fetch", (event) => {
   if (
     event.request.url.includes("/api/horoscope") ||
     event.request.url.includes("horoscope-app-api.vercel.app") ||
+    event.request.url.includes("freehoroscopeapi.com") ||
     event.request.url.includes("posthog.com") ||
     event.request.url.includes("ko-fi.com")
   ) {

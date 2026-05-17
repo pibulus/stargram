@@ -53,7 +53,7 @@
 
 ```bash
 cd ~/Projects/active/apps/cosmic-horoscope
-deployctl deploy --production --token=$DENO_DEPLOY_TOKEN
+deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
 ```
 
 After deployment, Deno Deploy will add a project ID to `deno.json`. Commit this:

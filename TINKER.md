@@ -26,7 +26,7 @@ deno task build
 ### Deploy
 
 ```bash
-deployctl deploy --production --token=$DENO_DEPLOY_TOKEN
+deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
 ```
 
 ---
@@ -225,7 +225,7 @@ DevTools → Application → Clear storage
 ### One-Liner Deploy
 
 ```bash
-deployctl deploy --production --token=$DENO_DEPLOY_TOKEN
+deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
 ```
 
 ### Manual Deploy Steps
@@ -234,7 +234,7 @@ deployctl deploy --production --token=$DENO_DEPLOY_TOKEN
 2. Check everything works
 3. Commit changes: `git add -A && git commit -m "fix: whatever"`
 4. Push: `git push origin main`
-5. Deploy: `deployctl deploy --production`
+5. Deploy: `deployctl deploy --prod`
 
 ### First-Time Deno Deploy Setup
 
@@ -329,7 +329,7 @@ export_png - When PNG downloaded (format)
 - **Theme system is universal**: Can be copied to other apps (already in
   asciifier, button_studio, etc.)
 - **No accounts needed**: Everything localStorage, privacy-first
-- **Horoscope API is free**: No rate limits, MIT licensed, stable since 2021
+- **Horoscope API is free**: freehoroscopeapi.com, no auth required
 - **OG image must be 1200x630**: Twitter/Facebook requirement
 
 ### Pablo's Project Quirks:
@@ -349,7 +349,7 @@ export_png - When PNG downloaded (format)
 deno task dev
 
 # Ship it
-deployctl deploy --production
+deployctl deploy --prod
 
 # When broken
 rm -rf _fresh

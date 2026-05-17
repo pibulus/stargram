@@ -6,8 +6,7 @@
 
 import { FreshContext } from "$fresh/server.ts";
 
-const HOROSCOPE_API_BASE =
-  "https://horoscope-app-api.vercel.app/api/v1/get-horoscope";
+const HOROSCOPE_API_BASE = "https://freehoroscopeapi.com/api/v1/get-horoscope";
 
 // Zodiac signs (validated)
 const VALID_SIGNS = [
@@ -181,7 +180,10 @@ export const handler = async (
     // Fetch from horoscope API
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-    const response = await fetch(apiUrl, { signal: controller.signal })
+    const response = await fetch(apiUrl, {
+      redirect: "follow",
+      signal: controller.signal,
+    })
       .finally(() => clearTimeout(timeout));
 
     if (!response.ok) {

@@ -306,7 +306,7 @@ export default function HoroscopeDisplay(
       }
 
       const horoscopeText = data.data?.horoscope_data ?? data.data?.horoscope;
-      if (data.success && horoscopeText) {
+      if (data.success !== false && horoscopeText) {
         colorEffect.value = pickRandomColorEffect();
         horoscopeData.value = {
           ...data.data,

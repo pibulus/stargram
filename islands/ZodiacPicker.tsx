@@ -230,7 +230,7 @@ export default function ZodiacPicker() {
       const data = await response.json();
 
       const horoscopeText = data.data?.horoscope_data ?? data.data?.horoscope;
-      if (data.success && horoscopeText) {
+      if (data.success !== false && horoscopeText) {
         const date = data.data.date || "";
 
         // Generate ASCII art
