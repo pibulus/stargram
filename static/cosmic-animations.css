@@ -273,10 +273,7 @@
   50% {
     --glow-intensity: 1.5;
     filter: drop-shadow(0 0 40px currentColor) drop-shadow(
-      0
-      0
-      60px
-      currentColor
+      0 0 60px currentColor
     );
   }
 }
