@@ -1,7 +1,7 @@
 // Cosmic Horoscope Service Worker v1.0
 // Enables offline functionality and PWA features
 
-const CACHE_NAME = "cosmic-horoscope-v1";
+const CACHE_NAME = "stargram-v2";
 const urlsToCache = [
   "/",
   "/styles.css",
@@ -32,7 +32,8 @@ self.addEventListener("activate", (event) => {
         cacheNames.map((cacheName) => {
           if (
             cacheName !== CACHE_NAME &&
-            cacheName.startsWith("cosmic-horoscope-")
+            (cacheName.startsWith("cosmic-horoscope-") ||
+              cacheName.startsWith("stargram-"))
           ) {
             console.log("🗑️ Removing old cache:", cacheName);
             return caches.delete(cacheName);
