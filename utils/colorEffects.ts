@@ -138,6 +138,19 @@ export function applyColorToArt(
   };
 
   const headerColor = headerColors[effect] || "#FFD700"; // Gold fallback
+  const getHeaderFontSize = (
+    lineLength: number,
+    preferredVw: number,
+    minPx: number,
+    maxPx: number,
+  ) => {
+    const safeLength = Math.max(12, lineLength);
+    const estimatedGlyphWidth = safeLength * 0.62;
+    const vwFit = (100 / estimatedGlyphWidth).toFixed(4);
+    const remInset = (6 / estimatedGlyphWidth).toFixed(4);
+
+    return `clamp(${minPx}px, min(${preferredVw}vw, calc(${vwFit}vw - ${remInset}rem)), ${maxPx}px)`;
+  };
 
   for (let y = 0; y < lines.length; y++) {
     const line = lines[y];
@@ -158,19 +171,22 @@ export function applyColorToArt(
     if (inHeader) {
       headerLineIndex++;
       const isTitleLine = headerLineIndex === 1;
+      const fontSize = isTitleLine
+        ? getHeaderFontSize(line.length, 2.1, 5.5, 18)
+        : getHeaderFontSize(line.length, 1.9, 4.5, 16);
       const baseStyle =
         `color: ${headerColor}; display: block; max-width: 100%; overflow: hidden; white-space: pre; font-family: 'JetBrains Mono', 'SF Mono', 'Courier New', monospace;`;
 
       if (isTitleLine) {
         const span =
-          `<span style="${baseStyle} font-weight: 900; letter-spacing: 0.04em; font-size: clamp(8px, 2.4vw, 20px); text-transform: uppercase; line-height: 1.05;">${
+          `<span style="${baseStyle} font-weight: 900; letter-spacing: 0.04em; font-size: ${fontSize}; text-transform: uppercase; line-height: 1.05;">${
             escapeHtml(line)
           }</span>`;
         headerLines.push(span);
         colorizedLines.push(span);
       } else {
         const span =
-          `<span style="${baseStyle} font-weight: 700; letter-spacing: 0; font-size: clamp(6px, 1.9vw, 22px); text-transform: none; line-height: 1.1;">${
+          `<span style="${baseStyle} font-weight: 700; letter-spacing: 0; font-size: ${fontSize}; text-transform: none; line-height: 1.1;">${
             escapeHtml(line)
           }</span>`;
         headerLines.push(span);

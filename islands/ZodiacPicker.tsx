@@ -1072,7 +1072,7 @@ export default function ZodiacPicker() {
                       <div class="space-y-6">
                         {/* Fast-typing header */}
                         <div
-                          class="border-b pb-4"
+                          class="min-w-0 w-full overflow-hidden border-b pb-4"
                           style={`border-color: ${accentGlowColor}30;`}
                         >
                           <TypedWriter
@@ -1082,7 +1082,8 @@ export default function ZodiacPicker() {
                             speed={3}
                             enabled
                             showCompletionCursor={false}
-                            className="font-mono leading-tight min-w-0 max-w-full overflow-hidden"
+                            reserveLayout
+                            className="block w-full font-mono leading-tight min-w-0 max-w-full overflow-hidden"
                             style="color: #FFD700; font-size: 14px; letter-spacing: 0.02em;"
                           />
                         </div>

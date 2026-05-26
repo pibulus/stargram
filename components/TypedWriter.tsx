@@ -1,3 +1,5 @@
+// deno-lint-ignore-file react-no-danger
+
 // ===================================================================
 // TYPED WRITER - Uses typed.js library with keyboard sounds
 // ===================================================================
@@ -20,6 +22,8 @@ interface TypedWriterProps {
   onComplete?: () => void;
   /** Whether to append blinking cursor on completion */
   showCompletionCursor?: boolean;
+  /** Reserve the final text box while typing to avoid layout growth */
+  reserveLayout?: boolean;
   /** CSS class */
   className?: string;
   /** Inline styles */
@@ -33,6 +37,7 @@ export function TypedWriter({
   enabled = true,
   onComplete,
   showCompletionCursor = true,
+  reserveLayout = false,
   className = "",
   style = "",
 }: TypedWriterProps) {
@@ -213,11 +218,37 @@ export function TypedWriter({
     };
   }, [text, htmlText, speed, enabled]);
 
-  return (
-    <div
-      ref={elementRef}
-      className={className}
-      style={style}
-    />
-  );
+  if (reserveLayout && enabled) {
+    const reserveStyle = [
+      style,
+      "position: relative; width: 100%; min-width: 0;",
+    ].filter(Boolean).join(" ");
+
+    return (
+      <div className={className} style={reserveStyle}>
+        {htmlText
+          ? (
+            <div
+              aria-hidden="true"
+              style="visibility: hidden; pointer-events: none; width: 100%; min-width: 0;"
+              dangerouslySetInnerHTML={{ __html: htmlText }}
+            />
+          )
+          : (
+            <div
+              aria-hidden="true"
+              style="visibility: hidden; pointer-events: none; width: 100%; min-width: 0;"
+            >
+              {text}
+            </div>
+          )}
+        <div
+          ref={elementRef}
+          style="position: absolute; inset: 0; width: 100%; min-width: 0;"
+        />
+      </div>
+    );
+  }
+
+  return <div ref={elementRef} className={className} style={style} />;
 }
