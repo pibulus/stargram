@@ -144,7 +144,7 @@ The random generator supports:
 
 ## Example Implementation
 
-See `asciifier-themes.ts` for a complete implementation example with:
+See `cosmic-themes.ts` for a small app-specific implementation example with:
 
 - Refined theme definitions
 - Custom random theme generation

@@ -85,7 +85,7 @@ interface TerminalDisplayProps {
   showShuffleButton?: boolean;
   /** Visual effect to apply (glow, saturation, etc.) */
   visualEffect?: string;
-  /** Hide export buttons (for cosmic-horoscope which renders them externally) */
+  /** Hide export buttons when the parent view renders external actions */
   hideExportButtons?: boolean;
   /** Enable typewriter effect (default: false) */
   enableTypewriter?: boolean;
@@ -909,7 +909,7 @@ export function TerminalDisplay({
               if (navigator.share) {
                 try {
                   await navigator.share({
-                    title: 'Cosmic Horoscope',
+                    title: 'Stargram',
                     text: content,
                   });
                 } catch (err) {
@@ -1036,7 +1036,7 @@ export function TerminalDisplay({
           transform: translateY(0);
         }
 
-        /* Responsive letter-spacing for ASCII display - matches asciifier-web */
+        /* Responsive letter-spacing for ASCII display */
         .ascii-display {
           letter-spacing: 0.2px;
           white-space: pre-wrap;

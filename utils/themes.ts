@@ -207,12 +207,12 @@ export class ThemeSystem {
 }
 
 // =================================================================
-// 🔮 COSMIC HOROSCOPE THEME COLLECTION
+// 🔮 STARGRAM THEME COLLECTION
 // E-girl grind fiction meets Tokyo boyfriend energy
 // Curated for mystery angel diva pop aesthetic
 // =================================================================
 
-export const asciifierThemes: Theme[] = [
+export const stargramThemes: Theme[] = [
   // Turquoise Pop (cyan text/borders on white)
   {
     name: "TURQUOISE",
@@ -342,14 +342,14 @@ export function createThemeSystem(config: ThemeSystemConfig): ThemeSystem {
 
 // Get a random theme
 export function getRandomTheme(): Theme {
-  return asciifierThemes[Math.floor(Math.random() * asciifierThemes.length)];
+  return stargramThemes[Math.floor(Math.random() * stargramThemes.length)];
 }
 
 // Rotate through themes
-let currentThemeIndex = Math.floor(Math.random() * asciifierThemes.length);
+let currentThemeIndex = Math.floor(Math.random() * stargramThemes.length);
 export function getNextTheme(): Theme {
-  currentThemeIndex = (currentThemeIndex + 1) % asciifierThemes.length;
-  return asciifierThemes[currentThemeIndex];
+  currentThemeIndex = (currentThemeIndex + 1) % stargramThemes.length;
+  return stargramThemes[currentThemeIndex];
 }
 
 // Apply theme to document (backward compatibility)
@@ -370,14 +370,14 @@ export function applyTheme(theme: Theme) {
 
   // Store in localStorage
   if (typeof window !== "undefined") {
-    localStorage.setItem("asciifier-theme", JSON.stringify(theme));
+    localStorage.setItem("stargram-theme", JSON.stringify(theme));
   }
 }
 
 // Load saved theme or random
 export function loadTheme(): Theme {
   if (typeof window !== "undefined") {
-    const saved = localStorage.getItem("asciifier-theme");
+    const saved = localStorage.getItem("stargram-theme");
     if (saved) {
       try {
         return JSON.parse(saved);

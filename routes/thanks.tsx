@@ -1,78 +1,33 @@
-// deno-lint-ignore-file react-no-danger fresh-server-event-handlers
-import { useEffect, useState } from "preact/hooks";
-import { sounds } from "../utils/sounds.ts";
-
 export default function Thanks() {
-  const [celebrationArt, setCelebrationArt] = useState("");
-  const [showConfetti, setShowConfetti] = useState(false);
-
-  useEffect(() => {
-    // Play celebration sound
-    sounds.init();
-    sounds.success();
-
-    // Show confetti
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 5000);
-
-    // Generate celebration ASCII art
-    const generateCelebration = async () => {
-      try {
-        const response = await fetch("/api/enhanced-figlet", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text: "THANK YOU!",
-            font: "Big",
-            effect: "unicorn",
-            color: "#00FF41",
-          }),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          setCelebrationArt(data.html || data.ascii);
-        }
-      } catch (error) {
-        console.error("Failed to generate celebration art:", error);
-        setCelebrationArt("THANK YOU! ☕✨");
-      }
-    };
-
-    generateCelebration();
-  }, []);
-
   return (
     <div
       class="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden"
       style="background: var(--color-base-gradient, var(--color-base, #FAF9F6))"
     >
       {/* Confetti particles */}
-      {showConfetti && (
-        <div class="absolute inset-0 pointer-events-none">
-          {Array.from({ length: 50 }).map((_, i) => (
-            <div
-              key={i}
-              class="absolute animate-confetti"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: "-10%",
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${2 + Math.random() * 2}s`,
-              }}
-            >
-              {[
-                "☕",
-                "✨",
-                "🎨",
-                "💖",
-                "🌈",
-                "⭐",
-              ][Math.floor(Math.random() * 6)]}
-            </div>
-          ))}
-        </div>
-      )}
+      <div class="absolute inset-0 pointer-events-none">
+        {Array.from({ length: 50 }).map((_, i) => (
+          <div
+            key={i}
+            class="absolute animate-confetti"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: "-10%",
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${2 + Math.random() * 2}s`,
+            }}
+          >
+            {[
+              "☕",
+              "✨",
+              "🎨",
+              "💖",
+              "🌈",
+              "⭐",
+            ][Math.floor(Math.random() * 6)]}
+          </div>
+        ))}
+      </div>
 
       {/* Main content */}
       <div class="max-w-4xl w-full">
@@ -81,12 +36,17 @@ export default function Thanks() {
           class="mb-12 p-8 border-8 rounded-3xl shadow-brutal-xl animate-pop-in"
           style="border-color: var(--color-border, #0A0A0A); background-color: var(--color-secondary, #FFE5B4)"
         >
-          {/* deno-lint-ignore react-no-danger */}
           <pre
             class="font-mono text-center overflow-x-auto"
             style="color: var(--color-text, #0A0A0A); line-height: 1.1;"
-            dangerouslySetInnerHTML={{ __html: celebrationArt }}
-          />
+          >
+{`████████╗██╗  ██╗ █████╗ ███╗   ██╗██╗  ██╗███████╗
+╚══██╔══╝██║  ██║██╔══██╗████╗  ██║██║ ██╔╝██╔════╝
+   ██║   ███████║███████║██╔██╗ ██║█████╔╝ ███████╗
+   ██║   ██╔══██║██╔══██║██║╚██╗██║██╔═██╗ ╚════██║
+   ██║   ██║  ██║██║  ██║██║ ╚████║██║  ██╗███████║
+   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝`}
+          </pre>
         </div>
 
         {/* Message */}
@@ -104,8 +64,8 @@ export default function Thanks() {
             class="text-lg font-mono mb-4"
             style="color: var(--color-text, #0A0A0A)"
           >
-            Your support keeps this tool alive and free for everyone. No ads, no
-            subscriptions, no bullshit - just pure ASCII magic.
+            Your support keeps Stargram alive and free for everyone. No ads, no
+            subscriptions, just cosmic signal and strange little stars.
           </p>
           <p
             class="text-md font-mono opacity-80"
@@ -115,7 +75,7 @@ export default function Thanks() {
           </p>
         </div>
 
-        {/* Gift: Premium ASCII Art Collection */}
+        {/* Supporter note */}
         <div
           class="mb-8 p-6 border-4 rounded-2xl shadow-brutal animate-slide-up"
           style="border-color: var(--color-accent, #FF69B4); background-color: var(--color-secondary, #FFE5B4); animation-delay: 0.4s;"
@@ -131,36 +91,15 @@ export default function Thanks() {
             class="text-md font-mono mb-4 opacity-80"
             style="color: var(--color-text, #0A0A0A)"
           >
-            As a thank you, here's a collection of premium ASCII art pieces you
-            can use anywhere:
+            A tiny share line for the group chat, the feed, or your notes app:
           </p>
 
-          {/* Download buttons */}
-          <div class="flex flex-wrap gap-3">
-            <a
-              href="/api/random-ascii-art"
-              download="asciifier-gift.txt"
-              class="inline-flex items-center gap-2 px-4 py-3 border-4 rounded-xl font-mono font-bold shadow-brutal transition-all hover:scale-105"
-              style="background-color: var(--color-accent, #FF69B4); color: var(--color-base, #FAF9F6); border-color: var(--color-border, #0A0A0A)"
-            >
-              <span>💾</span>
-              <span>Random ASCII Art</span>
-            </a>
-            <button
-              type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(
-                  "☕ Thanks for the coffee! - Made with ASCIIFIER https://asciifier.com",
-                );
-                sounds.copy();
-              }}
-              class="inline-flex items-center gap-2 px-4 py-3 border-4 rounded-xl font-mono font-bold shadow-brutal transition-all hover:scale-105"
-              style="background-color: var(--color-base, #FAF9F6); color: var(--color-text, #0A0A0A); border-color: var(--color-border, #0A0A0A)"
-            >
-              <span>📋</span>
-              <span>Share Template</span>
-            </button>
-          </div>
+          <p
+            class="inline-block px-4 py-3 border-4 rounded-xl font-mono font-bold shadow-brutal"
+            style="background-color: var(--color-base, #FAF9F6); color: var(--color-text, #0A0A0A); border-color: var(--color-border, #0A0A0A)"
+          >
+            ☕ Thanks for keeping Stargram weird and free https://stargram.app
+          </p>
         </div>
 
         {/* Secret hint */}
@@ -172,7 +111,7 @@ export default function Thanks() {
             class="text-sm font-mono"
             style="color: var(--color-text, #0A0A0A)"
           >
-            ✨ Psst... more surprise features coming soon for supporters
+            ✨ Psst... more strange little star features coming soon
           </p>
         </div>
 
@@ -184,7 +123,7 @@ export default function Thanks() {
             style="background-color: var(--color-secondary, #FFE5B4); color: var(--color-text, #0A0A0A); border-color: var(--color-border, #0A0A0A)"
           >
             <span>←</span>
-            <span>Back to ASCII Magic</span>
+            <span>Back to Stargram</span>
           </a>
         </div>
       </div>

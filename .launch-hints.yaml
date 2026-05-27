@@ -13,8 +13,8 @@ differentiators: []
 proof_points:
   - "\U0001F319 12 Zodiac Signs - All signs supported with emoji + date ranges"
   - "\U0001F4C5 3 Reading Types - Daily, weekly, monthly horoscopes"
-  - "\U0001F3A8 11 Cosmic Themes - Purple oracle, neon dreams, stardust shimmer"
-  - "\U0001F308 6 Gradient Effects - Unicorn, fire, cyberpunk, vaporwave, sunset, ocean"
+  - "\U0001F3A8 12 Cosmic Themes - Purple oracle, neon dreams, terminal glow"
+  - "\U0001F308 12 Color Effects - Matrix, lolcat, trinity, fire, chrome, poison"
 objections:
   - "Still wants a human pass on audience, proof, and the sharpest angle."
 keywords:
@@ -24,7 +24,8 @@ keywords:
     - web app
   audience: people who already feel the problem
   intent:
-    - launch faster
-    - clearer first draft
+    - daily horoscope
+    - shareable horoscope art
+    - zodiac reading
 manual_notes:
   - Edit this aggressively. Keep only the lines that feel native to the app.

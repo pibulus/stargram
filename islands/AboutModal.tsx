@@ -4,7 +4,7 @@ import { signal } from "@preact/signals";
 /**
  * 🎸 About Modal Component
  *
- * Showcase modal explaining ASCIIFIER's purpose and Pablo's rapid dev approach.
+ * Showcase modal explaining Stargram's purpose and Pablo's rapid dev approach.
  *
  * FEATURES:
  * - Project narrative & tech stack showcase

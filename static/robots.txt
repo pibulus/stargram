@@ -1,8 +1,8 @@
-# robots.txt for Cosmic Horoscope
+# robots.txt for Stargram
 # Allow all crawlers to index everything
 
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://cosmic-horoscope.deno.dev/sitemap.xml
+Sitemap: https://stargram.app/sitemap.xml

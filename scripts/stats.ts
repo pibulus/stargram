@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-net --allow-env
 
 /**
- * ASCIIFIER TERMINAL STATS
+ * STARGRAM TERMINAL STATS
  * Query PostHog analytics and render beautiful ASCII charts
  *
  * Usage: deno run --allow-net --allow-env scripts/stats.ts [days]
@@ -31,8 +31,9 @@ interface PostHogEvent {
   properties?: {
     format?: string;
     to_theme?: string;
-    font?: string;
     effect?: string;
+    sign?: string;
+    period?: string;
   };
 }
 
@@ -71,8 +72,9 @@ async function getStats() {
     const eventCounts: Record<string, number> = {};
     const exportFormats: Record<string, number> = {};
     const themes: Record<string, number> = {};
-    const fonts: Record<string, number> = {};
     const effects: Record<string, number> = {};
+    const signs: Record<string, number> = {};
+    const periods: Record<string, number> = {};
 
     for (const event of recentEvents) {
       const eventName = event.event;
@@ -89,16 +91,21 @@ async function getStats() {
         themes[theme] = (themes[theme] || 0) + 1;
       }
 
-      if (eventName === "ascii_generated" && event.properties?.font) {
-        const font = event.properties.font;
-        fonts[font] = (fonts[font] || 0) + 1;
-      }
-
-      if (eventName === "ascii_generated" && event.properties?.effect) {
+      if (eventName === "horoscope_viewed" && event.properties?.effect) {
         const effect = event.properties.effect;
         if (effect !== "none") {
           effects[effect] = (effects[effect] || 0) + 1;
         }
+      }
+
+      if (eventName === "horoscope_viewed" && event.properties?.sign) {
+        const sign = event.properties.sign;
+        signs[sign] = (signs[sign] || 0) + 1;
+      }
+
+      if (eventName === "horoscope_viewed" && event.properties?.period) {
+        const period = event.properties.period;
+        periods[period] = (periods[period] || 0) + 1;
       }
     }
 
@@ -107,8 +114,9 @@ async function getStats() {
       eventCounts,
       exportFormats,
       themes,
-      fonts,
       effects,
+      signs,
+      periods,
     };
   } catch (error) {
     console.error("❌ Error fetching stats:", error);
@@ -127,7 +135,7 @@ async function renderDashboard() {
     "\x1b[95m╔══════════════════════════════════════════════════════════╗\x1b[0m",
   );
   console.log(
-    "\x1b[95m║\x1b[0m  \x1b[1m🎨 ASCIIFIER ANALYTICS\x1b[0m                                 \x1b[95m║\x1b[0m",
+    "\x1b[95m║\x1b[0m  \x1b[1m🔮 STARGRAM ANALYTICS\x1b[0m                                  \x1b[95m║\x1b[0m",
   );
   console.log(
     "\x1b[95m║\x1b[0m  \x1b[93mLast ${DAYS} days\x1b[0m                                             \x1b[95m║\x1b[0m",
@@ -186,16 +194,31 @@ async function renderDashboard() {
     console.log();
   }
 
-  // Popular fonts
-  if (Object.keys(stats.fonts).length > 0) {
-    console.log("\x1b[96m✍️  Popular Fonts:\x1b[0m");
-    const topFonts = Object.entries(stats.fonts)
+  // Popular signs
+  if (Object.keys(stats.signs).length > 0) {
+    console.log("\x1b[96m♈ Popular Signs:\x1b[0m");
+    const topSigns = Object.entries(stats.signs)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
-    const maxFontCount = Math.max(...topFonts.map((f) => f[1]));
-    for (const [font, count] of topFonts) {
-      const bar = renderBar(count, maxFontCount, 20);
-      console.log(`  ${bar} \x1b[94m${count}\x1b[0m ${font}`);
+    const maxSignCount = Math.max(...topSigns.map((s) => s[1]));
+    for (const [sign, count] of topSigns) {
+      const bar = renderBar(count, maxSignCount, 20);
+      console.log(`  ${bar} \x1b[94m${count}\x1b[0m ${sign}`);
+    }
+    console.log();
+  }
+
+  // Popular periods
+  if (Object.keys(stats.periods).length > 0) {
+    console.log("\x1b[96m🗓️  Reading Periods:\x1b[0m");
+    const maxPeriodCount = Math.max(...Object.values(stats.periods));
+    for (
+      const [period, count] of Object.entries(stats.periods).sort((a, b) =>
+        b[1] - a[1]
+      )
+    ) {
+      const bar = renderBar(count, maxPeriodCount, 20);
+      console.log(`  ${bar} \x1b[94m${count}\x1b[0m ${period}`);
     }
     console.log();
   }

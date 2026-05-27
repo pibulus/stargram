@@ -1,128 +1,82 @@
-# 🔮 Cosmic Horoscope - Deployment Ready!
+# Stargram Deployment Checklist
 
-## ✅ Complete Feature List
+Stargram is deploy-ready when the checks below pass and the PWA/mobile flow has
+had a real-device or browser-device pass.
 
-### Core Features
-
-- ✅ 12 zodiac signs with emojis + descriptions
-- ✅ Daily/weekly/monthly horoscope readings
-- ✅ Timezone handling (Melbourne UTC+11)
-- ✅ LocalStorage sign persistence
-- ✅ Mobile responsive design
-
-### Visual Magic
-
-- ✅ 11 curated cosmic themes:
-  - MIDNIGHT (mystery energy)
-  - NEON_ORACLE (Tokyo boyfriend energy)
-  - STARDUST (angel diva pop)
-  - PURPLE, MAGENTA, CYBER, TURQUOISE
-  - CORAL, TEAL, RISO, CHERRY
-- ✅ 6 gradient effects (unicorn, fire, vaporwave, ocean, neon, poison)
-- ✅ PNG export with effects baked in
-- ✅ Cosmic purple/pink color palette
-
-### PWA Features (NEW!)
-
-- ✅ Installable on iOS + Android
-- ✅ Offline app shell caching
-- ✅ Service worker with smart caching strategy
-- ✅ PWA manifest with shortcuts
-- ✅ Gradient icons (192x192, 512x512, maskable)
-
-### Integrations
-
-- ✅ PostHog analytics (privacy-focused)
-- ✅ Ko-fi support modal
-- ✅ Share functionality (URL-based)
-- ✅ Easter eggs with cosmic messages
-- ✅ Sound effects
-
-### Copy & Tone
-
-- ✅ E-girl grind fiction energy
-- ✅ "Horoscopes that look as good as they read"
-- ✅ Direct, confident, loveable (not cold or try-hard)
-- ✅ Rhythm over explanation
-
----
-
-## 🚀 Deployment Steps
-
-### 1. Deploy to Deno Deploy
+## Preflight
 
 ```bash
-cd ~/Projects/active/apps/cosmic-horoscope
+deno task check
+deno task build
+bash scripts/horoscope.sh --json --day today aries
+```
+
+Manual smoke test:
+
+1. Open the app at `http://localhost:8002` or a temporary `PORT=8012` server.
+2. Dismiss the welcome modal.
+3. Select a long sign such as Sagittarius.
+4. Confirm the loading sequence completes.
+5. Switch daily/weekly/monthly.
+6. Check iPhone width: no horizontal scroll, readable title bar, 44px+ buttons.
+7. Install/cache pass: manifest loads, service worker registers, offline shell
+   opens after first load.
+
+## Deployment
+
+If GitHub auto-deploy is connected:
+
+```bash
+git push origin main
+```
+
+Manual Deno Deploy fallback:
+
+```bash
 deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
 ```
 
-After deployment, Deno Deploy will add a project ID to `deno.json`. Commit this:
+Optional production env vars:
 
-```bash
-git add deno.json
-git commit -m "chore: Add Deno Deploy project ID"
-git push
-```
+- `POSTHOG_KEY` - optional analytics key.
+- `POSTHOG_HOST` - PostHog host, usually `https://us.i.posthog.com`.
+- `HOROSCOPE_SCRIPT_PATH` - override path for the bundled daily oracle.
 
-### 2. Add Environment Variables (Optional)
+## Production URLs
 
-In Deno Deploy dashboard, add:
+- Canonical app: `https://stargram.app`
+- Sitemap: `https://stargram.app/sitemap.xml`
+- Social card: `https://stargram.app/og-image.jpg`
+- Repo: `https://github.com/pibulus/stargram`
 
-- `POSTHOG_KEY` - For analytics (optional)
-- `POSTHOG_HOST` - Usually `https://us.i.posthog.com` (optional)
+## Current Feature Surface
 
-### 3. Test PWA Installation
+- 12 zodiac signs.
+- Daily readings from the bundled `scripts/horoscope.sh` oracle.
+- Weekly/monthly readings from `freehoroscopeapi.com`.
+- Live cosmic context from local moon/Discordian calculations plus NOAA SWPC and
+  NASA/JPL close-approach APIs when reachable.
+- Terminal-style ASCII horoscope display with typed header/body.
+- PWA manifest, install prompt, service worker cache, and app shortcuts.
+- Optional PostHog analytics.
+- Ko-fi support flow.
 
-- **iOS**: Open in Safari → Share → Add to Home Screen
-- **Android**: Open in Chrome → Menu → Install App
-- Verify offline mode works (airplane mode after installing)
+## Post-Deploy Checks
 
-### 4. Point Domain (Optional)
+1. Open `https://stargram.app`.
+2. Confirm title/OG metadata with a link preview debugger.
+3. Confirm `/manifest.json`, `/sw.js`, `/robots.txt`, and `/sitemap.xml`.
+4. On iOS Safari: Share -> Add to Home Screen.
+5. After first load, enable airplane mode and reopen from the icon.
+6. Check console for service worker or API errors.
 
-In Deno Deploy dashboard:
+## Later Ideas
 
-- Add custom domain (e.g., `cosmic.pibul.us`)
-- Update DNS with CNAME record
+- More share-native flows for iMessage/Instagram/Twitter/X.
+- Horoscope history/archive.
+- Daily PWA notifications.
+- Tarot or Chinese zodiac expansion.
+- Prune legacy alternate display/theme files once the current terminal flow is
+  settled.
 
----
-
-## 📊 Analytics Events (if PostHog configured)
-
-- `sign_selected` - User picks zodiac sign
-- `horoscope_viewed` - Reading displayed (sign, period, effect)
-- `export_clicked` - PNG download (format)
-- `theme_changed` - Theme switch (from_theme, to_theme)
-- `error_occurred` - Any errors
-
----
-
-## 🎨 Next Enhancement Ideas (Post-Launch)
-
-- [ ] More gradient effects (starfield, aurora, galaxy)
-- [ ] Social media share buttons (Twitter, Instagram stories)
-- [ ] Horoscope history/archive
-- [ ] Daily push notifications (PWA)
-- [ ] Chinese zodiac support
-- [ ] Tarot card integration
-- [ ] Custom gradient builder
-
----
-
-## 📝 GitHub
-
-- **Repo**: https://github.com/pibulus/cosmic-horoscope
-- **Stack**: Deno/Fresh/Preact/PostHog/html-to-image/PWA
-- **License**: MIT
-
----
-
-## 🔗 Similar Apps
-
-- **asciifier-web**: Also just got PWA support!
-  (https://github.com/pibulus/asciifier-web)
-
----
-
-**Built with e-girl grind fiction energy meets Tokyo boyfriend aesthetic** 🔮
-
-_Ready to ship!_
+Last updated: 2026-05-27.

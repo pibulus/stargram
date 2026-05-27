@@ -6,7 +6,6 @@ import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $api_cosmic_context from "./routes/api/cosmic-context.ts";
 import * as $api_horoscope from "./routes/api/horoscope.ts";
-import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
 import * as $thanks from "./routes/thanks.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
@@ -29,7 +28,6 @@ const manifest = {
     "./routes/_app.tsx": $_app,
     "./routes/api/cosmic-context.ts": $api_cosmic_context,
     "./routes/api/horoscope.ts": $api_horoscope,
-    "./routes/greet/[name].tsx": $greet_name_,
     "./routes/index.tsx": $index,
     "./routes/thanks.tsx": $thanks,
   },

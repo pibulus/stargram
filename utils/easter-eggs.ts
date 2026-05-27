@@ -33,7 +33,7 @@ export class EasterEggEngine {
 
   // Cosmic signatures that randomly appear
   private signatures = [
-    "✨ COSMIC HOROSCOPE ✨",
+    "✨ STARGRAM ✨",
     "⭐ BY PABLO ⭐",
     "🌙 STARLIGHT MAGIC 🌙",
     "🔮 ORACLE APPROVED 🔮",

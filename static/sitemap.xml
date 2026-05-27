@@ -2,16 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Home page - main entry point -->
   <url>
-    <loc>https://cosmic-horoscope.deno.dev/</loc>
-    <lastmod>2025-10-07</lastmod>
+    <loc>https://stargram.app/</loc>
+    <lastmod>2026-05-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- Thanks page - Ko-fi redirect -->
+  <!-- Supporter thank-you page -->
   <url>
-    <loc>https://cosmic-horoscope.deno.dev/thanks</loc>
-    <lastmod>2025-10-05</lastmod>
+    <loc>https://stargram.app/thanks</loc>
+    <lastmod>2026-05-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>

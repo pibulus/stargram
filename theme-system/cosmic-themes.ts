@@ -1,4 +1,4 @@
-// 🌙 Cosmic Horoscope - Theme Configuration
+// 🌙 Stargram - Theme Configuration
 // Two fresh themes for e-girl Tokyo energy
 
 import type { Theme, ThemeSystemConfig } from "./mod.ts";
@@ -55,7 +55,7 @@ export const cyberLove: Theme = {
 export const cosmicThemeConfig: ThemeSystemConfig = {
   themes: [sunsetDreams, cyberLove],
   defaultTheme: "SUNSET DREAMS",
-  storageKey: "cosmic-horoscope-theme",
+  storageKey: "stargram-theme",
 };
 
 // Export all themes

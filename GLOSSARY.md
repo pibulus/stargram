@@ -1,78 +1,88 @@
-# Glossary - Cosmic Horoscope
+# Stargram Glossary
 
-## Islands (Interactive Components)
+## Live User Flow
 
-- `ZodiacPicker` - Interactive zodiac sign selector grid
-  (islands/ZodiacPicker.tsx)
-- `HoroscopeDisplay` - Horoscope display with gradients + export
-  (islands/HoroscopeDisplay.tsx)
-- `ThemeIsland` - Floating theme switcher button (islands/ThemeIsland.tsx)
-- `TabSwitcher` - Period selector (daily/weekly/monthly)
-  (islands/TabSwitcher.tsx)
-- `AboutModal` - About/info modal dialog (islands/AboutModal.tsx)
-- `KofiModal` - Ko-fi donation modal (islands/KofiModal.tsx)
-- `WelcomeChecker` - First-visit detection (islands/WelcomeChecker.tsx)
-- `WelcomeModal` - Welcome message modal (islands/WelcomeModal.tsx)
-
-## Components (Shared UI)
-
-- `MagicDropdown` - Animated dropdown selector for gradients
-  (components/MagicDropdown.tsx)
-- `StructuredData` - JSON-LD schema for SEO (components/StructuredData.tsx)
+- `routes/index.tsx` - App shell for the home page. Mounts background,
+  welcome/about modals, and `HomeIsland`.
+- `islands/HomeIsland.tsx` - Centers the main interactive surface.
+- `islands/ZodiacPicker.tsx` - Primary live island. Handles sign selection,
+  cosmic context loading, horoscope fetches, ASCII rendering, period switches,
+  and mobile terminal layout.
+- `components/TypedWriter.tsx` - `typed.js` wrapper with keyboard sounds and
+  optional layout reservation for typed content.
 
 ## API Routes
 
-- `GET /api/horoscope?sign=libra&period=daily` - Horoscope proxy with timezone
-  handling (routes/api/horoscope.ts)
+- `GET /api/horoscope?sign=aries&period=daily` - Validates sign/period, uses the
+  bundled oracle for daily readings, and falls back to `freehoroscopeapi.com`.
+- `GET /api/cosmic-context?sign=aries&period=daily` - Builds the "Signal Room"
+  packet from moon phase, Discordian date, NOAA space weather, NASA/JPL close
+  approach data, and a crypto-random d23 roll.
 
-## Key Functions
+## Important Utilities
 
-- `openAboutModal()` - Show about modal (islands/AboutModal.tsx)
-- `closeAboutModal()` - Hide about modal (islands/AboutModal.tsx)
-- `openKofiModal()` - Show Ko-fi modal (islands/KofiModal.tsx)
-- `closeKofiModal()` - Hide Ko-fi modal (islands/KofiModal.tsx)
-- `checkWelcomeStatus()` - Check if user has seen welcome
-  (islands/WelcomeModal.tsx)
-- `markWelcomeSeen()` - Mark welcome as viewed with animation
-  (islands/WelcomeModal.tsx)
-- `saveZodiacSign(sign)` - Save sign to localStorage (utils/zodiac.ts)
-- `getSavedZodiacSign()` - Load sign from localStorage (utils/zodiac.ts)
-- `downloadPNG(selector, filename)` - Export element as PNG
-  (utils/exportUtils.ts)
-- `applyColorToArt(text, effect)` - Apply gradient to text
-  (utils/colorEffects.ts)
+- `utils/zodiac.ts` - Zodiac metadata and saved-sign localStorage helpers.
+- `utils/asciiArtGenerator.ts` - Figlet font loading and horoscope ASCII
+  formatter.
+- `utils/colorEffects.ts` - Converts header/body ASCII sections into escaped
+  HTML spans with color effects and responsive header sizing.
+- `utils/constants.ts` - Color and visual effect option lists.
+- `utils/sounds.ts` - Web Audio sound engine.
+- `utils/simple-typewriter.js` - Mechanical keyboard sample playback for typed
+  text.
+- `utils/analytics.ts` - Optional PostHog wrapper. No analytics are sent unless
+  `POSTHOG_KEY` is configured.
 
-## Theme System
+## Modals and Support
 
-- `ThemeSystem` - Universal theme engine with 60/30/10 rule (utils/themes.ts)
-- `asciifierThemes[]` - 11 cosmic themes (Turquoise, Coral, Purple, etc.)
-- `applyTheme(theme)` - Apply theme CSS variables (utils/themes.ts)
-- `loadTheme()` - Load saved theme from localStorage (utils/themes.ts)
-- `cycleTheme()` - Switch to next theme (utils/themes.ts)
-- `getRandomTheme()` - Get random theme (utils/themes.ts)
+- `islands/WelcomeChecker.tsx` - Opens the welcome modal on first visit.
+- `islands/WelcomeModal.tsx` - First-run terminal intro.
+- `islands/AboutModal.tsx` - About/info modal.
+- `islands/KofiModal.tsx` - Ko-fi modal and support button helpers.
+- `islands/InstallPrompt.tsx` - PWA install prompt for iOS/Android.
+- `routes/thanks.tsx` - Supporter thank-you route.
 
-## Color Effects
+## Assets and PWA
 
-- `COLOR_EFFECTS` - Gradient definitions (Unicorn, Fire, Cyberpunk, Vaporwave,
-  Sunset, Ocean)
-- `generateGradient(text, effect)` - Create HSL gradients
-  (utils/colorEffects.ts)
+- `static/manifest.json` - PWA manifest and shortcuts.
+- `static/sw.js` - App-shell service worker cache.
+- `static/icons/` - PWA icons.
+- `static/og-image.jpg` - 1200x630 Open Graph/Twitter image.
+- `static/robots.txt` and `static/sitemap.xml` - Search crawler metadata for
+  `stargram.app`.
 
-## Analytics
+## Legacy / Alternate Surfaces
 
-- `analytics.init()` - Initialize PostHog (utils/analytics.ts)
-- `analytics.trackEvent(name, props)` - Track custom event (utils/analytics.ts)
-- `analytics.trackThemeChange(theme)` - Track theme switch (utils/analytics.ts)
-- `analytics.trackExport(format)` - Track PNG export (utils/analytics.ts)
+These files still exist but are not the primary home flow:
+
+- `islands/HoroscopeDisplay.tsx`
+- `components/TerminalDisplay.tsx`
+- `islands/ThemeIsland.tsx`
+- `islands/TabSwitcher.tsx`
+- `components/MagicDropdown.tsx`
+- `components/TypewriterText.tsx`
+- `islands/BackgroundEffects.tsx`
+
+Keep them only while they are useful as references or alternate surfaces.
+Otherwise prune in a dedicated cleanup pass.
+
+## Analytics Event Names
+
+- `horoscope_viewed`
+- `sign_selected`
+- `export_clicked`
+- `theme_changed`
+- `error_occurred`
 
 ## Core Concepts
 
-- **Islands Architecture** - Fresh framework pattern for selective hydration
-- **60/30/10 Theme Rule** - 60% base, 30% secondary, 10% accent colors
-- **Timezone Handling** - Melbourne is 15-16hrs ahead of US, API uses "tomorrow"
-  before 6pm
-- **localStorage Persistence** - Sign + theme saved locally, no accounts needed
-- **PWA Support** - Manifest + service worker for installability
-- **Accessibility First** - WCAG compliant with aria-labels, keyboard nav,
-  skip-to-content
-- **SEO Optimized** - Open Graph, Twitter Cards, JSON-LD structured data
+- **Fresh Islands** - Server-rendered routes with selective client hydration.
+- **Cosmic Context** - The non-horoscope "signal room" packet shown before the
+  reading: moon, calendar, space weather, JPL visitor, d23 roll, glitch level,
+  charm.
+- **Oracle Script** - `scripts/horoscope.sh`, used for daily readings before
+  falling back to the external API.
+- **Typed ASCII Header** - The sign/date header generated with Figlet and typed
+  into a reserved box so mobile layout does not grow sideways.
+- **PWA Shell** - Home page, manifest, icons, styles, and core assets cached by
+  the service worker.

@@ -1,4 +1,4 @@
-// Cosmic Horoscope Service Worker v1.0
+// Stargram Service Worker
 // Enables offline functionality and PWA features
 
 const CACHE_NAME = "stargram-v2";

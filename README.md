@@ -1,132 +1,155 @@
-# ✨ Stargram
+# Stargram
 
-**Your horoscope as shareable cosmic art.**
+Your horoscope as shareable cosmic art.
 
 Stargram is a little mystical terminal: simple, fast, a bit haunted, a bit
-funny, but grounded in real cosmic signals where possible.
+funny, and grounded in real cosmic signals where possible.
 
-Pick your sign. Get daily, weekly, or monthly readings. Apply cosmic gradients.
-Export as images. Share the vibe.
+Pick your sign. Get daily, weekly, or monthly readings. Watch the Signal Room
+load live context. Share the vibe.
 
-Quick, free, no fuss.
+## Features
 
-## ✨ Features
+- 12 zodiac signs with dates, elements, bios, and dossier details.
+- Daily, weekly, and monthly readings.
+- Daily readings from the bundled `scripts/horoscope.sh` oracle, with
+  `freehoroscopeapi.com` as fallback.
+- Weekly/monthly readings from `freehoroscopeapi.com`.
+- Live cosmic context from moon phase, Discordian calendar, NOAA SWPC, NASA/JPL
+  close-approach data, and a crypto-random d23 roll.
+- Terminal-style ASCII horoscope display with typed header/body.
+- 12 color effects and 12 reusable themes.
+- PWA manifest, install prompt, service worker, app shortcuts, and icons.
+- Optional PostHog analytics.
+- SEO metadata, Open Graph/Twitter cards, JSON-LD, sitemap, and robots file.
 
-- 🌙 **12 Zodiac Signs** - All signs supported with emoji + date ranges
-- 📅 **3 Reading Types** - Daily, weekly, monthly horoscopes
-- 🎨 **11 Cosmic Themes** - Purple oracle, neon dreams, stardust shimmer
-- 🌈 **6 Gradient Effects** - Unicorn, fire, cyberpunk, vaporwave, sunset, ocean
-- 💾 **Export as PNG** - Save and share your cosmic readings
-- 📱 **PWA Support** - Install on iOS/Android for quick access
-- ♿ **Accessible** - WCAG compliant with aria-labels and keyboard navigation
-- 🔍 **SEO Optimized** - Open Graph, Twitter Cards, JSON-LD
-
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
-# Install Deno
 brew install deno
-
-# Start dev server
-deno task dev
-
-# Build for production
+deno task dev      # http://localhost:8002
+deno task check
 deno task build
 ```
 
-## 🛠️ Tech Stack
-
-- **Runtime**: Deno 2.0+
-- **Framework**: Fresh (Preact + Islands)
-- **Styling**: Tailwind CSS + CSS Variables
-- **Analytics**: PostHog (optional)
-- **Deployment**: Deno Deploy
-
-## 📁 Project Structure
-
-```
-stargram/
-├── routes/
-│   ├── index.tsx           # Main page
-│   ├── _app.tsx           # App wrapper with SEO
-│   └── api/
-│       └── horoscope.ts   # Horoscope API proxy
-├── islands/
-│   ├── ZodiacPicker.tsx   # Interactive zodiac selector
-│   ├── HoroscopeDisplay.tsx # Reading display + export
-│   ├── ThemeIsland.tsx    # Theme switcher
-│   └── WelcomeModal.tsx   # First-visit modal
-├── utils/
-│   ├── zodiac.ts          # Zodiac data + localStorage
-│   ├── themes.ts          # Theme system (60/30/10 rule)
-│   ├── colorEffects.ts    # Gradient generators
-│   └── analytics.ts       # PostHog tracking
-└── static/
-    ├── styles.css         # Global styles + theme vars
-    ├── manifest.json      # PWA manifest
-    ├── sw.js             # Service worker
-    └── og-image.jpg      # Social share image
-```
-
-## 🎨 Theme System
-
-Stargram uses a universal theme system with 11 curated cosmic themes:
-
-- **Light Themes**: Turquoise, Coral, Purple, Cyber, Magenta, Teal, Riso, Cherry
-- **Dark Themes**: Midnight, Neon Oracle, Terminal
-- **Special**: Stardust (angel diva pop energy)
-
-Each theme follows the 60/30/10 color rule:
-
-- 60% base (background)
-- 30% secondary (cards/sections)
-- 10% accent (CTAs/highlights)
-
-## 🔌 API Integration
-
-Uses Stargram's bundled `scripts/horoscope.sh` oracle for daily readings, with
-freehoroscopeapi.com as the fallback and source for weekly/monthly readings:
-
-- No auth required
-- Daily, weekly, monthly endpoints
-- Timezone-aware (Melbourne → tomorrow reading for accuracy)
-
-## 📱 PWA Features
-
-- Installable on home screen
-- Offline-capable
-- App shortcuts (daily/weekly readings)
-- Splash screens
-- iOS/Android optimized
-
-## 🚢 Deployment
+Use a temporary port if `8002` is busy:
 
 ```bash
-# Deploy to Deno Deploy
-deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
+PORT=8012 deno run -A --watch=static/,routes/ dev.ts
+```
 
-# Or push to GitHub (auto-deploys if connected)
+## Tech Stack
+
+- Runtime: Deno 2+
+- Framework: Fresh 1.7, Preact, islands
+- Styling: Tailwind CSS plus app CSS
+- Typewriter: `typed.js`
+- Export/share helpers: `html-to-image`
+- Analytics: PostHog, optional
+- Deployment: Deno Deploy / GitHub auto-deploy
+
+## Project Map
+
+```text
+stargram/
+├── routes/
+│   ├── index.tsx             # Home app shell
+│   ├── _app.tsx              # SEO, PWA, analytics env, SW registration
+│   ├── thanks.tsx            # Supporter thank-you page
+│   └── api/
+│       ├── horoscope.ts      # Horoscope oracle + upstream fallback
+│       └── cosmic-context.ts # Moon/calendar/NOAA/JPL/dice context
+├── islands/
+│   ├── ZodiacPicker.tsx      # Main live app flow
+│   ├── HomeIsland.tsx        # Main page layout wrapper
+│   ├── BackgroundCanvas.tsx  # Animated starfield
+│   ├── WelcomeModal.tsx      # First-visit modal
+│   ├── InstallPrompt.tsx     # PWA install prompt
+│   ├── KofiModal.tsx         # Support modal
+│   └── AboutModal.tsx        # About modal
+├── components/
+│   ├── TypedWriter.tsx       # typed.js wrapper + keyboard sounds
+│   └── StructuredData.tsx    # JSON-LD schema
+├── utils/
+│   ├── zodiac.ts             # Zodiac data + localStorage
+│   ├── asciiArtGenerator.ts  # Figlet formatter
+│   ├── colorEffects.ts       # ASCII colorization and responsive sizing
+│   ├── sounds.ts             # Web Audio sound engine
+│   └── analytics.ts          # Optional PostHog wrapper
+└── static/
+    ├── manifest.json
+    ├── sw.js
+    ├── og-image.jpg
+    ├── robots.txt
+    ├── sitemap.xml
+    └── icons/
+```
+
+## Main Flow
+
+`routes/index.tsx` -> `islands/HomeIsland.tsx` -> `islands/ZodiacPicker.tsx`
+
+When a user selects a sign:
+
+1. The sign is saved locally.
+2. `/api/cosmic-context` returns the Signal Room packet.
+3. `/api/horoscope` returns the reading.
+4. `generateHoroscopeAscii` creates the terminal output.
+5. `applyColorToArt` returns escaped HTML spans for header/body sections.
+6. `TypedWriter` types the reading into a reserved responsive box.
+
+## PWA
+
+The app shell caches:
+
+- `/`
+- `/styles.css`
+- `/manifest.json`
+- PWA icons
+- favicon
+
+API routes stay network-only so horoscope data is not cached accidentally.
+
+## Analytics
+
+Analytics are disabled unless `POSTHOG_KEY` is present. Event names:
+
+- `horoscope_viewed`
+- `sign_selected`
+- `export_clicked`
+- `theme_changed`
+- `error_occurred`
+
+## Deployment
+
+```bash
+deno task check
+deno task build
 git push origin main
 ```
 
-## 📊 Analytics (Optional)
+Manual deploy fallback:
 
-PostHog events tracked:
+```bash
+deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
+```
 
-- `horoscope_viewed` - Sign + period
-- `theme_changed` - Theme name
-- `gradient_applied` - Effect name
-- `export_png` - Format type
+Canonical URL: `https://stargram.app`
 
-Set `POSTHOG_KEY` and `POSTHOG_HOST` in environment variables.
+## Docs
 
-## 🎸 Built by Pablo
+- `CLAUDE.md` - agent orientation and current flow.
+- `GLOSSARY.md` - glossary of modules, APIs, and concepts.
+- `TINKER.md` - practical quick reference for local changes.
+- `DEPLOYMENT_READY.md` - deploy and post-deploy checklist.
+
+## Built by Pablo
 
 Part of the SoftStack suite of pastel-punk tools.
 
 - Portfolio: https://pibul.us
 - GitHub: https://github.com/pibulus
 
-## 📄 License
+## License
 
-MIT - Do whatever you want with this!
+MIT.
