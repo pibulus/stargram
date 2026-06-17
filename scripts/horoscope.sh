@@ -67,15 +67,31 @@ EMOJI="$(get_zodiac_emoji "$SIGN")"
 TIP="$(get_tip)"
 SIGN_TITLE="$(tr '[:lower:]' '[:upper:]' <<<"${SIGN:0:1}")${SIGN:1}"
 
-RESPONSE="$(
-  curl -sL --connect-timeout 5 --max-time 10 \
-    "https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign=${SIGN}&day=${DAY_PARAM}" \
-    2>/dev/null
-)"
+# Try Ohmanda first for daily
+RESPONSE=""
+if [[ "$DAY_PARAM" == "today" || "$DAY_PARAM" == "tomorrow" ]]; then
+  RESPONSE="$(
+    curl -sL --connect-timeout 5 --max-time 10 \
+      "https://ohmanda.com/api/horoscope/${SIGN}/" \
+      2>/dev/null
+  )"
+fi
 
 HOROSCOPE="$(
-  echo "$RESPONSE" | jq -r '(.data.horoscope_data // .data.horoscope) // empty' 2>/dev/null
+  echo "$RESPONSE" | jq -r '.horoscope // empty' 2>/dev/null
 )"
+
+# Fallback to freehoroscopeapi if Ohmanda failed or was empty
+if [[ -z "$HOROSCOPE" || "$HOROSCOPE" == "null" ]]; then
+  RESPONSE="$(
+    curl -sL --connect-timeout 5 --max-time 10 \
+      "https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign=${SIGN}&day=${DAY_PARAM}" \
+      2>/dev/null
+  )"
+  HOROSCOPE="$(
+    echo "$RESPONSE" | jq -r '(.data.horoscope_data // .data.horoscope) // empty' 2>/dev/null
+  )"
+fi
 
 if [[ "$JSON_MODE" -eq 1 ]]; then
   if [[ -z "$HOROSCOPE" || "$HOROSCOPE" == "null" ]]; then

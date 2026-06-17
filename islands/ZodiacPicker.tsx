@@ -3,7 +3,7 @@
 // ===================================================================
 
 import { signal } from "@preact/signals";
-import { useEffect, useMemo } from "preact/hooks";
+import { useEffect, useMemo, useRef } from "preact/hooks";
 import {
   saveZodiacSign,
   ZODIAC_SIGNS,
@@ -276,6 +276,18 @@ function getSignalRows(context: CosmicContext) {
 }
 
 export default function ZodiacPicker() {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll scrollable terminal content to the bottom during typing or loading
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = contentRef.current.scrollHeight;
+    }
+  }, [
+    bootMessages.value.length,
+    isLoadingHoroscope.value,
+    showHoroscope.value,
+  ]);
   useEffect(() => {
     const styleEl = document.createElement("style");
     styleEl.textContent = COSMIC_ANIMATION_STYLES;
@@ -503,6 +515,28 @@ export default function ZodiacPicker() {
     <div class="relative w-full min-w-0 overflow-x-hidden">
       <style>
         {`
+          /* Custom Terminal Scrollbar */
+          .custom-terminal-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+          }
+          .custom-terminal-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+          }
+          .custom-terminal-scrollbar::-webkit-scrollbar-thumb {
+            background: ${accentColor}44;
+            border-radius: 3px;
+            border: 1px solid ${accentColor}22;
+          }
+          .custom-terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: ${accentColor}aa;
+          }
+          .custom-terminal-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: ${accentColor}44 rgba(0, 0, 0, 0.2);
+          }
+
           .terminal-shell {
             position: relative;
             isolation: isolate;
@@ -699,11 +733,11 @@ export default function ZodiacPicker() {
           } border-[3px] sm:border-4 rounded-[18px] sm:rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-visible terminal-shell ${cosmicGlitchClass} ${cosmicPhaseClass} ${cosmicElementClass} ${
             flickerTrigger.value > 0 ? "crt-flicker" : ""
           }`}
-          style={`background: rgba(2, 4, 12, 0.95); border-color: ${accentGlowColor}80; box-shadow: 0 0 30px ${accentGlowColor}24, 0 18px 60px rgba(0,0,0,0.68), inset 0 0 64px rgba(0,0,0,0.6); animation: cosmicFloat 12s ease-in-out infinite; transform: perspective(1000px) rotateX(${parallaxRotateX}deg) rotateY(${parallaxRotateY}deg) translate3d(${parallaxX}px, ${parallaxY}px, 0); transition: transform 0.3s ease-out; min-height: ${
+          style={`background: rgba(2, 4, 12, 0.95); border-color: ${accentGlowColor}80; box-shadow: 0 0 30px ${accentGlowColor}24, 0 18px 60px rgba(0,0,0,0.68), inset 0 0 64px rgba(0,0,0,0.6); animation: cosmicFloat 12s ease-in-out infinite; transform: perspective(1000px) rotateX(${parallaxRotateX}deg) rotateY(${parallaxRotateY}deg) translate3d(${parallaxX}px, ${parallaxY}px, 0); transition: transform 0.3s ease-out; ${
             isHoroscopeMode
-              ? "min(660px, calc(100dvh - 2rem))"
-              : "min(700px, calc(100dvh - 2rem))"
-          }; width: 100%; overflow: visible;`}
+              ? "height: min(680px, calc(100dvh - 2rem)); max-height: calc(100dvh - 2rem); overflow: hidden; display: flex; flex-direction: column;"
+              : "min-height: min(700px, calc(100dvh - 2rem)); overflow: visible;"
+          } width: 100%;`}
         >
           {/* Terminal title bar */}
           <div
@@ -726,14 +760,15 @@ export default function ZodiacPicker() {
           </div>
 
           <div
-            class={`min-w-0 terminal-content-wrapper ${
-              isHoroscopeMode ? "p-4 sm:p-7 lg:p-9" : "p-4 sm:p-8 lg:p-12"
-            }`}
-            style={`min-height: ${
+            ref={contentRef}
+            class={`min-w-0 terminal-content-wrapper custom-terminal-scrollbar ${
               isHoroscopeMode
-                ? "min(560px, calc(100dvh - 7rem))"
-                : "min(600px, calc(100dvh - 7rem))"
-            }; overflow: visible;`}
+                ? "p-4 sm:p-7 lg:p-9 flex-1 overflow-y-auto"
+                : "p-4 sm:p-8 lg:p-12"
+            }`}
+            style={isHoroscopeMode
+              ? "position: relative; z-index: 10;"
+              : `min-height: min(600px, calc(100dvh - 7rem)); overflow: visible;`}
           >
             {currentMode.value === "picker"
               ? (

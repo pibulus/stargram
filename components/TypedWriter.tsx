@@ -121,6 +121,12 @@ export function TypedWriter({
         }
         sounds.transmissionTick(newChar);
 
+        // Auto-scroll scrollable parent to bottom
+        const scrollParent = elementRef.current.closest(".overflow-y-auto");
+        if (scrollParent) {
+          scrollParent.scrollTop = scrollParent.scrollHeight;
+        }
+
         if (elementRef.current) {
           elementRef.current.classList.remove("typing-trail");
           void elementRef.current.offsetWidth;

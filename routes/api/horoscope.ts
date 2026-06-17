@@ -105,6 +105,41 @@ function normalizeHoroscopePayload(
   };
 }
 
+async function fetchFromOhmanda(
+  sign: string,
+): Promise<ReturnType<typeof normalizeHoroscopePayload> | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000); // 6s timeout
+    const response = await fetch(`https://ohmanda.com/api/horoscope/${sign}/`, {
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
+
+    if (!response.ok) {
+      throw new Error(`Ohmanda returned status ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data && typeof data.horoscope === "string") {
+      return {
+        success: true,
+        data: {
+          date: data.date || new Date().toISOString().split("T")[0],
+          period: "daily",
+          sign: data.sign || sign,
+          horoscope: data.horoscope,
+          horoscope_data: data.horoscope,
+          source: "ohmanda",
+        },
+      };
+    }
+    return null;
+  } catch (error) {
+    console.warn("Ohmanda fetch failed, falling back:", error);
+    return null;
+  }
+}
+
 function getOracleScriptPath(): string {
   const configuredPath = Deno.env.get("HOROSCOPE_SCRIPT_PATH");
   if (configuredPath) return configuredPath;
@@ -219,8 +254,21 @@ export const handler = async (
   const params = new URLSearchParams({ sign });
 
   if (period === "daily") {
-    // Use custom day or auto-detect timezone
+    // 1. Try Ohmanda first for better quality daily horoscopes
+    // (Only if no custom day is requested, or if custom day is today/tomorrow)
     const day = customDay || getDayParamForTimezone();
+    if (!customDay || customDay === "today" || customDay === "tomorrow") {
+      try {
+        const ohmandaData = await fetchFromOhmanda(sign);
+        if (ohmandaData) {
+          return jsonResponse(ohmandaData, 200, "public, max-age=3600");
+        }
+      } catch (error) {
+        console.warn("Failed fetching from Ohmanda daily API:", error);
+      }
+    }
+
+    // 2. Validate day param and fall back to local oracle script or freehoroscopeapi
     if (!VALID_DAYS.has(day) && !DATE_RE.test(day)) {
       return jsonResponse(
         {

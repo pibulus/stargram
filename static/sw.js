@@ -1,7 +1,7 @@
 // Stargram Service Worker
 // Enables offline functionality and PWA features
 
-const CACHE_NAME = "stargram-v2";
+const CACHE_NAME = "stargram-v3";
 const urlsToCache = [
   "/",
   "/styles.css",
@@ -54,6 +54,7 @@ self.addEventListener("fetch", (event) => {
     event.request.url.includes("/api/horoscope") ||
     event.request.url.includes("horoscope-app-api.vercel.app") ||
     event.request.url.includes("freehoroscopeapi.com") ||
+    event.request.url.includes("ohmanda.com") ||
     event.request.url.includes("posthog.com") ||
     event.request.url.includes("ko-fi.com")
   ) {
