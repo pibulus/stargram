@@ -91,7 +91,7 @@ export function WelcomeModal() {
       >
         {/* Terminal Modal */}
         <div
-          class="relative w-full max-w-2xl animate-terminal-in terminal-modal"
+          class="relative w-full max-w-2xl my-auto animate-terminal-in terminal-modal"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Terminal shell */}
