@@ -110,7 +110,6 @@ export default function App({ Component }: PageProps) {
 
         {/* Styles */}
         <link rel="stylesheet" href="/styles.css" />
-        <link rel="stylesheet" href="/cosmic-animations.css" />
 
         {/* Global animation and interaction styles */}
         <style>
@@ -120,7 +119,7 @@ export default function App({ Component }: PageProps) {
             transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
           }
 
-          /* Better font rendering */}
+          /* Better font rendering */
           body, .font-mono {
             font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Courier New', monospace;
             -webkit-font-smoothing: antialiased;
@@ -128,12 +127,12 @@ export default function App({ Component }: PageProps) {
             text-rendering: optimizeLegibility;
           }
 
-          /* Smooth scrolling */}
+          /* Smooth scrolling */
           html {
             scroll-behavior: smooth;
           }
 
-          /* Custom scrollbar theming */}
+          /* Custom scrollbar theming */
           ::-webkit-scrollbar {
             width: 12px;
             height: 12px;
@@ -152,39 +151,12 @@ export default function App({ Component }: PageProps) {
             background: var(--color-border, #a855f7);
           }
 
-          /* Spring bounce animation for interactive elements */}
-          @keyframes spring-in {
-            0% {
-              transform: scale(0.9);
-              opacity: 0;
-            }
-            50% {
-              transform: scale(1.05);
-            }
-            100% {
-              transform: scale(1);
-              opacity: 1;
-            }
-          }
-
-          /* Glow pulse for important elements */}
-          @keyframes glow-pulse {
-            0%, 100% {
-              filter: drop-shadow(0 0 10px var(--color-accent));
-              opacity: 0.9;
-            }
-            50% {
-              filter: drop-shadow(0 0 20px var(--color-accent)) drop-shadow(0 0 30px var(--color-border));
-              opacity: 1;
-            }
-          }
-
           /* Magnetic button hover effect */
           button:hover {
             filter: drop-shadow(0 0 8px var(--color-accent));
           }
 
-          /* Respect reduced motion preferences */}
+          /* Respect reduced motion preferences */
           @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
               animation-duration: 0.01ms !important;

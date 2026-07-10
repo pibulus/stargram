@@ -1,92 +1,26 @@
 // ===================================================================
-// COLOR EFFECTS - Shared color calculation utilities
+// COLOR EFFECTS - Colorizes horoscope ASCII into header/body HTML
 // ===================================================================
-// Used by both TextToAscii and AsciiGallery for consistent coloring
+// The live flow renders one palette: "trinity" (purple/green/orange
+// body sweep with a warm gold header). Past effect variants live in
+// git history if an effect picker ever returns.
+
+const TRINITY_PALETTE = ["#b179ff", "#00ff9d", "#ff9a3c"];
+const TRINITY_HEADER_COLOR = "#ffdb8a";
+const FALLBACK_COLOR = "#00FF41";
 
 /**
- * Calculate HSL color for a specific position in ASCII art
- * based on the selected color effect
+ * Calculate the body color for a specific position in the ASCII art
  */
-export function getEffectColor(
-  effect: string,
-  x: number,
-  y: number,
-  lineWidth: number,
-  totalLines: number,
-): string {
-  switch (effect) {
-    case "unicorn": {
-      const hue = (x * 360 / lineWidth) % 360;
-      return `hsl(${hue}, 95%, 65%)`;
-    }
-    case "fire": {
-      const hue = 60 - (y * 60 / totalLines);
-      const sat = 100 - (y * 20 / totalLines);
-      return `hsl(${hue}, ${sat}%, 55%)`;
-    }
-    case "cyberpunk": {
-      const progress = (x + y) / (lineWidth + totalLines);
-      const hue = 320 - (progress * 140);
-      return `hsl(${hue}, 100%, 60%)`;
-    }
-    case "sunrise": {
-      const progress = y / totalLines;
-      const hue = 330 + (progress * 60);
-      const sat = 85 + (progress * 15);
-      const bright = 60 + (progress * 20);
-      return `hsl(${hue}, ${sat}%, ${bright}%)`;
-    }
-    case "vaporwave": {
-      const progress = y / totalLines;
-      const hue = 280 + (progress * 80);
-      const sat = 80 + Math.sin((x + y) * 0.3) * 15;
-      const bright = 65 + Math.sin(x * 0.4) * 10;
-      return `hsl(${hue}, ${sat}%, ${bright}%)`;
-    }
-    case "chrome": {
-      const hue = 200 + Math.sin(x * 0.2) * 60;
-      const brightness = 70 + Math.sin(y * 0.3) * 20;
-      return `hsl(${hue}, 30%, ${brightness}%)`;
-    }
-    case "ocean": {
-      const progress = y / totalLines;
-      const hue = 180 + (progress * 30); // Cyan (180) → Blue (210)
-      const sat = 70 + (progress * 20);
-      const bright = 50 + (progress * 20);
-      return `hsl(${hue}, ${sat}%, ${bright}%)`;
-    }
-    case "neon": {
-      const progress = (x + y) / (lineWidth + totalLines);
-      const hue = 60 + Math.sin(progress * 10) * 120; // Yellow/Green/Pink oscillation
-      const sat = 100;
-      const bright = 60 + Math.sin(progress * 8) * 15;
-      return `hsl(${hue}, ${sat}%, ${bright}%)`;
-    }
-    case "poison": {
-      const progress = (x + y) / (lineWidth + totalLines);
-      const hue = 90 + (progress * 30); // Lime green (90) → Yellow-green (120)
-      const sat = 90 + Math.sin(x * 0.5) * 10;
-      const bright = 45 + (progress * 20);
-      return `hsl(${hue}, ${sat}%, ${bright}%)`;
-    }
-    case "lolcat": {
-      const hue = ((x * 18) + (y * 8)) % 360;
-      const sat = 90;
-      const bright = 70 + Math.sin((x + y) * 0.35) * 12;
-      return `hsl(${hue}, ${sat}%, ${bright}%)`;
-    }
-    case "trinity": {
-      const palette = ["#b179ff", "#00ff9d", "#ff9a3c"];
-      const progress = x / Math.max(1, lineWidth);
-      const index = Math.min(
-        palette.length - 1,
-        Math.floor(progress * palette.length),
-      );
-      return palette[index];
-    }
-    default:
-      return "#00FF41";
-  }
+function getEffectColor(effect: string, x: number, lineWidth: number): string {
+  if (effect !== "trinity") return FALLBACK_COLOR;
+
+  const progress = x / Math.max(1, lineWidth);
+  const index = Math.min(
+    TRINITY_PALETTE.length - 1,
+    Math.floor(progress * TRINITY_PALETTE.length),
+  );
+  return TRINITY_PALETTE[index];
 }
 
 export interface ColorizedArtSegments {
@@ -95,10 +29,6 @@ export interface ColorizedArtSegments {
   bodyHtml: string;
 }
 
-/**
- * Apply a color effect to ASCII art text with special header treatment
- * Returns HTML segments with colored spans for header/body
- */
 const escapeHtml = (value: string): string =>
   value
     .replace(/&/g, "&amp;")
@@ -107,6 +37,10 @@ const escapeHtml = (value: string): string =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 
+/**
+ * Apply a color effect to ASCII art text with special header treatment
+ * Returns HTML segments with colored spans for header/body
+ */
 export function applyColorToArt(
   art: string,
   effect: string,
@@ -122,22 +56,7 @@ export function applyColorToArt(
   let inHeader = false;
   let headerLineIndex = 0;
 
-  // Define header colors for each effect (brighter than body)
-  const headerColors: Record<string, string> = {
-    unicorn: "hsl(280, 100%, 75%)", // Bright purple
-    fire: "hsl(40, 100%, 65%)", // Bright orange-yellow
-    cyberpunk: "hsl(320, 100%, 70%)", // Hot pink
-    sunrise: "hsl(30, 100%, 70%)", // Golden
-    vaporwave: "hsl(310, 95%, 75%)", // Pink-purple
-    chrome: "hsl(200, 60%, 85%)", // Light cyan
-    ocean: "hsl(180, 85%, 65%)", // Bright cyan
-    neon: "hsl(100, 100%, 70%)", // Lime green
-    poison: "hsl(100, 100%, 55%)", // Toxic green
-    lolcat: "hsl(320, 95%, 75%)", // Vibrant magenta
-    trinity: "#ffdb8a", // Warm gold for triad mix
-  };
-
-  const headerColor = headerColors[effect] || "#FFD700"; // Gold fallback
+  const headerColor = effect === "trinity" ? TRINITY_HEADER_COLOR : "#FFD700"; // Gold fallback
   const getHeaderFontSize = (
     lineLength: number,
     preferredVw: number,
@@ -197,9 +116,7 @@ export function applyColorToArt(
       const color = getEffectColor(
         effect,
         Math.floor(line.length / 2),
-        y,
         line.length,
-        lines.length,
       );
       const isDividerLine = /^[\s═★:·.\-]+$/.test(line);
       const bodyLayout = isDividerLine

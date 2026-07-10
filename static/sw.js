@@ -1,8 +1,8 @@
 // Stargram Service Worker
 // Enables offline functionality and PWA features
 
-const CACHE_NAME = "stargram-v3";
-const urlsToCache = [
+const CACHE_NAME = "stargram-v4";
+const APP_SHELL = [
   "/",
   "/styles.css",
   "/manifest.json",
@@ -18,7 +18,7 @@ self.addEventListener("install", (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log("🔮 Caching cosmic app shell");
-        return cache.addAll(urlsToCache);
+        return cache.addAll(APP_SHELL);
       })
       .then(() => self.skipWaiting()), // Activate immediately
   );
@@ -44,57 +44,56 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Fetch event - serve from cache when possible
+// Fetch strategy:
+// - dev (localhost): network only, never cache
+// - /api/* and cross-origin (PostHog, Ko-fi, horoscope sources): network only —
+//   readings and the live sky packet must never be served stale
+// - navigations (HTML): network first so new deploys land immediately,
+//   cached shell as the offline fallback
+// - same-origin static assets (hashed js chunks, icons, css, sounds):
+//   cache first with runtime fill
 self.addEventListener("fetch", (event) => {
-  // Skip non-GET requests
   if (event.request.method !== "GET") return;
 
-  // Skip external API requests (horoscope API, PostHog)
-  if (
-    event.request.url.includes("/api/horoscope") ||
-    event.request.url.includes("horoscope-app-api.vercel.app") ||
-    event.request.url.includes("freehoroscopeapi.com") ||
-    event.request.url.includes("ohmanda.com") ||
-    event.request.url.includes("posthog.com") ||
-    event.request.url.includes("ko-fi.com")
-  ) {
-    // Network-only for API calls - don't cache horoscope data
+  const url = new URL(event.request.url);
+
+  if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return;
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith("/api/")) return;
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) =>
+              cache.put(event.request, copy)
+            );
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(event.request).then((cached) =>
+            cached || caches.match("/")
+          )
+        ),
+    );
     return;
   }
 
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return cached response
-        if (response) {
-          return response;
+    caches.match(event.request).then((cached) =>
+      cached ||
+      fetch(event.request).then((response) => {
+        if (response && response.status === 200 && response.type === "basic") {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) =>
+            cache.put(event.request, copy)
+          );
         }
-
-        // Clone the request
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest).then((response) => {
-          // Check if valid response
-          if (
-            !response || response.status !== 200 ||
-            response.type === "error"
-          ) {
-            return response;
-          }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-
-          return response;
-        }).catch(() => {
-          // Network failed, return offline page if available
-          return caches.match("/");
-        });
-      }),
+        return response;
+      })
+    ),
   );
 });

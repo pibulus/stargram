@@ -209,14 +209,6 @@ export function getZodiacSign(name: string): ZodiacSign | undefined {
 }
 
 /**
- * Get emoji for a zodiac sign
- */
-export function getZodiacEmoji(name: string): string {
-  const sign = getZodiacSign(name);
-  return sign?.emoji || "✨";
-}
-
-/**
  * Save user's zodiac sign to localStorage
  */
 export function saveZodiacSign(sign: string): void {
@@ -230,19 +222,4 @@ export function saveZodiacSign(sign: string): void {
 export function getSavedZodiacSign(): string | null {
   if (typeof localStorage === "undefined") return null;
   return localStorage.getItem(STORAGE_KEY);
-}
-
-/**
- * Clear saved zodiac sign
- */
-export function clearSavedZodiacSign(): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.removeItem(STORAGE_KEY);
-}
-
-/**
- * Validate if a string is a valid zodiac sign
- */
-export function isValidZodiacSign(sign: string): boolean {
-  return ZODIAC_SIGNS.some((z) => z.name === sign.toLowerCase());
 }

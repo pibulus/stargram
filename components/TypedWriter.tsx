@@ -47,6 +47,7 @@ export function TypedWriter({
   const lastContentRef = useRef<string>(""); // Track what we last typed
   const trailTimeoutRef = useRef<number | null>(null);
   const speedIntervalRef = useRef<number | null>(null);
+  const readerTookScrollRef = useRef(false); // Reader scrolled away mid-typing
 
   useEffect(() => {
     // Initialize keyboard sounds (quieter)
@@ -99,6 +100,21 @@ export function TypedWriter({
       return;
     }
 
+    // Let the reader take over the scroll: wheel/touch means intent, and we
+    // resume following only once they come back near the caret.
+    readerTookScrollRef.current = false;
+    const scrollHost = elementRef.current.closest(".overflow-y-auto");
+    const markReaderScroll = () => {
+      if (!scrollHost || !elementRef.current) return;
+      const parentBottom = scrollHost.getBoundingClientRect().bottom;
+      const caretBottom = elementRef.current.getBoundingClientRect().bottom;
+      readerTookScrollRef.current = caretBottom - parentBottom > 120;
+    };
+    scrollHost?.addEventListener("wheel", markReaderScroll, { passive: true });
+    scrollHost?.addEventListener("touchmove", markReaderScroll, {
+      passive: true,
+    });
+
     // Watch for DOM changes to play sounds and add natural pauses
     let lastLength = 0;
     let lastChar = "";
@@ -121,10 +137,16 @@ export function TypedWriter({
         }
         sounds.transmissionTick(newChar);
 
-        // Auto-scroll scrollable parent to bottom
+        // Follow the caret: nudge the scroller only once typing passes the
+        // fold, so content above (like the ASCII title) stays in view.
         const scrollParent = elementRef.current.closest(".overflow-y-auto");
-        if (scrollParent) {
-          scrollParent.scrollTop = scrollParent.scrollHeight;
+        if (scrollParent && !readerTookScrollRef.current) {
+          const parentBottom = scrollParent.getBoundingClientRect().bottom;
+          const caretBottom = elementRef.current.getBoundingClientRect().bottom;
+          const overshoot = caretBottom - parentBottom + 24;
+          if (overshoot > 0) {
+            scrollParent.scrollTop += overshoot;
+          }
         }
 
         if (elementRef.current) {
@@ -210,6 +232,8 @@ export function TypedWriter({
 
     return () => {
       observer.disconnect();
+      scrollHost?.removeEventListener("wheel", markReaderScroll);
+      scrollHost?.removeEventListener("touchmove", markReaderScroll);
       if (typedRef.current) {
         typedRef.current.destroy();
       }

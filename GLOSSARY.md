@@ -26,7 +26,6 @@
   formatter.
 - `utils/colorEffects.ts` - Converts header/body ASCII sections into escaped
   HTML spans with color effects and responsive header sizing.
-- `utils/constants.ts` - Color and visual effect option lists.
 - `utils/sounds.ts` - Web Audio sound engine.
 - `utils/simple-typewriter.js` - Mechanical keyboard sample playback for typed
   text.
@@ -37,41 +36,33 @@
 
 - `islands/WelcomeChecker.tsx` - Opens the welcome modal on first visit.
 - `islands/WelcomeModal.tsx` - First-run terminal intro.
-- `islands/AboutModal.tsx` - About/info modal.
-- `islands/KofiModal.tsx` - Ko-fi modal and support button helpers.
-- `islands/InstallPrompt.tsx` - PWA install prompt for iOS/Android.
+- `islands/AboutModal.tsx` - About/info modal, opened by the `[about]` button in
+  the terminal title bar.
+- `islands/KofiModal.tsx` - In-app Ko-fi iframe modal, opened by the SUPPORT
+  CREATOR button under a reading.
+- `islands/InstallPrompt.tsx` - PWA install prompt. Waits for the
+  `stargram:reading-complete` event (fired when a reading finishes typing) plus
+  a short settle, with a 90s fallback for visitors who never pull one.
 - `routes/thanks.tsx` - Supporter thank-you route.
 
 ## Assets and PWA
 
 - `static/manifest.json` - PWA manifest and shortcuts.
-- `static/sw.js` - App-shell service worker cache.
+- `static/sw.js` - Service worker. Network-first for HTML navigations (so
+  deploys land immediately), network-only for `/api/*` and cross-origin,
+  cache-first for same-origin static assets, disabled on localhost.
 - `static/icons/` - PWA icons.
 - `static/og-image.jpg` - 1200x630 Open Graph/Twitter image.
 - `static/robots.txt` and `static/sitemap.xml` - Search crawler metadata for
   `stargram.app`.
 
-## Legacy / Alternate Surfaces
-
-These files still exist but are not the primary home flow:
-
-- `islands/HoroscopeDisplay.tsx`
-- `components/TerminalDisplay.tsx`
-- `islands/ThemeIsland.tsx`
-- `islands/TabSwitcher.tsx`
-- `components/MagicDropdown.tsx`
-- `components/TypewriterText.tsx`
-- `islands/BackgroundEffects.tsx`
-
-Keep them only while they are useful as references or alternate surfaces.
-Otherwise prune in a dedicated cleanup pass.
-
 ## Analytics Event Names
 
-- `horoscope_viewed`
+Captured by `utils/analytics.ts` from `ZodiacPicker` (no-op unless a `phc_...`
+`POSTHOG_KEY` is configured):
+
 - `sign_selected`
-- `export_clicked`
-- `theme_changed`
+- `horoscope_viewed`
 - `error_occurred`
 
 ## Core Concepts
@@ -84,5 +75,8 @@ Otherwise prune in a dedicated cleanup pass.
   falling back to the external API.
 - **Typed ASCII Header** - The sign/date header generated with Figlet and typed
   into a reserved box so mobile layout does not grow sideways.
+- **Typing Choreography** - The terminal snaps to the top when a reading
+  appears, the header types first in full view, then the body types while the
+  scroll follows the caret — standing down if the reader scrolls away.
 - **PWA Shell** - Home page, manifest, icons, styles, and core assets cached by
   the service worker.

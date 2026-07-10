@@ -27,8 +27,10 @@ class AnalyticsService {
     const key = (window as any).ENV?.POSTHOG_KEY;
     const host = (window as any).ENV?.POSTHOG_HOST || "https://app.posthog.com";
 
-    // Early exit if no key - don't even import the library
-    if (!key || key === "undefined" || key === "null") {
+    // Early exit unless a real PostHog project key ("phc_...") is set —
+    // anything else (e.g. a personal "phx_" key leaking in from the shell
+    // env) would only 401-spam the console on every page load.
+    if (!key || typeof key !== "string" || !key.startsWith("phc_")) {
       this.isInitialized = true;
       this.eventQueue = []; // Clear queue since we won't process it
       return;
@@ -97,23 +99,6 @@ class AnalyticsService {
   trackSignSelected(sign: string) {
     this.trackEvent("sign_selected", {
       sign,
-      timestamp: Date.now(),
-    });
-  }
-
-  // Export Events
-  trackExport(format: string) {
-    this.trackEvent("export_clicked", {
-      format, // "png", "clipboard"
-      timestamp: Date.now(),
-    });
-  }
-
-  // Theme Changes
-  trackThemeChanged(fromTheme: string, toTheme: string) {
-    this.trackEvent("theme_changed", {
-      from_theme: fromTheme,
-      to_theme: toTheme,
       timestamp: Date.now(),
     });
   }

@@ -7,7 +7,7 @@ import WelcomeChecker from "../islands/WelcomeChecker.tsx";
 export default function Home() {
   return (
     <div
-      class="min-h-[100dvh] w-full flex flex-col relative overflow-x-hidden global-flicker"
+      class="min-h-[100dvh] w-full flex flex-col relative overflow-x-hidden"
       style="background: linear-gradient(135deg, #0a0a0a 0%, #151515 50%, #0a0a0a 100%);"
     >
       {/* Animated canvas background */}
@@ -22,15 +22,8 @@ export default function Home() {
         {/* First-visit welcome modal */}
         <WelcomeModal />
 
-        {/* About modal (opened by footer link) */}
+        {/* About modal (opened from the terminal title bar) */}
         <AboutModal />
-
-        {/* Floating Theme Button */}
-        {
-          /* <div class="fixed top-4 right-4 z-50">
-          <ThemeIsland />
-        </div> */
-        }
 
         {/* Main interactive content */}
         <HomeIsland />

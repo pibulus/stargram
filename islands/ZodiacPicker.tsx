@@ -5,14 +5,18 @@
 import { signal } from "@preact/signals";
 import { useEffect, useMemo, useRef } from "preact/hooks";
 import {
+  getSavedZodiacSign,
   saveZodiacSign,
   ZODIAC_SIGNS,
   type ZodiacSign,
 } from "../utils/zodiac.ts";
 import { sounds } from "../utils/sounds.ts";
+import { analytics } from "../utils/analytics.ts";
 import { renderFigletText } from "../utils/asciiArtGenerator.ts";
 import { applyColorToArt } from "../utils/colorEffects.ts";
 import { TypedWriter } from "../components/TypedWriter.tsx";
+import { openKofiModal } from "./KofiModal.tsx";
+import { openAboutModal } from "./AboutModal.tsx";
 
 const PRIMARY_TERMINAL_COLOR = "#00FF41";
 const ACCENT_COLORS = [
@@ -88,6 +92,7 @@ const horoscopeHeaderHtml = signal("");
 const horoscopeBodyHtml = signal("");
 const bootMessages = signal<string[]>([]);
 const showHoroscope = signal(false);
+const headerTyped = signal(false);
 const cosmicContext = signal<CosmicContext | null>(null);
 
 const PICKER_TITLE_ASCII = renderFigletText("STARGRAM", {
@@ -278,11 +283,13 @@ function getSignalRows(context: CosmicContext) {
 export default function ZodiacPicker() {
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll scrollable terminal content to the bottom during typing or loading
+  // Follow boot messages at the bottom, then snap to the top when the
+  // reading appears so the ASCII title types in full view.
   useEffect(() => {
-    if (contentRef.current) {
-      contentRef.current.scrollTop = contentRef.current.scrollHeight;
-    }
+    if (!contentRef.current) return;
+    contentRef.current.scrollTop = showHoroscope.value
+      ? 0
+      : contentRef.current.scrollHeight;
   }, [
     bootMessages.value.length,
     isLoadingHoroscope.value,
@@ -295,6 +302,18 @@ export default function ZodiacPicker() {
     return () => {
       document.head.removeChild(styleEl);
     };
+  }, []);
+
+  // Optional analytics (no-op without POSTHOG_KEY) + welcome back a
+  // returning visitor by preselecting their saved sign.
+  useEffect(() => {
+    analytics.init();
+    if (!selectedSign.value) {
+      const saved = getSavedZodiacSign();
+      if (saved && ZODIAC_SIGNS.some((z) => z.name === saved)) {
+        selectedSign.value = saved;
+      }
+    }
   }, []);
 
   // Parallax mouse tracking
@@ -323,13 +342,22 @@ export default function ZodiacPicker() {
     };
   }, []);
 
+  // Generation guard: rapid sign/period taps spawn overlapping fetches;
+  // only the latest one may write state, or a slow loser clobbers the winner.
+  const fetchGeneration = useRef(0);
+
   const fetchHoroscope = async (sign: string, period: Period) => {
+    const generation = ++fetchGeneration.current;
+    const isCurrent = () => generation === fetchGeneration.current;
+
     isLoadingHoroscope.value = true;
+    headerTyped.value = false;
     cosmicContext.value = null;
     bootMessages.value = ["> opening cosmic context socket..."];
     sounds.bootStep();
 
     const context = await fetchCosmicContext(sign, period);
+    if (!isCurrent()) return;
     cosmicContext.value = context;
 
     const loadingLines = context?.loadingLines ??
@@ -338,6 +366,7 @@ export default function ZodiacPicker() {
 
     for (const line of loadingLines) {
       await new Promise((resolve) => setTimeout(resolve, bootDelay));
+      if (!isCurrent()) return;
       bootMessages.value = [...bootMessages.value, line];
       sounds.bootStep();
     }
@@ -350,6 +379,7 @@ export default function ZodiacPicker() {
         throw new Error(`API returned ${response.status}`);
       }
       const data = await response.json();
+      if (!isCurrent()) return;
 
       const horoscopeText = data.data?.horoscope_data ?? data.data?.horoscope;
       if (data.success !== false && horoscopeText) {
@@ -373,21 +403,28 @@ export default function ZodiacPicker() {
 
         showHoroscope.value = true;
         sounds.success();
+        analytics.trackHoroscopeViewed(sign, period, "trinity");
       } else {
         sounds.error();
         console.error("Horoscope fetch failed:", data.error);
+        analytics.trackError("horoscope_fetch_failed", { sign, period });
       }
     } catch (error) {
+      if (!isCurrent()) return;
       sounds.error();
       console.error("Failed to fetch horoscope:", error);
+      analytics.trackError("horoscope_fetch_failed", { sign, period });
     } finally {
-      isLoadingHoroscope.value = false;
+      if (isCurrent()) {
+        isLoadingHoroscope.value = false;
+      }
     }
   };
 
   const handleSignClick = (sign: string) => {
     selectedSign.value = sign;
     saveZodiacSign(sign);
+    analytics.trackSignSelected(sign);
     sounds.selectSign();
     flickerTrigger.value = Date.now(); // Trigger flicker animation
 
@@ -750,13 +787,26 @@ export default function ZodiacPicker() {
               <span class="w-3 h-3 rounded-full bg-[#27c93f]" />
             </div>
             <div
-              class="min-w-0 truncate text-[10px] sm:text-sm font-mono tracking-[0.08em] sm:tracking-[0.18em] uppercase"
+              class="min-w-0 flex-1 truncate text-[10px] sm:text-sm font-mono tracking-[0.08em] sm:tracking-[0.18em] uppercase"
               style={`color: ${accentColor};`}
             >
               {currentMode.value === "picker"
                 ? "~/cosmic/bin/zodiac.sh"
                 : `~/cosmic/${selectedSign.value}/${currentPeriod.value}.txt`}
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                sounds.click();
+                openAboutModal();
+              }}
+              onMouseEnter={() => sounds.hover()}
+              aria-label="About Stargram"
+              class="-my-2 min-h-[44px] shrink-0 px-2 font-mono text-[10px] sm:text-xs uppercase tracking-[0.14em] transition-all hover:scale-105"
+              style={`color: ${accentGlowColor}AA;`}
+            >
+              [about]
+            </button>
           </div>
 
           <div
@@ -1118,6 +1168,9 @@ export default function ZodiacPicker() {
                             enabled
                             showCompletionCursor={false}
                             reserveLayout
+                            onComplete={() => {
+                              headerTyped.value = true;
+                            }}
                             className="block w-full font-mono leading-tight min-w-0 max-w-full overflow-hidden"
                             style="color: #FFD700; font-size: 14px; letter-spacing: 0.02em;"
                           />
@@ -1200,17 +1253,27 @@ export default function ZodiacPicker() {
                             </div>
                           </div>
                         )}
-                        {/* Slower-typing body */}
-                        <TypedWriter
-                          text={splitHoroscopeAscii(horoscopePlainText.value)
-                            .body}
-                          htmlText={horoscopeBodyHtml.value}
-                          speed={8}
-                          enabled
-                          showCompletionCursor
-                          className="font-mono min-w-0 max-w-full overflow-hidden break-words text-[14px] sm:text-[15px] leading-[1.52] sm:leading-relaxed"
-                          style={`color: ${accentColor};`}
-                        />
+                        {
+                          /* Slower-typing body — waits for the header so the
+                            two streams never fight over the scroll position */
+                        }
+                        {headerTyped.value && (
+                          <TypedWriter
+                            text={splitHoroscopeAscii(horoscopePlainText.value)
+                              .body}
+                            htmlText={horoscopeBodyHtml.value}
+                            speed={8}
+                            enabled
+                            showCompletionCursor
+                            onComplete={() => {
+                              globalThis.dispatchEvent(
+                                new CustomEvent("stargram:reading-complete"),
+                              );
+                            }}
+                            className="font-mono min-w-0 max-w-full overflow-hidden break-words text-[14px] sm:text-[15px] leading-[1.52] sm:leading-relaxed"
+                            style={`color: ${accentColor};`}
+                          />
+                        )}
 
                         {/* Navigation */}
                         <div class="space-y-4">
@@ -1253,18 +1316,19 @@ export default function ZodiacPicker() {
                             class="flex justify-center pt-2 border-t"
                             style={`border-color: ${accentGlowColor}15;`}
                           >
-                            <a
-                              href="https://ko-fi.com/madebypablo"
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              type="button"
                               class="inline-flex min-h-[44px] items-center px-4 py-2.5 border-2 rounded-xl font-mono text-xs uppercase tracking-wider transition-all hover:scale-105"
                               style={`background: rgba(255, 192, 203, 0.05); border-color: rgba(255, 192, 203, 0.3); color: rgba(255, 192, 203, 0.9); box-shadow: 0 0 8px rgba(255, 192, 203, 0.2);`}
                               onMouseEnter={() => sounds.hover()}
-                              onClick={() => sounds.click()}
+                              onClick={() => {
+                                sounds.click();
+                                openKofiModal();
+                              }}
                             >
                               <span style="opacity: 0.7;">{">"}</span>☕ SUPPORT
                               CREATOR
-                            </a>
+                            </button>
                           </div>
                         </div>
                       </div>

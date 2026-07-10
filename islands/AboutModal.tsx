@@ -124,8 +124,8 @@ export function AboutModal() {
                 class="text-sm sm:text-base font-medium"
                 style="color: var(--color-text, #e0e7ff)"
               >
-                Pick your sign. Get daily, weekly, or monthly readings. Apply
-                cosmic gradients. Export as images. Share the vibe.
+                Pick your sign. Get daily, weekly, or monthly readings typed out
+                live, tuned to real sky signals. Share the vibe.
               </p>
               <p
                 class="text-sm sm:text-base font-medium"

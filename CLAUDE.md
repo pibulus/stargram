@@ -48,14 +48,9 @@ PORT=8012 deno run -A --watch=static/,routes/ dev.ts
 - Do not revert unrelated local changes.
 - Do not commit secrets; `.env.example` should use placeholders only.
 
-## Known Legacy Files
+## History Note
 
-These are not the current home flow, but still exist:
-
-- `islands/HoroscopeDisplay.tsx`
-- `components/TerminalDisplay.tsx`
-- `islands/ThemeIsland.tsx`
-- `islands/TabSwitcher.tsx`
-- `components/MagicDropdown.tsx`
-
-Treat them as legacy/alternate surfaces unless the task explicitly revives them.
+The legacy alternate surfaces (`HoroscopeDisplay`, `TerminalDisplay`,
+`ThemeIsland`, `TabSwitcher`, `MagicDropdown`, and friends) were pruned in the
+v1.0 cleanup pass. Everything in `islands/`, `components/`, and `utils/` is
+live; recover old experiments from git history if ever needed.

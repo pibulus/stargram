@@ -10,13 +10,9 @@ import * as $index from "./routes/index.tsx";
 import * as $thanks from "./routes/thanks.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $BackgroundCanvas from "./islands/BackgroundCanvas.tsx";
-import * as $BackgroundEffects from "./islands/BackgroundEffects.tsx";
 import * as $HomeIsland from "./islands/HomeIsland.tsx";
-import * as $HoroscopeDisplay from "./islands/HoroscopeDisplay.tsx";
 import * as $InstallPrompt from "./islands/InstallPrompt.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
-import * as $TabSwitcher from "./islands/TabSwitcher.tsx";
-import * as $ThemeIsland from "./islands/ThemeIsland.tsx";
 import * as $WelcomeChecker from "./islands/WelcomeChecker.tsx";
 import * as $WelcomeModal from "./islands/WelcomeModal.tsx";
 import * as $ZodiacPicker from "./islands/ZodiacPicker.tsx";
@@ -34,13 +30,9 @@ const manifest = {
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,
     "./islands/BackgroundCanvas.tsx": $BackgroundCanvas,
-    "./islands/BackgroundEffects.tsx": $BackgroundEffects,
     "./islands/HomeIsland.tsx": $HomeIsland,
-    "./islands/HoroscopeDisplay.tsx": $HoroscopeDisplay,
     "./islands/InstallPrompt.tsx": $InstallPrompt,
     "./islands/KofiModal.tsx": $KofiModal,
-    "./islands/TabSwitcher.tsx": $TabSwitcher,
-    "./islands/ThemeIsland.tsx": $ThemeIsland,
     "./islands/WelcomeChecker.tsx": $WelcomeChecker,
     "./islands/WelcomeModal.tsx": $WelcomeModal,
     "./islands/ZodiacPicker.tsx": $ZodiacPicker,

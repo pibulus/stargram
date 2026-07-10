@@ -8,12 +8,12 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { sounds } from "../utils/sounds.ts";
 
 const PROMPT_DISMISSED_KEY = "stargram-install-dismissed";
-const PROMPT_DELAY_MS = 45000; // Give the first horoscope flow room before asking.
+const READING_SETTLE_MS = 7000; // Breathing room after the reading finishes typing.
+const FALLBACK_DELAY_MS = 90000; // User never finished a reading this visit.
 
 export default function InstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
-  const [isAndroid, setIsAndroid] = useState(false);
   const deferredPromptRef = useRef<any>(null);
 
   useEffect(() => {
@@ -30,38 +30,53 @@ export default function InstallPrompt() {
     // Detect platform
     const userAgent = navigator.userAgent.toLowerCase();
     const isiOS = /iphone|ipad|ipod/.test(userAgent);
-    const isAndroidDevice = /android/.test(userAgent);
 
     setIsIOS(isiOS);
-    setIsAndroid(isAndroidDevice);
 
-    // iOS: Show after delay
-    if (isiOS) {
-      const timer = setTimeout(() => {
-        setShowPrompt(true);
-        sounds.success();
-      }, PROMPT_DELAY_MS);
+    let timer: number | undefined;
+    let shown = false;
+    const reveal = () => {
+      if (shown) return;
+      // iOS shows manual instructions; everyone else needs the captured
+      // install event or the button would be dead.
+      if (!isiOS && !deferredPromptRef.current) return;
+      shown = true;
+      setShowPrompt(true);
+      sounds.success();
+    };
+    const scheduleReveal = (delay: number) => {
+      clearTimeout(timer);
+      timer = globalThis.setTimeout(reveal, delay);
+    };
 
-      return () => clearTimeout(timer);
-    }
+    // Preferred cue: ask during the lull after the first reading finishes
+    // typing, never on top of it.
+    const handleReadingComplete = () => scheduleReveal(READING_SETTLE_MS);
+    globalThis.addEventListener(
+      "stargram:reading-complete",
+      handleReadingComplete,
+      { once: true },
+    );
 
-    // Android/Chrome: Listen for beforeinstallprompt
+    // Fallback for visitors who browse without pulling a reading.
+    scheduleReveal(FALLBACK_DELAY_MS);
+
+    // Chrome/Android: capture the install event for the INSTALL button.
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       deferredPromptRef.current = e;
-
-      setTimeout(() => {
-        setShowPrompt(true);
-        sounds.success();
-      }, PROMPT_DELAY_MS);
     };
-
     globalThis.addEventListener(
       "beforeinstallprompt",
       handleBeforeInstallPrompt,
     );
 
     return () => {
+      clearTimeout(timer);
+      globalThis.removeEventListener(
+        "stargram:reading-complete",
+        handleReadingComplete,
+      );
       globalThis.removeEventListener(
         "beforeinstallprompt",
         handleBeforeInstallPrompt,
@@ -70,7 +85,7 @@ export default function InstallPrompt() {
   }, []);
 
   const handleInstall = async () => {
-    if (isAndroid && deferredPromptRef.current) {
+    if (deferredPromptRef.current) {
       deferredPromptRef.current.prompt();
       const { outcome } = await deferredPromptRef.current.userChoice;
 
