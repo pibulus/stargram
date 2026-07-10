@@ -70,13 +70,21 @@ Optional production env vars:
 5. After first load, enable airplane mode and reopen from the icon.
 6. Check console for service worker or API errors.
 
+## Service Worker Migration (v3 -> v4, Jul 2026)
+
+The old `stargram-v3` worker served everything cache-first and had cached
+`/api/cosmic-context` responses frozen indefinitely. The v4 worker
+(network-first HTML, network-only APIs) self-heals existing visitors: the
+browser re-fetches `/sw.js` on their next visit (HTTP cache holds it at most
+~24h), the new worker activates immediately via `skipWaiting()`, and its
+activate handler deletes every old `stargram-*` / `cosmic-horoscope-*` cache. No
+user action and no announcement needed — one visit fixes them.
+
 ## Later Ideas
 
 - More share-native flows for iMessage/Instagram/Twitter/X.
 - Horoscope history/archive.
 - Daily PWA notifications.
 - Tarot or Chinese zodiac expansion.
-- Prune legacy alternate display/theme files once the current terminal flow is
-  settled.
 
-Last updated: 2026-05-27.
+Last updated: 2026-07-10 (legacy display/theme files pruned in the v1.0 pass).
