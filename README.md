@@ -17,8 +17,10 @@ load live context. Share the vibe.
 - Weekly/monthly readings from `freehoroscopeapi.com`.
 - Live cosmic context from moon phase, Discordian calendar, NOAA SWPC, NASA/JPL
   close-approach data, and a crypto-random d23 roll.
-- Terminal-style ASCII horoscope display with typed header/body.
-- 12 color effects and 12 reusable themes.
+- Terminal-style ASCII horoscope display with typed header/body choreography:
+  the title types first in full view, then the body follows with caret-aware
+  scrolling.
+- Trinity color treatment (purple/green/orange sweep with warm gold headers).
 - PWA manifest, install prompt, service worker, app shortcuts, and icons.
 - Optional PostHog analytics.
 - SEO metadata, Open Graph/Twitter cards, JSON-LD, sitemap, and robots file.
@@ -44,7 +46,6 @@ PORT=8012 deno run -A --watch=static/,routes/ dev.ts
 - Framework: Fresh 1.7, Preact, islands
 - Styling: Tailwind CSS plus app CSS
 - Typewriter: `typed.js`
-- Export/share helpers: `html-to-image`
 - Analytics: PostHog, optional
 - Deployment: Deno Deploy / GitHub auto-deploy
 
@@ -63,6 +64,7 @@ stargram/
 │   ├── ZodiacPicker.tsx      # Main live app flow
 │   ├── HomeIsland.tsx        # Main page layout wrapper
 │   ├── BackgroundCanvas.tsx  # Animated starfield
+│   ├── WelcomeChecker.tsx    # First-visit detection
 │   ├── WelcomeModal.tsx      # First-visit modal
 │   ├── InstallPrompt.tsx     # PWA install prompt
 │   ├── KofiModal.tsx         # Support modal
@@ -108,16 +110,16 @@ The app shell caches:
 - PWA icons
 - favicon
 
-API routes stay network-only so horoscope data is not cached accidentally.
+API routes stay network-only so readings and the live sky packet are never
+served stale, and HTML navigations are network-first so deploys land immediately
+for returning visitors.
 
 ## Analytics
 
 Analytics are disabled unless `POSTHOG_KEY` is present. Event names:
 
-- `horoscope_viewed`
 - `sign_selected`
-- `export_clicked`
-- `theme_changed`
+- `horoscope_viewed`
 - `error_occurred`
 
 ## Deployment
