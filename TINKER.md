@@ -56,10 +56,9 @@ stargram/
     └── icons/                # PWA icons
 ```
 
-`islands/HoroscopeDisplay.tsx`, `components/TerminalDisplay.tsx`,
-`islands/ThemeIsland.tsx`, and related theme/dropdown components still exist as
-legacy/alternate surfaces. The live home route currently goes through
-`ZodiacPicker`.
+The legacy/alternate surfaces (`HoroscopeDisplay`, `TerminalDisplay`,
+`ThemeIsland`, and related theme/dropdown components) were pruned in the Jul
+2026 v1.0 cleanup. The live home route goes through `ZodiacPicker`.
 
 ## Main Flow
 
@@ -172,10 +171,7 @@ Check for:
 
 ## Known Housekeeping Notes
 
-- The live app does not currently expose a visible theme switcher, although the
-  theme system is still present.
-- `TerminalDisplay`/`HoroscopeDisplay` are retained legacy surfaces. If they
-  stay unused, prune them in a dedicated cleanup pass.
 - The main user-facing domain in docs and metadata is `https://stargram.app`.
 
-Last updated: 2026-05-27.
+Last updated: 2026-07-10 (legacy surfaces and theme system pruned in the v1.0
+cleanup; recover from git history if ever needed).
