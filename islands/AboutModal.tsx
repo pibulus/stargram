@@ -58,8 +58,8 @@ export function AboutModal() {
     <>
       {/* Backdrop */}
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style="background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);"
+        class="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto px-3 sm:px-4"
+        style="background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); padding-top: max(1rem, env(safe-area-inset-top)); padding-bottom: max(1rem, env(safe-area-inset-bottom));"
         onClick={closeAboutModal}
         role="dialog"
         aria-modal="true"
@@ -86,7 +86,7 @@ export function AboutModal() {
               <button
                 type="button"
                 onClick={closeAboutModal}
-                class="text-2xl sm:text-3xl leading-none font-bold transition-transform hover:scale-110"
+                class="-mt-2 -mr-2 w-11 h-11 shrink-0 flex items-center justify-center text-2xl sm:text-3xl leading-none font-bold transition-transform hover:scale-110"
                 style="color: var(--color-text, #e0e7ff)"
                 aria-label="Close about dialog"
               >
@@ -191,7 +191,7 @@ export function AboutModal() {
               class="text-xs font-mono opacity-60"
               style="color: var(--color-text, #e0e7ff)"
             >
-              Press ESC or click outside to close
+              Tap outside or press ESC to close
             </p>
           </div>
         </div>

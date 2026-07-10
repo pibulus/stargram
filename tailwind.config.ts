@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      borderWidth: {
+        "3": "3px",
+      },
       colors: {
         // Pablo's Soft Stack Palette
         "paper": "#FAF9F6",

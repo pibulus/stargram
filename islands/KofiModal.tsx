@@ -87,9 +87,12 @@ export function KofiModal({
     <>
       {/* Backdrop */}
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style="background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);"
+        class="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto px-3 sm:px-4"
+        style="background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); padding-top: max(1rem, env(safe-area-inset-top)); padding-bottom: max(1rem, env(safe-area-inset-bottom));"
         onClick={closeKofiModal}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
       >
         {/* Modal */}
         <div
@@ -98,12 +101,12 @@ export function KofiModal({
         >
           {/* Header */}
           <div
-            class="p-6 border-4 border-b-0 rounded-t-3xl"
+            class="p-4 sm:p-6 border-4 border-b-0 rounded-t-3xl"
             style="background-color: var(--color-secondary, #FFE5B4); border-color: var(--color-border, #0A0A0A)"
           >
             <div class="flex items-start justify-between mb-2">
               <h2
-                class="text-2xl font-bold font-mono"
+                class="text-xl sm:text-2xl font-bold font-mono"
                 style="color: var(--color-text, #0A0A0A)"
               >
                 {title}
@@ -111,7 +114,7 @@ export function KofiModal({
               <button
                 type="button"
                 onClick={closeKofiModal}
-                class="text-3xl leading-none font-bold transition-transform hover:scale-110"
+                class="-mt-2 -mr-2 w-11 h-11 shrink-0 flex items-center justify-center text-3xl leading-none font-bold transition-transform hover:scale-110"
                 style="color: var(--color-text, #0A0A0A)"
                 aria-label="Close"
               >
@@ -133,7 +136,7 @@ export function KofiModal({
           >
             <iframe
               src={`https://ko-fi.com/${kofiUsername}/?hidefeed=true&widget=true&embed=true`}
-              style="border: none; width: 100%; height: 600px; background: transparent;"
+              style="border: none; width: 100%; height: min(600px, calc(100dvh - 15rem)); min-height: 320px; background: transparent;"
               title="Ko-fi donation"
             />
           </div>
@@ -144,7 +147,7 @@ export function KofiModal({
               class="text-xs font-mono opacity-60"
               style="color: var(--color-text, #0A0A0A)"
             >
-              Press ESC or click outside to close
+              Tap outside or press ESC to close
             </p>
           </div>
         </div>
