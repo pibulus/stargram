@@ -1,6 +1,12 @@
 {
   "lock": false,
   "nodeModulesDir": "auto",
+  "deploy": {
+    "org": "pibulus",
+    "app": "stargram",
+    "entrypoint": "main.ts",
+    "exclude": ["**/node_modules"]
+  },
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check \"**/*.ts\" && deno check \"**/*.tsx\"",
     "cli": "echo \"import '\\$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",
