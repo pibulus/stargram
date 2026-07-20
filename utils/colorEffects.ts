@@ -7,14 +7,11 @@
 
 const TRINITY_PALETTE = ["#b179ff", "#00ff9d", "#ff9a3c"];
 const TRINITY_HEADER_COLOR = "#ffdb8a";
-const FALLBACK_COLOR = "#00FF41";
 
 /**
  * Calculate the body color for a specific position in the ASCII art
  */
-function getEffectColor(effect: string, x: number, lineWidth: number): string {
-  if (effect !== "trinity") return FALLBACK_COLOR;
-
+function getEffectColor(x: number, lineWidth: number): string {
   const progress = x / Math.max(1, lineWidth);
   const index = Math.min(
     TRINITY_PALETTE.length - 1,
@@ -38,14 +35,11 @@ const escapeHtml = (value: string): string =>
     .replace(/'/g, "&#039;");
 
 /**
- * Apply a color effect to ASCII art text with special header treatment
- * Returns HTML segments with colored spans for header/body
+ * Apply the trinity color effect to ASCII art text with special header
+ * treatment. Returns HTML segments with colored spans for header/body.
  */
-export function applyColorToArt(
-  art: string,
-  effect: string,
-): ColorizedArtSegments {
-  if (effect === "none" || !art) {
+export function applyColorToArt(art: string): ColorizedArtSegments {
+  if (!art) {
     return { fullHtml: "", headerHtml: "", bodyHtml: "" };
   }
 
@@ -56,7 +50,7 @@ export function applyColorToArt(
   let inHeader = false;
   let headerLineIndex = 0;
 
-  const headerColor = effect === "trinity" ? TRINITY_HEADER_COLOR : "#FFD700"; // Gold fallback
+  const headerColor = TRINITY_HEADER_COLOR;
   const getHeaderFontSize = (
     lineLength: number,
     preferredVw: number,
@@ -114,7 +108,6 @@ export function applyColorToArt(
     } else if (line.trim()) {
       // Body gets gradient effect
       const color = getEffectColor(
-        effect,
         Math.floor(line.length / 2),
         line.length,
       );

@@ -86,11 +86,11 @@ class AnalyticsService {
   }
 
   // Horoscope Viewed
-  trackHoroscopeViewed(sign: string, period: string, effect: string | null) {
+  trackHoroscopeViewed(sign: string, period: string) {
     this.trackEvent("horoscope_viewed", {
       sign,
       period,
-      effect: effect || "none",
+      effect: "trinity", // only palette shipped; kept so the event schema stays stable
       timestamp: Date.now(),
     });
   }

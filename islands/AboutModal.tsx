@@ -226,30 +226,3 @@ export function AboutModal() {
     </>
   );
 }
-
-/**
- * 🔘 About Link Component
- *
- * Simple link that opens the About modal.
- */
-
-interface AboutLinkProps {
-  label?: string;
-  className?: string;
-}
-
-export function AboutLink({
-  label = "Made by Pablo 🎸",
-  className = "",
-}: AboutLinkProps) {
-  return (
-    <button
-      type="button"
-      onClick={openAboutModal}
-      class={`px-3 py-2 text-sm border-3 rounded-xl font-mono font-bold shadow-brutal transition-all hover:scale-105 active:scale-95 ${className}`}
-      style="background-color: var(--color-accent, #FF69B4); color: var(--color-base, #FAF9F6); border-color: var(--color-border, #0A0A0A);"
-    >
-      {label}
-    </button>
-  );
-}

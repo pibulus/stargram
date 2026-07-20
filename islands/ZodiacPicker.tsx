@@ -395,7 +395,7 @@ export default function ZodiacPicker() {
         horoscopePlainText.value = ascii;
 
         // Colorize
-        const colorized = applyColorToArt(ascii, "trinity");
+        const colorized = applyColorToArt(ascii);
 
         horoscopeHtml.value = colorized.fullHtml;
         horoscopeHeaderHtml.value = colorized.headerHtml;
@@ -403,7 +403,7 @@ export default function ZodiacPicker() {
 
         showHoroscope.value = true;
         sounds.success();
-        analytics.trackHoroscopeViewed(sign, period, "trinity");
+        analytics.trackHoroscopeViewed(sign, period);
       } else {
         sounds.error();
         console.error("Horoscope fetch failed:", data.error);

@@ -155,15 +155,6 @@ export class SoundEngine {
     notes.forEach((note) => this.playBlip(note));
   }
 
-  // Play a simple beep/boop sound. Kept public for existing call sites.
-  playTone(
-    frequency: number,
-    duration: number,
-    type: OscillatorType = "sine",
-  ) {
-    this.playBlip({ frequency, duration, type, gain: 0.032 });
-  }
-
   // Sound effects library
   click() {
     const base = this.pickNote();
@@ -226,21 +217,6 @@ export class SoundEngine {
     });
   }
 
-  drop() {
-    const base = this.pickNote(-2);
-    this.playPattern([
-      { frequency: base * 1.5, duration: 0.08, gain: 0.032 },
-      { frequency: base, duration: 0.11, delay: 0.055, gain: 0.026 },
-      {
-        frequency: base * 0.75,
-        duration: 0.13,
-        delay: 0.12,
-        gain: 0.021,
-        type: "triangle",
-      },
-    ]);
-  }
-
   success() {
     const base = this.pickNote(-1);
     this.playPattern([
@@ -266,45 +242,6 @@ export class SoundEngine {
         bend: 1.08,
       },
     ]);
-  }
-
-  copy() {
-    const base = this.pickNote(1);
-    this.playPattern([
-      {
-        frequency: base,
-        duration: 0.045,
-        gain: 0.026,
-        type: "triangle",
-      },
-      {
-        frequency: base * 1.333,
-        duration: 0.05,
-        delay: 0.055,
-        gain: 0.022,
-        type: "triangle",
-      },
-    ]);
-  }
-
-  toggle() {
-    this.playBlip({
-      frequency: this.pickNote(),
-      duration: 0.05,
-      gain: 0.026,
-      type: "triangle",
-    });
-  }
-
-  slide(value: number) {
-    // Map slider value to frequency
-    const freq = 200 + (value * 3);
-    this.playBlip({
-      frequency: freq,
-      duration: 0.02,
-      gain: 0.014,
-      type: "sine",
-    });
   }
 
   error() {
@@ -432,19 +369,6 @@ export class SoundEngine {
         gain: 0.014,
         bend: 1.06,
       },
-    ]);
-  }
-
-  // Easter egg: play a little melody
-  playMelody() {
-    this.playPattern([
-      { frequency: 523.25, delay: 0, duration: 0.18, gain: 0.03 },
-      { frequency: 587.33, delay: 0.18, duration: 0.18, gain: 0.03 },
-      { frequency: 659.25, delay: 0.36, duration: 0.18, gain: 0.03 },
-      { frequency: 523.25, delay: 0.54, duration: 0.18, gain: 0.03 },
-      { frequency: 659.25, delay: 0.72, duration: 0.18, gain: 0.03 },
-      { frequency: 783.99, delay: 0.90, duration: 0.2, gain: 0.028 },
-      { frequency: 783.99, delay: 1.08, duration: 0.24, gain: 0.026 },
     ]);
   }
 }

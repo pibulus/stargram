@@ -17,8 +17,7 @@ export default function Error404() {
           <p class="text-sm opacity-70 tracking-widest">SIGNAL ROOM</p>
           <h1 class="text-4xl font-black">404</h1>
           <p class="opacity-90">
-            The cosmos has no reading for this address. Try a sign that
-            exists.
+            The cosmos has no reading for this address. Try a sign that exists.
           </p>
           <a
             href="/"
