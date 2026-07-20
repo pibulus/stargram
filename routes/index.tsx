@@ -1,6 +1,5 @@
 import HomeIsland from "../islands/HomeIsland.tsx";
 import BackgroundCanvas from "../islands/BackgroundCanvas.tsx";
-import { AboutModal } from "../islands/AboutModal.tsx";
 import { WelcomeModal } from "../islands/WelcomeModal.tsx";
 import WelcomeChecker from "../islands/WelcomeChecker.tsx";
 
@@ -21,9 +20,6 @@ export default function Home() {
 
         {/* First-visit welcome modal */}
         <WelcomeModal />
-
-        {/* About modal (opened from the terminal title bar) */}
-        <AboutModal />
 
         {/* Main interactive content */}
         <HomeIsland />

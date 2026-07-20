@@ -53,3 +53,18 @@ html {
   clip: auto;
   white-space: normal;
 }
+
+/* ModalShell (chassis) skin — stargram cosmic dark.
+   Cards draw their own two-block chrome, so the shell card is transparent. */
+:root {
+  --charm-modal-scrim: rgba(10, 10, 14, 0.7);
+  --charm-modal-blur: 8px;
+  --charm-modal-bg: transparent;
+  --charm-modal-ink: var(--color-text);
+  --charm-modal-border: none;
+  --charm-modal-radius: 0;
+  --charm-modal-shadow: none;
+  --charm-modal-pad: 0;
+  --charm-modal-open-ms: 300ms;
+  --charm-modal-ease: ease-out;
+}

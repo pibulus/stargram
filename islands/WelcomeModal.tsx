@@ -1,17 +1,20 @@
 import { useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { sounds } from "../utils/sounds.ts";
+import { useModalShell } from "../components/modal/useModalShell.ts";
 
 /**
  * ✨ Terminal-styled Welcome Modal
- * First-open modal with cosmic CRT terminal aesthetic
+ * First-open modal with cosmic CRT terminal aesthetic.
+ *
+ * Custom skeleton on the chassis useModalShell hook (the escape hatch):
+ * keeps the unique CRT terminal-in/out animations, scanlines, and
+ * no-backdrop-dismiss behavior while the hook owns Escape, scroll-lock,
+ * focus trap, and the close-out clock.
  */
 
 // Global signal for modal state
 export const welcomeModalOpen = signal(false);
-
-// Track the animation timeout globally
-let closeAnimationTimeout: number | null = null;
 
 // Check if user has seen welcome before
 const WELCOME_SEEN_KEY = "stargram-welcome-seen";
@@ -25,74 +28,55 @@ export function checkWelcomeStatus() {
   }
 }
 
-export function markWelcomeSeen() {
-  const modal = document.querySelector(".animate-terminal-in");
-  if (modal) {
-    modal.classList.add("animate-terminal-out");
-  }
-
-  // Clear any existing timeout
-  if (closeAnimationTimeout !== null) {
-    clearTimeout(closeAnimationTimeout);
-  }
-
-  closeAnimationTimeout = setTimeout(() => {
-    welcomeModalOpen.value = false;
-
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(WELCOME_SEEN_KEY, "true");
-    }
-    closeAnimationTimeout = null;
-  }, 400) as unknown as number;
-}
-
 export function WelcomeModal() {
   const isOpen = welcomeModalOpen.value;
 
+  const shell = useModalShell({
+    open: isOpen,
+    onClose: () => {
+      welcomeModalOpen.value = false;
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(WELCOME_SEEN_KEY, "true");
+      }
+    },
+  });
+
   const handleStart = () => {
     sounds.openPortal();
-    markWelcomeSeen();
+    shell.requestClose();
   };
 
+  // The hook owns Escape-to-close; this listener only adds the click sound.
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        sounds.click();
-        markWelcomeSeen();
-      }
+    if (!isOpen) return;
+    const clickOnEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") sounds.click();
     };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
-      if (closeAnimationTimeout !== null) {
-        clearTimeout(closeAnimationTimeout);
-        closeAnimationTimeout = null;
-      }
-    };
+    document.addEventListener("keydown", clickOnEscape);
+    return () => document.removeEventListener("keydown", clickOnEscape);
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!shell.mounted) return null;
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop (no click-to-dismiss — the button or Escape closes) */}
       <div
+        ref={shell.backdropRef}
         class="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto px-3 sm:px-4"
-        style="background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(18px); padding-top: max(1rem, env(safe-area-inset-top)); padding-bottom: max(1rem, env(safe-area-inset-bottom));"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="welcome-modal-title"
+        style="background: rgba(10, 10, 14, 0.92); backdrop-filter: blur(18px); padding-top: max(1rem, env(safe-area-inset-top)); padding-bottom: max(1rem, env(safe-area-inset-bottom));"
+        role="presentation"
       >
         {/* Terminal Modal */}
         <div
-          class="relative w-full max-w-2xl my-auto animate-terminal-in terminal-modal"
-          onClick={(e) => e.stopPropagation()}
+          ref={shell.dialogRef}
+          class={`relative w-full max-w-2xl my-auto terminal-modal ${
+            shell.closing ? "animate-terminal-out" : "animate-terminal-in"
+          }`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Welcome to Stargram"
+          tabindex={-1}
         >
           {/* Terminal shell */}
           <div
@@ -238,6 +222,12 @@ export function WelcomeModal() {
 
           .terminal-modal {
             position: relative;
+            /* Exit timing — the hook reads this token off the card. */
+            --charm-modal-close-ms: 300ms;
+          }
+
+          .terminal-modal:focus {
+            outline: none;
           }
 
           .terminal-scanlines {

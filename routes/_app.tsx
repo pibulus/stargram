@@ -110,6 +110,7 @@ export default function App({ Component }: PageProps) {
 
         {/* Styles */}
         <link rel="stylesheet" href="/styles.css" />
+        <link rel="stylesheet" href="/modal-shell.css" />
 
         {/* Global animation and interaction styles */}
         <style>
