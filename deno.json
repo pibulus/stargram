@@ -3,9 +3,7 @@
   "nodeModulesDir": "auto",
   "deploy": {
     "org": "pibulus",
-    "app": "stargram",
-    "entrypoint": "main.ts",
-    "exclude": ["**/node_modules"]
+    "app": "stargram"
   },
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check \"**/*.ts\" && deno check \"**/*.tsx\"",
@@ -37,13 +35,18 @@
     "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
     "$std/": "https://deno.land/std@0.216.0/",
     "tailwindcss": "npm:tailwindcss@^3.4.0",
-    "posthog-js": "npm:posthog-js@^1.246.0",
     "typed.js": "npm:typed.js@^2.1.0",
     "simplex-noise": "npm:simplex-noise@^4.0.1"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
-    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns"
+    ]
   }
 }
+

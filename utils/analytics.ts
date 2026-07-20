@@ -38,7 +38,14 @@ class AnalyticsService {
 
     try {
       // Dynamic import - only loads PostHog when we have API keys
-      const posthogModule = await import("posthog-js");
+      // Loaded straight from the CDN rather than via a bare "posthog-js"
+      // specifier: keeping it in deno.json's imports drags npm:core-js into
+      // the dependency graph, whose postinstall build script breaks the
+      // Deno Deploy builder. This is browser-only, lazy, and already guarded
+      // by the try/catch + key check above.
+      const posthogModule = await import(
+        "https://esm.sh/posthog-js@1.246.0"
+      );
       this.posthog = posthogModule.default;
 
       this.posthog.init(key, {
