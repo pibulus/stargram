@@ -1,7 +1,10 @@
 // Stargram Service Worker
 // Enables offline functionality and PWA features
 
-const CACHE_NAME = "stargram-v4";
+// BUMP THIS on any deploy that touches an unhashed asset (styles.css,
+// modal-shell.css, icons). They're served cache-first, so returning PWA
+// users keep the old copy until the cache name changes.
+const CACHE_NAME = "stargram-v5";
 const APP_SHELL = [
   "/",
   "/styles.css",

@@ -46,6 +46,7 @@ export function TypedWriter({
   const soundsRef = useRef<SimpleTypeWriter | null>(null);
   const lastContentRef = useRef<string>(""); // Track what we last typed
   const trailTimeoutRef = useRef<number | null>(null);
+  const pauseTimeoutRef = useRef<number | null>(null);
   const speedIntervalRef = useRef<number | null>(null);
   const readerTookScrollRef = useRef(false); // Reader scrolled away mid-typing
 
@@ -91,6 +92,11 @@ export function TypedWriter({
     if (trailTimeoutRef.current) {
       clearTimeout(trailTimeoutRef.current);
       trailTimeoutRef.current = null;
+    }
+
+    if (pauseTimeoutRef.current) {
+      clearTimeout(pauseTimeoutRef.current);
+      pauseTimeoutRef.current = null;
     }
 
     if (!enabled) {
@@ -164,12 +170,20 @@ export function TypedWriter({
           }, 320);
         }
 
-        // Add natural pause after punctuation
+        // Add natural pause after punctuation. The resume has to be
+        // cancellable: without it, switching period mid-sentence leaves a
+        // timer that calls start() on a destroyed instance — or worse, on
+        // the replacement that's already typing.
         if (lastChar === "." || lastChar === "!" || lastChar === "?") {
-          typedRef.current.stop();
-          setTimeout(() => {
-            if (typedRef.current) {
-              typedRef.current.start();
+          const paused = typedRef.current;
+          paused.stop();
+          if (pauseTimeoutRef.current) {
+            clearTimeout(pauseTimeoutRef.current);
+          }
+          pauseTimeoutRef.current = globalThis.setTimeout(() => {
+            pauseTimeoutRef.current = null;
+            if (typedRef.current === paused) {
+              paused.start();
             }
           }, 400); // Pause for 400ms after sentence end
         }
@@ -244,6 +258,10 @@ export function TypedWriter({
       if (trailTimeoutRef.current) {
         clearTimeout(trailTimeoutRef.current);
         trailTimeoutRef.current = null;
+      }
+      if (pauseTimeoutRef.current) {
+        clearTimeout(pauseTimeoutRef.current);
+        pauseTimeoutRef.current = null;
       }
     };
   }, [text, htmlText, speed, enabled]);

@@ -11,9 +11,11 @@
   --color-border: #a855f7;
 }
 
-/* Force scrollbar to prevent layout shift */
-html {
-  overflow-y: scroll;
+/* The app is viewport-locked, so no forced scrollbar gutter — and no
+   rubber-band bounce, which is what makes a web app feel un-native on iOS. */
+html,
+body {
+  overscroll-behavior: none;
 }
 
 /* Global theme transitions */

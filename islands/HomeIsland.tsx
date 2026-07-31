@@ -7,15 +7,15 @@ import ZodiacPicker from "./ZodiacPicker.tsx";
 export default function HomeIsland() {
   return (
     <>
-      {/* Main Content - Centered both vertically and horizontally */}
+      {
+        /* The picker owns the viewport box (safe areas included) — main just
+          hands it the full remaining height. */
+      }
       <main
         id="main-content"
-        class="w-full min-h-[100dvh] flex items-start justify-center overflow-x-hidden px-0 py-0 sm:py-4"
-        style="padding-bottom: max(1rem, env(safe-area-inset-bottom));"
+        class="w-full flex-1 min-h-0 flex overflow-hidden"
       >
-        <div class="w-full flex justify-center">
-          <ZodiacPicker />
-        </div>
+        <ZodiacPicker />
       </main>
     </>
   );

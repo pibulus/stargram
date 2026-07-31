@@ -126,13 +126,6 @@ const COSMIC_ANIMATION_STYLES = `
   0% { background-position: 0 0; }
   100% { background-position: 0 8px; }
 }
-.cosmic-scrollless {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.cosmic-scrollless::-webkit-scrollbar {
-  display: none;
-}
 .cursor-blink {
   animation: cursorBlink 1s steps(2, start) infinite;
 }
@@ -283,17 +276,18 @@ function getSignalRows(context: CosmicContext) {
 export default function ZodiacPicker() {
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Follow boot messages at the bottom, then snap to the top when the
-  // reading appears so the ASCII title types in full view.
+  // Follow boot messages at the bottom while they stream; every other state
+  // (reading, and the picker we came back to) starts at the top.
   useEffect(() => {
     if (!contentRef.current) return;
-    contentRef.current.scrollTop = showHoroscope.value
-      ? 0
-      : contentRef.current.scrollHeight;
+    contentRef.current.scrollTop = isLoadingHoroscope.value
+      ? contentRef.current.scrollHeight
+      : 0;
   }, [
     bootMessages.value.length,
     isLoadingHoroscope.value,
     showHoroscope.value,
+    currentMode.value,
   ]);
   useEffect(() => {
     const styleEl = document.createElement("style");
@@ -549,29 +543,50 @@ export default function ZodiacPicker() {
     : [];
 
   return (
-    <div class="relative w-full min-w-0 overflow-x-hidden">
+    <div class="relative w-full min-w-0 overflow-hidden">
       <style>
         {`
-          /* Custom Terminal Scrollbar */
-          .custom-terminal-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+          /* Session accent, published for the global scrollbar skin. */
+          :root {
+            --stargram-accent: ${accentColor};
+            --stargram-accent-soft: ${accentColor}4D;
+            --stargram-accent-hover: ${accentColor}99;
           }
-          .custom-terminal-scrollbar::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 3px;
+
+          /* The stage is the phone screen: exactly one viewport, safe areas
+             carved out, never scrolls. The terminal fills it in every mode. */
+          .cosmic-stage {
+            height: 100vh; /* iOS 15.0-15.3 has no dvh — don't collapse */
+            height: 100dvh;
+            padding:
+              calc(env(safe-area-inset-top, 0px) + 0.5rem)
+              calc(env(safe-area-inset-right, 0px) + 0.5rem)
+              calc(env(safe-area-inset-bottom, 0px) + 0.5rem)
+              calc(env(safe-area-inset-left, 0px) + 0.5rem);
           }
-          .custom-terminal-scrollbar::-webkit-scrollbar-thumb {
-            background: ${accentColor}44;
-            border-radius: 3px;
-            border: 1px solid ${accentColor}22;
+
+          .terminal-shell {
+            height: 100%;
           }
-          .custom-terminal-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: ${accentColor}aa;
+
+          @media (min-width: 640px) {
+            .cosmic-stage {
+              padding: 2rem 1.5rem;
+            }
+            .terminal-shell {
+              height: min(100%, 900px);
+            }
           }
-          .custom-terminal-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: ${accentColor}44 rgba(0, 0, 0, 0.2);
+
+          /* Landscape phones: the ASCII crown would eat the entire screen,
+             so trade it for a wider grid and keep all 12 signs reachable. */
+          @media (max-height: 520px) {
+            .picker-crown {
+              display: none;
+            }
+            .picker-grid {
+              grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
           }
 
           .terminal-shell {
@@ -762,23 +777,19 @@ export default function ZodiacPicker() {
           }
         `}
       </style>
-      <div class="w-full min-w-0 min-h-[100dvh] flex items-start sm:items-center justify-center px-2 sm:px-6 py-4 sm:py-8 md:py-12 overflow-x-hidden">
+      <div class="cosmic-stage w-full min-w-0 flex items-center justify-center overflow-hidden">
         <div
           key={flickerTrigger.value}
-          class={`w-full min-w-0 max-w-[calc(100vw-1rem)] ${
+          class={`w-full min-w-0 flex flex-col overflow-hidden ${
             isHoroscopeMode ? "sm:max-w-4xl" : "sm:max-w-6xl"
-          } border-[3px] sm:border-4 rounded-[18px] sm:rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-visible terminal-shell ${cosmicGlitchClass} ${cosmicPhaseClass} ${cosmicElementClass} ${
+          } border-[3px] sm:border-4 rounded-[18px] sm:rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] terminal-shell ${cosmicGlitchClass} ${cosmicPhaseClass} ${cosmicElementClass} ${
             flickerTrigger.value > 0 ? "crt-flicker" : ""
           }`}
-          style={`background: rgba(2, 4, 12, 0.95); border-color: ${accentGlowColor}80; box-shadow: 0 0 30px ${accentGlowColor}24, 0 18px 60px rgba(0,0,0,0.68), inset 0 0 64px rgba(0,0,0,0.6); animation: cosmicFloat 12s ease-in-out infinite; transform: perspective(1000px) rotateX(${parallaxRotateX}deg) rotateY(${parallaxRotateY}deg) translate3d(${parallaxX}px, ${parallaxY}px, 0); transition: transform 0.3s ease-out; ${
-            isHoroscopeMode
-              ? "height: min(680px, calc(100dvh - 2rem)); max-height: calc(100dvh - 2rem); overflow: hidden; display: flex; flex-direction: column;"
-              : "min-height: min(700px, calc(100dvh - 2rem)); overflow: visible;"
-          } width: 100%;`}
+          style={`background: rgba(2, 4, 12, 0.95); border-color: ${accentGlowColor}80; box-shadow: 0 0 30px ${accentGlowColor}24, 0 18px 60px rgba(0,0,0,0.68), inset 0 0 64px rgba(0,0,0,0.6); animation: cosmicFloat 12s ease-in-out infinite; transform: perspective(1000px) rotateX(${parallaxRotateX}deg) rotateY(${parallaxRotateY}deg) translate3d(${parallaxX}px, ${parallaxY}px, 0); transition: transform 0.3s ease-out;`}
         >
           {/* Terminal title bar */}
           <div
-            class="flex items-center gap-3 px-4 sm:px-8 py-3 border-b-[3px] sm:border-b-4 terminal-content-wrapper"
+            class="shrink-0 flex items-center gap-3 px-4 sm:px-8 py-3 border-b-[3px] sm:border-b-4 terminal-content-wrapper"
             style="border-color: rgba(0, 255, 65, 0.18); background: rgba(0, 0, 0, 0.8);"
           >
             <div class="flex gap-2">
@@ -811,24 +822,20 @@ export default function ZodiacPicker() {
 
           <div
             ref={contentRef}
-            class={`min-w-0 terminal-content-wrapper custom-terminal-scrollbar ${
-              isHoroscopeMode
-                ? "p-4 sm:p-7 lg:p-9 flex-1 overflow-y-auto"
-                : "p-4 sm:p-8 lg:p-12"
+            class={`min-w-0 min-h-0 flex-1 overflow-y-auto terminal-content-wrapper ${
+              isHoroscopeMode ? "p-4 sm:p-7 lg:p-9" : "p-4 sm:p-8 lg:p-10"
             }`}
-            style={isHoroscopeMode
-              ? "position: relative; z-index: 10;"
-              : `min-height: min(600px, calc(100dvh - 7rem)); overflow: visible;`}
+            style="position: relative; z-index: 10;"
           >
             {currentMode.value === "picker"
               ? (
                 // PICKER MODE - Zodiac grid + dossier
-                <div class="flex min-w-0 flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-12">
+                <div class="flex min-h-full min-w-0 flex-col lg:h-full lg:flex-row gap-6 sm:gap-8 lg:gap-12">
                   <div
-                    class="min-w-0 flex-1 selector-panel-motion"
+                    class="min-w-0 flex-1 flex flex-col selector-panel-motion"
                     style={`animation: cosmicFloat 16s ease-in-out infinite; animation-delay: 0.7s; transform: translate3d(${selectorParallaxX}px, ${selectorParallaxY}px, 0); transition: transform 0.3s ease-out;`}
                   >
-                    <div class="mb-5">
+                    <div class="picker-crown shrink-0 mb-4 sm:mb-5">
                       <pre
                         class="font-mono text-[5.5px] min-[390px]:text-[6px] sm:text-[10px] md:text-xs leading-[1.05] sm:leading-[1.1] whitespace-pre mb-2 overflow-hidden"
                         style={`color: ${accentColor}; text-shadow: 0 0 14px ${accentColor}88;`}
@@ -844,12 +851,18 @@ export default function ZodiacPicker() {
                     </div>
 
                     <pre
-                      class="font-mono text-[10px] sm:text-sm tracking-[0.2em] sm:tracking-[0.35em] uppercase overflow-hidden"
+                      class="picker-crown shrink-0 font-mono text-[10px] sm:text-sm tracking-[0.2em] sm:tracking-[0.35em] uppercase overflow-hidden"
                       style={`color: ${accentGlowColor}88;`}
                     >{ASCII_DIVIDER}</pre>
 
+                    {
+                      /* Cards stretch to fill the locked screen — the grid is
+                        the page on mobile, so it should own the space. On
+                        desktop they keep their natural height next to the
+                        dossier. */
+                    }
                     <div
-                      class="mt-4 sm:mt-8 grid grid-cols-2 gap-2 sm:gap-3"
+                      class="picker-grid mt-3 sm:mt-6 grid flex-1 auto-rows-fr grid-cols-2 gap-2 sm:gap-3 lg:flex-none lg:auto-rows-min lg:content-start"
                       role="listbox"
                       aria-label="Select your zodiac sign"
                     >
@@ -889,7 +902,7 @@ export default function ZodiacPicker() {
                             onBlur={() => hoveredSign.value = null}
                             role="option"
                             aria-selected={isSelected}
-                            class="group w-full min-h-[64px] text-left font-mono border-[3px] rounded-xl sm:rounded-2xl px-3 py-3 sm:px-4 sm:py-4 transition-all duration-150 hover:scale-[1.02] hover:-translate-y-0.5"
+                            class="group flex h-full w-full min-h-[64px] flex-col justify-center text-left font-mono border-[3px] rounded-xl sm:rounded-2xl px-3 py-3 sm:px-4 sm:py-4 transition-all duration-150 hover:scale-[1.02] hover:-translate-y-0.5 lg:h-auto"
                             style={`
                         border-color: ${borderColor};
                         background: ${backgroundColor};
@@ -922,9 +935,13 @@ export default function ZodiacPicker() {
                     </div>
                   </div>
 
-                  {/* Preview Pane */}
+                  {
+                    /* Preview Pane — hover-driven, so it's desktop-only. On a
+                      phone it was 600px of untappable dead weight under the
+                      grid; the sign's flavor lands in the reading instead. */
+                  }
                   <div
-                    class="w-full lg:w-[320px] xl:w-[360px] border-[3px] rounded-[18px] sm:rounded-3xl p-4 sm:p-5 bg-black/35 dossier-panel-motion"
+                    class="hidden lg:block lg:w-[320px] xl:w-[360px] lg:max-h-full lg:overflow-y-auto border-[3px] rounded-[18px] sm:rounded-3xl p-4 sm:p-5 bg-black/35 dossier-panel-motion"
                     style={`border-color: ${accentGlowColor}40; box-shadow: inset 0 0 32px ${accentGlowColor}22; transform: perspective(1000px) rotateX(${dossierRotateX}deg) rotateY(${dossierRotateY}deg) translate3d(${dossierParallaxX}px, ${dossierParallaxY}px, 0); transition: transform 0.3s ease-out; transform-style: preserve-3d;`}
                   >
                     <div

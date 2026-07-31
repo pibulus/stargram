@@ -133,28 +133,44 @@ export default function App({ Component }: PageProps) {
             scroll-behavior: smooth;
           }
 
-          /* Custom scrollbar theming */
+          /* Scrollbar: thin, ethereal, tinted with whatever accent the
+             terminal rolled this session (ZodiacPicker sets the vars). */
+          * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--stargram-accent-soft, rgba(168, 85, 247, 0.3)) transparent;
+          }
+
           ::-webkit-scrollbar {
-            width: 12px;
-            height: 12px;
+            width: 6px;
+            height: 6px;
           }
 
           ::-webkit-scrollbar-track {
-            background: var(--color-base-solid, #0a0a0a);
+            background: transparent;
           }
 
           ::-webkit-scrollbar-thumb {
-            background: var(--color-accent, #c084fc);
-            border-radius: 6px;
+            background: var(--stargram-accent-soft, rgba(168, 85, 247, 0.3));
+            border-radius: 999px;
           }
 
           ::-webkit-scrollbar-thumb:hover {
-            background: var(--color-border, #a855f7);
+            background: var(--stargram-accent-hover, rgba(168, 85, 247, 0.6));
           }
 
-          /* Magnetic button hover effect */
-          button:hover {
-            filter: drop-shadow(0 0 8px var(--color-accent));
+          /* Magnetic button hover — pointer devices only, or a tapped
+             button keeps the glow until you tap somewhere else. */
+          @media (hover: hover) {
+            button:hover {
+              filter: drop-shadow(0 0 8px var(--color-accent));
+            }
+          }
+
+          /* Native-app touch manners on controls: no long-press callout,
+             no text selection. (Preflight already kills the tap flash.) */
+          button, [role="option"] {
+            -webkit-touch-callout: none;
+            user-select: none;
           }
 
           /* Respect reduced motion preferences */

@@ -4,6 +4,12 @@ export default {
   content: [
     "{routes,islands,components}/**/*.{ts,tsx}",
   ],
+  // Touch devices fire :hover on tap and keep it until you tap elsewhere,
+  // so a tapped sign card stayed lit. Gates every hover: utility behind
+  // (hover: hover) instead of patching them one at a time.
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   theme: {
     extend: {
       borderWidth: {

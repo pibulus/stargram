@@ -6,13 +6,13 @@ import WelcomeChecker from "../islands/WelcomeChecker.tsx";
 export default function Home() {
   return (
     <div
-      class="min-h-[100dvh] w-full flex flex-col relative overflow-x-hidden"
+      class="h-[100dvh] w-full flex flex-col relative overflow-hidden"
       style="background: linear-gradient(135deg, #0a0a0a 0%, #151515 50%, #0a0a0a 100%);"
     >
       {/* Animated canvas background */}
       <BackgroundCanvas />
 
-      <div class="relative z-10 flex flex-col flex-1 w-full">
+      <div class="relative z-10 flex flex-col flex-1 min-h-0 w-full">
         {/* Global atmospheric effects removed for crisper terminal */}
 
         {/* Check if first visit and show welcome */}
