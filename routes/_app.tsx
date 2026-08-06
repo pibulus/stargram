@@ -16,6 +16,7 @@ export default function App({ Component }: PageProps) {
     <html lang="en">
       <head>
         <meta charset="utf-8" />
+        <script defer src="https://fleetcount.pibulus.deno.net/beacon.js" data-site="stargram.pibulus.deno.net"></script>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, viewport-fit=cover"
