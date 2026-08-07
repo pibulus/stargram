@@ -22,7 +22,7 @@ export function StructuredData({ horoscope }: StructuredDataProps) {
     "name": "Stargram",
     "url": "https://stargram.app",
     "description":
-      "A little mystical horoscope terminal: simple, fast, a bit haunted, a bit funny, grounded in real cosmic signals where possible.",
+      "A hyperdimensional terminal that sources fortunes from the cosmos — real sky signals, purple phosphor, a bit haunted, a bit funny.",
     "applicationCategory": "LifestyleApplication",
     "offers": {
       "@type": "Offer",

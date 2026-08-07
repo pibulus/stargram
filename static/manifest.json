@@ -1,13 +1,16 @@
 {
   "name": "Stargram",
   "short_name": "Stargram",
-  "description": "A little mystical horoscope terminal: simple, fast, a bit haunted, a bit funny, grounded in real cosmic signals where possible.",
+  "description": "A hyperdimensional terminal that sources fortunes from the cosmos — real sky signals, purple phosphor, a bit haunted, a bit funny.",
   "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#0a0e27",
   "theme_color": "#a78bfa",
   "orientation": "portrait-primary",
-  "categories": ["lifestyle", "entertainment"],
+  "categories": [
+    "lifestyle",
+    "entertainment"
+  ],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -34,20 +37,33 @@
       "short_name": "Daily",
       "description": "View your daily horoscope",
       "url": "/?period=daily",
-      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Weekly Outlook",
       "short_name": "Weekly",
       "description": "View your weekly horoscope",
       "url": "/?period=weekly",
-      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ],
   "related_applications": [],
   "prefer_related_applications": false,
   "scope": "/",
   "launch_handler": {
-    "client_mode": ["navigate-existing", "auto"]
+    "client_mode": [
+      "navigate-existing",
+      "auto"
+    ]
   }
 }

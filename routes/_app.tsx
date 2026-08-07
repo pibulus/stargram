@@ -16,17 +16,22 @@ export default function App({ Component }: PageProps) {
     <html lang="en">
       <head>
         <meta charset="utf-8" />
-        <script defer src="https://fleetcount.pibulus.deno.net/beacon.js" data-site="stargram.pibulus.deno.net"></script>
+        <script
+          defer
+          src="https://fleetcount.pibulus.deno.net/beacon.js"
+          data-site="stargram.pibulus.deno.net"
+        >
+        </script>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, viewport-fit=cover"
         />
         <title>
-          Stargram • Horoscopes That Look As Good As They Read
+          Stargram • The Hyperdimensional Horoscope Terminal
         </title>
         <meta
           name="description"
-          content="A little mystical horoscope terminal: simple, fast, a bit haunted, a bit funny, grounded in real cosmic signals where possible."
+          content="A hyperdimensional terminal that sources fortunes from the cosmos — real sky signals, purple phosphor, a bit haunted, a bit funny."
         />
 
         {/* Canonical URL */}
@@ -47,42 +52,42 @@ export default function App({ Component }: PageProps) {
         <meta property="og:site_name" content="Stargram" />
         <meta
           property="og:title"
-          content="Stargram • Your Horoscope as Art"
+          content="Stargram • The Hyperdimensional Horoscope Terminal"
         />
         <meta
           property="og:description"
-          content="A little mystical horoscope terminal: simple, fast, a bit haunted, a bit funny, grounded in real cosmic signals where possible."
+          content="A hyperdimensional terminal that sources fortunes from the cosmos — real sky signals, purple phosphor, a bit haunted, a bit funny."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://stargram.app" />
         <meta
           property="og:image"
-          content="https://stargram.app/og-image.jpg"
+          content="https://stargram.app/og-card.png"
         />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta
           property="og:image:alt"
-          content="Stargram - Your horoscope as shareable art"
+          content="The Stargram terminal — STARGRAM in glowing purple ASCII above the cosmic access panel"
         />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content="Stargram • Your Horoscope as Art"
+          content="Stargram • The Hyperdimensional Horoscope Terminal"
         />
         <meta
           name="twitter:description"
-          content="A little mystical horoscope terminal: simple, fast, a bit haunted, a bit funny, grounded in real cosmic signals where possible."
+          content="A hyperdimensional terminal that sources fortunes from the cosmos — real sky signals, purple phosphor, a bit haunted, a bit funny."
         />
         <meta
           name="twitter:image"
-          content="https://stargram.app/og-image.jpg"
+          content="https://stargram.app/og-card.png"
         />
         <meta
           name="twitter:image:alt"
-          content="Stargram - Your horoscope as shareable art"
+          content="The Stargram terminal — STARGRAM in glowing purple ASCII above the cosmic access panel"
         />
 
         {/* PWA Manifest */}
