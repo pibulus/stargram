@@ -124,12 +124,17 @@ export function composeFallback(packet: Packet, sign: ZodiacSign): string {
   const seed = hashStr(`${packet.dateKey}:${packet.sign}`);
   const ruler = signSky.rulerPlacement;
   const parts: string[] = [];
+  const span = packet.period === "daily"
+    ? "today"
+    : packet.period === "weekly"
+    ? "this week"
+    : "this month";
 
   const openers = [
-    `Here's the shape of today, ${cap(sign.name)}.`,
-    `Today has a particular lean to it, ${cap(sign.name)}.`,
-    `A few things about today, ${cap(sign.name)}.`,
-    `Today reads clearer than most, ${cap(sign.name)}.`,
+    `Here's the shape of ${span}, ${cap(sign.name)}.`,
+    `${cap(span)} has a particular lean to it, ${cap(sign.name)}.`,
+    `A few things about ${span}, ${cap(sign.name)}.`,
+    `${cap(span)} reads clearer than most, ${cap(sign.name)}.`,
   ];
   parts.push(pickBy(seed, openers));
 
@@ -161,8 +166,8 @@ export function composeFallback(packet: Packet, sign: ZodiacSign): string {
   parts.push(
     `The ${moon.phase.toLowerCase()} in ${signSky.moonSign} means ${
       moon.illum >= 50
-        ? "feelings sit close to the surface today"
-        : "feelings run quieter than usual today"
+        ? `feelings sit close to the surface ${span}`
+        : `feelings run quieter than usual ${span}`
     }.`,
   );
 
@@ -171,8 +176,10 @@ export function composeFallback(packet: Packet, sign: ZodiacSign): string {
   );
 
   const closers = [
-    `Today's rune is ${draw.rune.name}: ${lowerFirst(draw.rune.meaning)}.`,
-    `Today's card is ${draw.tarot.name}${
+    `The rune for ${span} is ${draw.rune.name}: ${
+      lowerFirst(draw.rune.meaning)
+    }.`,
+    `The card for ${span} is ${draw.tarot.name}${
       draw.tarot.reversed ? " reversed" : ""
     } — worth a thought.`,
     `For what it's worth: ${lowerFirst(sign.motto)}`,
