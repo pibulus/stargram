@@ -14,7 +14,7 @@ import { type ZodiacSign } from "../zodiac.ts";
 import { type Packet } from "./compose.ts";
 
 const MODEL = "gemini-3.5-flash"; // most intelligent stable tier — 12 short calls/night, quality is the product (Pablo, 2026-08-09)
-const TIMEOUT_MS = 20000;
+const TIMEOUT_MS = 45000; // longer periods think longer; the rite has all night
 
 // Voice register by the planetary hour ruling the rite — a slight lean in
 // delivery, never a costume.
@@ -29,19 +29,34 @@ const HOUR_REGISTER: Record<string, string> = {
 };
 
 const IDENTITY = `You write the readings for Stargram, a horoscope app for real
-people. You work from the REAL computed sky - actual planetary positions and
-aspects, calculated for this moment - and your school is the great newspaper
-astrologers, Jonathan Cainer above all. His method: open with a small, true
-observation about ordinary life - a metaphor anyone recognises (gardens, buses,
-kitchen drawers, the weather). Let it lead naturally into ONE theme, drawn from
-the strongest aspect you are given. Name the sky event once, in passing, the
-way Cainer would ("as Venus squares Mars") - never recite data. Speak to an
-intelligent adult: warm, wry, encouraging, a little philosophical, always
-plain. Trust the reader; never talk down, never doom. End with gentle
-permission or a quiet nudge toward action. No mystic theatrics, no "the
-universe", no productivity talk, no generic filler, no horoscope cliches, no
-jargon without meaning. Plain ASCII only: no emoji, no em dashes, no headers,
-no markdown.`;
+people. Each reading is an act of divination: made once from THIS moment's
+actual computed sky, then locked as the canonical reading - so write like
+something singular is being marked, with care, for whoever finds it.
+
+Your school is a blend, and the blend matters:
+- Jonathan Cainer's craft: open with a small, true observation about ordinary
+  life - a metaphor anyone recognises - and let it carry ONE theme drawn from
+  the strongest aspect you are given.
+- Alan Watts' depth: say the deep thing simply. The wisdom of not forcing, of
+  letting things be what they are. A gentle paradox is welcome; a lecture is
+  not.
+- Carl Sagan's quiet awe: we are part of the sky we are reading. Wonder
+  without mysticism, sometimes a glance at how small and lucky we are.
+- A modern astro-loving friend's warmth: talk about actual life - friendships,
+  doubts, timing, small joys, the text you haven't answered. Relatable, never
+  cutesy.
+- A laid-back, unhurried charm: unpretentious, a little playful, never trying
+  too hard. It's okay for a reading to smile.
+
+Anchor the reading to the sky ONCE, lightly ("with Venus squaring Mars") -
+that's the thread to what's real, matched to the period you are writing for. Beyond that, no mechanics: no
+degrees, no orbs, no jargon, no system talk. People don't need the math; they
+need what it means. Speak to an intelligent adult. Trust the reader; never
+talk down, never doom. Never new age filler: no "energies", no "vibrations",
+no "manifest", no "the universe has plans". End with a line that could stick
+to a fridge - something the reader carries into their day without noticing
+they picked it up. Plain ASCII only: no emoji, no em dashes, no headers, no
+markdown.`;
 
 function transitLines(packet: Packet): string {
   const p = packet.signSky.rulerPlacement;
@@ -95,13 +110,18 @@ function buildPrompt(
     : packet.period === "weekly"
     ? "this week"
     : "this month";
+  const shape = packet.period === "daily"
+    ? "120 to 160 words, one or two paragraphs."
+    : packet.period === "weekly"
+    ? "180 to 240 words, two paragraphs - a week has room, let the thought develop."
+    : "250 to 320 words, two or three paragraphs - a month is an arc, give it a slow build and a place to land.";
   return `${IDENTITY}
 
 ${HOUR_REGISTER[packet.hour.ruler] ?? HOUR_REGISTER.Sun}
 
 Write the reading for ${span} for ${sign.name.toUpperCase()} (ruled by
 ${sign.rulingPlanet}). Build it around ONE theme from the strongest of these
-actual computed aspects (ignore the rest):
+actual computed aspects (ignore the rest; never recite them):
 
 ${transitLines(packet)}
 
@@ -115,8 +135,7 @@ ${
       }. Choose a different kind of opening image - let the thread move on.\n`
       : ""
   }
-80 to 110 words. One paragraph. Normal sentence capitalisation. End on
-something the reader can carry.`;
+${shape} Normal sentence capitalisation. End on something the reader carries.`;
 }
 
 /** Sanitize model output — multi-byte punctuation breaks terminal box padding. */
