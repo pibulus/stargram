@@ -131,14 +131,14 @@ export function WelcomeModal() {
                     class="text-sm font-bold text-center"
                     style="color: #EC4899;"
                   >
-                    🚫🤖 100% AI-FREE ZONE
+                    COMPUTED, NOT SCRAPED
                   </p>
                   <p
                     class="text-xs text-center mt-2"
                     style="color: rgba(139, 92, 246, 0.8);"
                   >
-                    Real horoscopes from actual astrologers.<br />
-                    Downloaded from the stars. No robots.
+                    Real planetary math, divined nightly at 1:33am.<br />
+                    One reading per day. Same sky for everyone.
                   </p>
                 </div>
 
