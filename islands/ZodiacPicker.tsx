@@ -82,6 +82,28 @@ type CosmicContext = {
   };
   loadingLines: string[];
 };
+// The sovereign oracle's divination packet — computed sky, old calendars,
+// daily draw, and the braille sigil that seals the reading.
+type OraclePacket = {
+  tonalli: { name: string; meaning: string };
+  moon: { phase: string; glyph: string; illum: number };
+  signSky: {
+    ruler: string;
+    rulerPlacement: {
+      body: string;
+      sign: string;
+      degree: number;
+      retrograde: boolean;
+    };
+    moonSign: string;
+  };
+  draw: {
+    tarot: { name: string; reversed: boolean };
+    hexagram: { number: number; symbol: string; name: string };
+    rune: { name: string; symbol: string };
+  };
+  sigil: string;
+};
 
 const currentMode = signal<Mode>("picker");
 const currentPeriod = signal<Period>("daily");
@@ -93,7 +115,10 @@ const horoscopeBodyHtml = signal("");
 const bootMessages = signal<string[]>([]);
 const showHoroscope = signal(false);
 const headerTyped = signal(false);
+const bodyTyped = signal(false);
 const cosmicContext = signal<CosmicContext | null>(null);
+const oraclePacket = signal<OraclePacket | null>(null);
+const oracleSource = signal<string>("");
 
 const PICKER_TITLE_ASCII = renderFigletText("STARGRAM", {
   font: "ANSI Shadow",
@@ -273,6 +298,34 @@ function getSignalRows(context: CosmicContext) {
   ];
 }
 
+function getRiteRows(packet: OraclePacket, source: string) {
+  const ruler = packet.signSky.rulerPlacement;
+  return [
+    {
+      label: "Ruler",
+      value: `${ruler.body} ${ruler.degree}° ${ruler.sign}${
+        ruler.retrograde ? " ℞" : ""
+      }`,
+    },
+    {
+      label: "Tonalli",
+      value: `${packet.tonalli.name} · ${packet.tonalli.meaning}`,
+    },
+    {
+      label: "Draw",
+      value: `${packet.draw.tarot.name}${
+        packet.draw.tarot.reversed ? " rev" : ""
+      } / ${packet.draw.hexagram.symbol} ${packet.draw.hexagram.name} / ${packet.draw.rune.symbol} ${packet.draw.rune.name}`,
+    },
+    {
+      label: "Voice",
+      value: source === "oracle-voice"
+        ? "the oracle spoke"
+        : "composed from the count",
+    },
+  ];
+}
+
 export default function ZodiacPicker() {
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -346,6 +399,8 @@ export default function ZodiacPicker() {
 
     isLoadingHoroscope.value = true;
     headerTyped.value = false;
+    bodyTyped.value = false;
+    oraclePacket.value = null;
     cosmicContext.value = null;
     bootMessages.value = ["> opening cosmic context socket..."];
     sounds.bootStep();
@@ -378,6 +433,8 @@ export default function ZodiacPicker() {
       const horoscopeText = data.data?.horoscope_data ?? data.data?.horoscope;
       if (data.success !== false && horoscopeText) {
         const date = data.data.date || "";
+        oraclePacket.value = data.data?.packet ?? null;
+        oracleSource.value = data.data?.source ?? "";
 
         // Generate ASCII art
         const ascii = generateHoroscopeAscii(
@@ -1283,6 +1340,7 @@ export default function ZodiacPicker() {
                             enabled
                             showCompletionCursor
                             onComplete={() => {
+                              bodyTyped.value = true;
                               globalThis.dispatchEvent(
                                 new CustomEvent("stargram:reading-complete"),
                               );
@@ -1290,6 +1348,70 @@ export default function ZodiacPicker() {
                             className="font-mono min-w-0 max-w-full overflow-hidden break-words text-[14px] sm:text-[15px] leading-[1.52] sm:leading-relaxed"
                             style={`color: ${accentColor};`}
                           />
+                        )}
+
+                        {/* The Rite — the seal stamps once the report prints */}
+                        {bodyTyped.value && oraclePacket.value && (
+                          <div
+                            class="cosmic-signal-plaque border-2 rounded-xl p-3 sm:p-4"
+                            style={`background: rgba(0,0,0,0.34); border-color: ${accentColor}38; box-shadow: inset 0 0 24px ${accentColor}12, 0 0 16px ${accentGlowColor}14;`}
+                          >
+                            <div class="relative z-10 flex flex-col sm:flex-row gap-4 sm:items-start">
+                              <div class="min-w-0 flex-1 space-y-3">
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                  <p
+                                    class="font-mono text-[10px] uppercase tracking-[0.34em]"
+                                    style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}66;`}
+                                  >
+                                    The Rite
+                                  </p>
+                                  <p
+                                    class="font-mono text-[10px] uppercase tracking-[0.18em]"
+                                    style={`color: ${accentGlowColor}96;`}
+                                  >
+                                    ∴∵∷ sky computed · reading locked ∷∵∴
+                                  </p>
+                                </div>
+                                <div class="grid gap-2 sm:grid-cols-2">
+                                  {getRiteRows(
+                                    oraclePacket.value,
+                                    oracleSource.value,
+                                  ).map((row) => (
+                                    <div
+                                      key={row.label}
+                                      class="min-w-0 border-b pb-1"
+                                      style={`border-color: ${accentGlowColor}22;`}
+                                    >
+                                      <p
+                                        class="font-mono text-[9px] uppercase tracking-[0.26em]"
+                                        style={`color: ${accentGlowColor}86;`}
+                                      >
+                                        {row.label}
+                                      </p>
+                                      <p
+                                        class="font-mono text-[11px] sm:text-xs leading-snug break-words"
+                                        style={`color: ${accentColor}D8;`}
+                                      >
+                                        {row.value}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              <div
+                                class="shrink-0 border-t sm:border-t-0 sm:border-l pt-3 sm:pt-1 sm:pl-4 text-left sm:text-center"
+                                style={`border-color: ${accentColor}33; color: ${accentColor};`}
+                              >
+                                <pre class="cosmic-charm font-mono text-[7px] sm:text-[8px] leading-[1.05]">{oraclePacket.value.sigil}</pre>
+                                <p
+                                  class="mt-2 font-mono text-[9px] uppercase tracking-[0.18em]"
+                                  style={`color: ${accentGlowColor}A8;`}
+                                >
+                                  sigil of the day
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         )}
 
                         {/* Navigation */}

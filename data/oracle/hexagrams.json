@@ -1,0 +1,514 @@
+[
+  {
+    "number": 1,
+    "symbol": "䷀",
+    "name": "The Creative",
+    "zh": "乾",
+    "judgment": "The Creative works sublime success,\nFurthering through perseverance.",
+    "image": "The movement of heaven is full of power.\nThus the superior man makes himself strong and untiring."
+  },
+  {
+    "number": 2,
+    "symbol": "䷁",
+    "name": "The Receptive",
+    "zh": "坤",
+    "judgment": "The Receptive brings about sublime success,\nFurthering through the perseverance of a mare.\nIf the superior man undertakes something and tries to lead,\nHe goes astray;\nBut if he follows, he finds guidance.\nIt is favorable to find friends in the west and south,\nTo forego friends in the east and north.\nQuiet perseverance brings good fortune.",
+    "image": "The earth's condition is receptive devotion.\nThus the superior man who has breadth of character\nCarries the outer world."
+  },
+  {
+    "number": 3,
+    "symbol": "䷂",
+    "name": "Difficulty at the Beginning",
+    "zh": "屯",
+    "judgment": "Difficulty at the Beginning works supreme success,\nFurthering through perseverance.\nNothing should be undertaken.\nIt furthers one to appoint helpers.",
+    "image": "Clouds and thunder:\nThe image of Difficulty at the Beginning.\nThus the superior man\nBrings order out of confusion."
+  },
+  {
+    "number": 4,
+    "symbol": "䷃",
+    "name": "Youthful Folly",
+    "zh": "蒙",
+    "judgment": "Youthful Folly has success.\nIt is not I who seek the young fool;\nThe young fool seeks me.\nAt the first oracle I inform him.\nIf he asks two or three times, it is importunity.\nIf he importunes, I give him no information.\nPerseverance furthers.",
+    "image": "A spring wells up at the foot of the mountain:\nThe image of Youth.\nThus the superior man fosters his character\nBy thoroughness in all that he does."
+  },
+  {
+    "number": 5,
+    "symbol": "䷄",
+    "name": "Waiting [Nourishment]",
+    "zh": "需",
+    "judgment": "Waiting. If you are sincere,\nYou have light and success.\nPerseverance brings good fortune.\nIt furthers one to cross the great water.",
+    "image": "Clouds rise up to heaven:\nThe image of Waiting.\nThus the superior man eats and drinks,\nIs joyous and of good cheer."
+  },
+  {
+    "number": 6,
+    "symbol": "䷅",
+    "name": "Conflict",
+    "zh": "訟",
+    "judgment": "Conflict. You are sincere\nAnd are being obstructed.\nA cautious halt halfway brings good fortune.\nGoing through to the end brings misfortune.\nIt furthers one to see the great man.\nIt does not further one to cross the great water.",
+    "image": "Heaven and water go their opposite ways:\nThe image of Conflict.\nThus in all his transactions the superior man\nCarefully considers the beginning."
+  },
+  {
+    "number": 7,
+    "symbol": "䷆",
+    "name": "The Army",
+    "zh": "師",
+    "judgment": "The Army. The army needs perseverance\nAnd a strong man.\nGood fortune without blame.",
+    "image": "In the middle of the earth is water:\nThe image of the Army.\nThus the superior man increases his masses\nBy generosity toward the people."
+  },
+  {
+    "number": 8,
+    "symbol": "䷇",
+    "name": "Holding Together [Union]",
+    "zh": "比",
+    "judgment": "Holding Together brings good fortune.\nInquire of the oracle once again\nWhether you possess sublimity, constancy, and perseverance;\nThen there is no blame.\nThose who are uncertain gradually join.\nWhoever comes too late\nMeets with misfortune.",
+    "image": "On the earth is water:\nThe image of Holding Together.\nThus the kings of antiquity\nBestowed the different states as fiefs\nAnd cultivated friendly relations\nWith the feudal lords."
+  },
+  {
+    "number": 9,
+    "symbol": "䷈",
+    "name": "The Taming Power of the Small",
+    "zh": "小畜",
+    "judgment": "The Taming Power of the Small\nHas success.\nDense clouds, no rain from our western region.",
+    "image": "The wind drives across heaven:\nThe image of The Taming Power of the Small.\nThus the superior man\nRefines the outward aspect of his nature."
+  },
+  {
+    "number": 10,
+    "symbol": "䷉",
+    "name": "Treading [Conduct]",
+    "zh": "履",
+    "judgment": "Treading. Treading upon the tail of the tiger.\nIt does not bite the man. Success.",
+    "image": "Heaven above, the lake below:\nThe image of Treading.\nThus the superior man discriminates between high and low,\nAnd thereby fortifies the thinking of the people."
+  },
+  {
+    "number": 11,
+    "symbol": "䷊",
+    "name": "Peace",
+    "zh": "泰",
+    "judgment": "Peace. The small departs,\nThe great approaches.\nGood fortune. Success.",
+    "image": "Heaven and earth unite: the image of Peace.\nThus the ruler\nDivides and completes the course of heaven and earth;\nHe furthers and regulates the gifts of heaven and earth,\nAnd so aids the people."
+  },
+  {
+    "number": 12,
+    "symbol": "䷋",
+    "name": "Standstill [Stagnation]",
+    "zh": "否",
+    "judgment": "Standstill. Evil people do not further\nThe perseverance of the superior man.\nThe great departs; the small approaches.",
+    "image": "Heaven and earth do not unite:\nThe image of Standstill.\nThus the superior man falls back upon his inner worth\nIn order to escape the difficulties.\nHe does not permit himself to be honored with revenue."
+  },
+  {
+    "number": 13,
+    "symbol": "䷌",
+    "name": "Fellowship with Men",
+    "zh": "同人",
+    "judgment": "Fellowship with Men in the open.\nSuccess.\nIt furthers one to cross the great water.\nThe perseverance of the superior man furthers.",
+    "image": "Heaven together with fire:\nThe image of Fellowship with Men.\nThus the superior man organizes the clans\nAnd makes distinctions between things."
+  },
+  {
+    "number": 14,
+    "symbol": "䷍",
+    "name": "Possession in Great Measure",
+    "zh": "大有",
+    "judgment": "Possession in Great Measure.\nSupreme success.",
+    "image": "Fire in heaven above:\nThe image of Possession in Great Measure.\nThus the superior man curbs evil and furthers good,\nAnd thereby obeys the benevolent will of heaven."
+  },
+  {
+    "number": 15,
+    "symbol": "䷎",
+    "name": "Modesty",
+    "zh": "謙",
+    "judgment": "Modesty creates success.\nThe superior man carries things through.",
+    "image": "Within the earth, a mountain:\nThe image of Modesty.\nThus the superior man reduces that which is too much,\nAnd augments that which is too little.\nHe weighs things and makes them equal."
+  },
+  {
+    "number": 16,
+    "symbol": "䷏",
+    "name": "Enthusiasm",
+    "zh": "豫",
+    "judgment": "Enthusiasm. It furthers one to install helpers\nAnd to set armies marching.",
+    "image": "Thunder comes resounding out of the earth:\nThe image of Enthusiasm.\nThus the ancient kings made music\nIn order to honor merit,\nAnd offered it with splendor\nto the Supreme Deity,\nInviting their ancestors to be present."
+  },
+  {
+    "number": 17,
+    "symbol": "䷐",
+    "name": "Following",
+    "zh": "隨",
+    "judgment": "Following has supreme success.\nPerseverance furthers. No blame.",
+    "image": "Thunder in the middle of the lake:\nThe image of Following.\nThus the superior man at nightfall\nGoes indoors for rest and recuperation."
+  },
+  {
+    "number": 18,
+    "symbol": "䷑",
+    "name": "Work on What Has Been Spoiled [Decay]",
+    "zh": "蠱",
+    "judgment": "Work on What Has Been Spoiled\nHas supreme success.\nIt furthers one to cross the great water.\nBefore the starting point, three days.\nAfter the starting point, three days.",
+    "image": "The wind blows low on the mountain:\nThe image of Decay.\nThus the superior man stirs up the people\nAnd strengthens their spirit."
+  },
+  {
+    "number": 19,
+    "symbol": "䷒",
+    "name": "Approach",
+    "zh": "臨",
+    "judgment": "Approach has supreme success.\nPerseverance furthers.\nWhen the eighth month comes,\nThere will be misfortune.",
+    "image": "The earth above the lake:\nThe image of Approach.\nThus the superior man is inexhaustible\nIn his will to teach,\nAnd without limits\nIn his tolerance and protection of the people."
+  },
+  {
+    "number": 20,
+    "symbol": "䷓",
+    "name": "Contemplation [View]",
+    "zh": "觀",
+    "judgment": "Contemplation. The ablution has been made,\nBut not yet the offering.\nFull of trust they look up to him.",
+    "image": "The wind blows over the earth:\nThe image of Contemplation.\nThus the kings of old visited the regions of the world,\nContemplated the people,\nAnd gave them instruction."
+  },
+  {
+    "number": 21,
+    "symbol": "䷔",
+    "name": "Biting Through",
+    "zh": "噬嗑",
+    "judgment": "Biting Through has success.\nIt is favorable to let justice be administered.",
+    "image": "Thunder and lightning:\nThe image of Biting Through.\nThus the kings of former times made firm the laws\nThrough clearly defined penalties."
+  },
+  {
+    "number": 22,
+    "symbol": "䷕",
+    "name": "Grace",
+    "zh": "賁",
+    "judgment": "Grace has success.\nIn small matters\nIt is favorable to undertake something.",
+    "image": "Fire at the foot of the mountain:\nThe image of Grace.\nThus does the superior man proceed\nWhen clearing up current affairs.\nBut he dare not decide controversial issues in this way."
+  },
+  {
+    "number": 23,
+    "symbol": "䷖",
+    "name": "Splitting Apart",
+    "zh": "剝",
+    "judgment": "Splitting Apart. It does not further one\nTo go anywhere.",
+    "image": "The mountain rests on the earth:\nThe image of Splitting Apart.\nThus those above can ensure their position\nOnly by giving generously to those below."
+  },
+  {
+    "number": 24,
+    "symbol": "䷗",
+    "name": "Return [The Turning Point]",
+    "zh": "復",
+    "judgment": "Return. Success.\nGoing out and coming in without error.\nFriends come without blame.\nTo and fro goes the way.\nOn the seventh day comes return.\nIt furthers one to have somewhere to go.",
+    "image": "Thunder within the earth:\nThe image of the Turning Point.\nThus the kings of antiquity closed the passes\nAt the time of solstice.\nMerchants and strangers did not go about,\nAnd the ruler\nDid not travel through the provinces."
+  },
+  {
+    "number": 25,
+    "symbol": "䷘",
+    "name": "Innocence [The Unexpected]",
+    "zh": "無妄",
+    "judgment": "Innocence. Supreme success.\nPerseverance furthers.\nIf someone is not as he should be,\nHe has misfortune,\nAnd it does not further him\nTo undertake anything.",
+    "image": "Under heaven thunder rolls:\nAll things attain the natural state of innocence.\nThus the kings of old,\nRich in virtue, and in harmony with the time,\nFostered and nourished all beings."
+  },
+  {
+    "number": 26,
+    "symbol": "䷙",
+    "name": "The Taming Power of the Great",
+    "zh": "大畜",
+    "judgment": "The Taming Power of the Great.\nPerseverance furthers.\nNot eating at home brings good fortune.\nIt furthers one to cross the great water.",
+    "image": "Heaven within the mountain:\nThe image of the Taming Power of the Great.\nThus the superior man acquaints himself with many sayings of antiquity\nAnd many deeds of the past,\nIn order to strengthen his character thereby."
+  },
+  {
+    "number": 27,
+    "symbol": "䷚",
+    "name": "The Corners of the Mouth",
+    "zh": "頤",
+    "judgment": "The Corners of the Mouth.\nPerseverance brings good fortune.\nPay heed to the providing of nourishment\nAnd to what a man seeks\nTo fill his own mouth with.",
+    "image": "At the foot of the mountain, thunder:\nThe image of Providing Nourishment.\nThus the superior man is careful of his words\nAnd temperate in eating and drinking."
+  },
+  {
+    "number": 28,
+    "symbol": "䷛",
+    "name": "Preponderance of the Great",
+    "zh": "大過",
+    "judgment": "Preponderance of the Great.\nThe ridgepole sags to the breaking point.\nIt furthers one to have somewhere to go.\nSuccess.",
+    "image": "The lake rises above the trees:\nThe image of Preponderance of the Great.\nThus the superior man, when he stands alone,\nIs unconcerned,\nAnd if he has to renounce the world,\nHe is undaunted."
+  },
+  {
+    "number": 29,
+    "symbol": "䷜",
+    "name": "The Abysmal [Water]",
+    "zh": "坎",
+    "judgment": "The Abysmal repeated.\nIf you are sincere, you have success in your heart,\nAnd whatever you do succeeds.",
+    "image": "Water flows on uninterruptedly and reaches its goal:\nThe image of the Abysmal repeated.\nThus the superior man walks in lasting virtue\nAnd carries on the business of teaching."
+  },
+  {
+    "number": 30,
+    "symbol": "䷝",
+    "name": "The Clinging, Fire",
+    "zh": "離",
+    "judgment": "The Clinging. Perseverance furthers.\nIt brings success.\nCare of the cow brings good fortune.",
+    "image": "That which is bright rises twice:\nThe image of Fire.\nThus the great man, by perpetuating this brightness,\nIllumines the four quarters of the world."
+  },
+  {
+    "number": 31,
+    "symbol": "䷞",
+    "name": "Influence [Wooing]",
+    "zh": "咸",
+    "judgment": "Influence. Success.\nPerseverance furthers.\nTo take a maiden to wife brings good fortune.",
+    "image": "A lake on the mountain:\nThe image of Influence.\nThus the superior man encourages people to approach him\nBy his readiness to receive them."
+  },
+  {
+    "number": 32,
+    "symbol": "䷟",
+    "name": "Duration",
+    "zh": "恆",
+    "judgment": "Duration. Success. No blame.\nPerseverance furthers.\nIt furthers one to have somewhere to go.",
+    "image": "Thunder and wind: the image of Duration.\nThus the superior man stands firm\nAnd does not change his direction."
+  },
+  {
+    "number": 33,
+    "symbol": "䷠",
+    "name": "Retreat",
+    "zh": "遯",
+    "judgment": "Retreat. Success.\nIn what is small, perseverance furthers.",
+    "image": "Mountain under heaven: the image of Retreat.\nThus the superior man keeps the inferior man at a distance,\nNot angrily but with reserve."
+  },
+  {
+    "number": 34,
+    "symbol": "䷡",
+    "name": "The Power of the Great",
+    "zh": "大壯",
+    "judgment": "The Power of the Great. Perseverance furthers.",
+    "image": "Thunder in heaven above:\nThe image of the Power of the Great.\nThus the superior man does not tread upon paths\nThat do not accord with established order."
+  },
+  {
+    "number": 35,
+    "symbol": "䷢",
+    "name": "Progress",
+    "zh": "晉",
+    "judgment": "Progress. The powerful prince\nIs honored with horses in large numbers.\nIn a single day he is granted audience three times.",
+    "image": "The sun rises over the earth:\nThe image of Progress.\nThus the superior man himself\nBrightens his bright virtue."
+  },
+  {
+    "number": 36,
+    "symbol": "䷣",
+    "name": "Darkening of the Light",
+    "zh": "明夷",
+    "judgment": "Darkening of the Light. In adversity\nIt furthers one to be persevering.",
+    "image": "The light has sunk into the earth:\nThe image of Darkening of the Light.\nThus does the superior man live with the great mass:\nHe veils his light, yet still shines."
+  },
+  {
+    "number": 37,
+    "symbol": "䷤",
+    "name": "The Family [The Clan]",
+    "zh": "家人",
+    "judgment": "The Family. The perseverance of the woman furthers.",
+    "image": "Wind comes forth from fire:\nThe image of the Family.\nThus the superior man has substance in his words\nAnd duration in his way of life."
+  },
+  {
+    "number": 38,
+    "symbol": "䷥",
+    "name": "Opposition",
+    "zh": "睽",
+    "judgment": "Opposition. In small matters, good fortune.",
+    "image": "Above, fire; below, the lake:\nThe image of Opposition.\nThus amid all fellowship\nThe superior man retains his individuality."
+  },
+  {
+    "number": 39,
+    "symbol": "䷦",
+    "name": "Obstruction",
+    "zh": "蹇",
+    "judgment": "Obstruction. The southwest furthers.\nThe northeast does not further.\nIt furthers one to see the great man.\nPerseverance brings good fortune.",
+    "image": "Water on the mountain:\nThe image of Obstruction.\nThus the superior man turns his attention to himself\nAnd molds his character."
+  },
+  {
+    "number": 40,
+    "symbol": "䷧",
+    "name": "Deliverance",
+    "zh": "解",
+    "judgment": "Deliverance. The southwest furthers.\nIf there is no longer anything where one has to go,\nReturn brings good fortune.\nIf there is still something where one has to go,\nHastening brings good fortune.",
+    "image": "Thunder and rain set in:\nThe image of Deliverance.\nThus the superior man pardons mistakes\nAnd forgives misdeeds."
+  },
+  {
+    "number": 41,
+    "symbol": "䷨",
+    "name": "Decrease",
+    "zh": "解",
+    "judgment": "Decrease combined with sincerity\nBrings about supreme good fortune\nWithout blame.\nOne may be persevering in this.\nIt furthers one to undertake something.\nHow is this to be carried out?\nOne may use two small bowls for the sacrifice.",
+    "image": "At the foot of the mountain, the lake:\nThe image of Decrease.\nThus the superior man controls his anger\nAnd restrains his instincts."
+  },
+  {
+    "number": 42,
+    "symbol": "䷩",
+    "name": "Increase",
+    "zh": "益",
+    "judgment": "Increase. It furthers one\nTo undertake something.\nIt furthers one to cross the great water.",
+    "image": "Wind and thunder: the image of Increase.\nThus the superior man:\nIf he sees good, he imitates it;\nIf he has faults, he rids himself of them."
+  },
+  {
+    "number": 43,
+    "symbol": "䷪",
+    "name": "Break-through [Resoluteness]",
+    "zh": "夬",
+    "judgment": "Break-through. One must resolutely make the matter known\nAt the court of the king.\nIt must be announced truthfully. Danger.\nIt is necessary to notify one's own city.\nIt does not further to resort to arms.\nIt furthers one to undertake something.",
+    "image": "The lake has risen up to heaven:\nThe image of Break-through.\nThus the superior man\nDispenses riches downward\nAnd refrains from resting on his virtue."
+  },
+  {
+    "number": 44,
+    "symbol": "䷫",
+    "name": "Coming to Meet",
+    "zh": "姤",
+    "judgment": "Coming to Meet. The maiden is powerful.\nOne should not marry such a maiden.",
+    "image": "Under heaven, wind:\nThe image of Coming to Meet.\nThus does the prince act when disseminating his commands\nAnd proclaiming them to the four quarters of heaven."
+  },
+  {
+    "number": 45,
+    "symbol": "䷬",
+    "name": "Gathering Together [Massing]",
+    "zh": "萃",
+    "judgment": "Gathering Together. Success.\nThe king approaches his temple.\nIt furthers one to see the great\nThis brings success. Perseverance furthers.\nTo bring great offerings creates good fortune.\nIt furthers one to undertake something.",
+    "image": "Over the earth, the lake:\nThe image of Gathering Together.\nThus the superior man renews his weapons\nIn order to meet the unforseen."
+  },
+  {
+    "number": 46,
+    "symbol": "䷭",
+    "name": "Pushing Upward",
+    "zh": "升",
+    "judgment": "Pushing Upward has supreme success.\nOne must see the great man.\nFear not.\nDeparture toward the south\nBrings good fortune.",
+    "image": "Within the earth, wood grows:\nThe image of Pushing Upward.\nThus the superior man of devoted character\nHeaps up small things\nIn order to achieve something high and great."
+  },
+  {
+    "number": 47,
+    "symbol": "䷮",
+    "name": "Oppression [Exhaustion]",
+    "zh": "困",
+    "judgment": "Oppression. Success. Perseverance.\nThe great man brings about good fortune.\nNo blame.\nWhen one has something to say,\nIt is not believed.",
+    "image": "There is no water in the lake:\nThe image of Exhaustion.\nThus the superior man stakes his life\nOn following his will."
+  },
+  {
+    "number": 48,
+    "symbol": "䷯",
+    "name": "The Well",
+    "zh": "井",
+    "judgment": "The Well. The town may be changed,\nBut the well cannot be changed.\nIt neither decreases nor increases.\nThey come and go and draw from the well.\nIf one gets down almost to the water\nAnd the rope does not go all the way,\nOr the jug breaks, it brings misfortune.",
+    "image": "Water over wood: the image of the Well.\nThus the superior man encourages the people at their work,\nAnd exhorts them to help one another."
+  },
+  {
+    "number": 49,
+    "symbol": "䷰",
+    "name": "Revolution [Molting]",
+    "zh": "革",
+    "judgment": "Revolution. On your own day\nYou are believed.\nSupreme success,\nFurthering through perseverance.\nRemorse disappears.",
+    "image": "Fire in the lake: the image of Revolution.\nThus the superior man\nSets the calendar in order\nAnd makes the seasons clear."
+  },
+  {
+    "number": 50,
+    "symbol": "䷱",
+    "name": "The Cauldron",
+    "zh": "鼎",
+    "judgment": "The Cauldron. Supreme good fortune.\nSuccess.",
+    "image": "Fire over wood:\nThe image of the Cauldron.\nThus the superior man consolidates his fate\nBy making his position correct."
+  },
+  {
+    "number": 51,
+    "symbol": "䷲",
+    "name": "The Arousing [Shock, Thunder]",
+    "zh": "震",
+    "judgment": "Shock brings success.\nShock comes - frightening, oh!\nLaughing words - shrieking, ha!\nThe shock terrifies for a hundred miles,\nAnd he does not let fall the sacrificial spoon and chalice.",
+    "image": "Thunder repeated: the image of Shock.\nThus in fear and trembling\nThe superior man sets his life in order\nAnd examines himself."
+  },
+  {
+    "number": 52,
+    "symbol": "䷳",
+    "name": " Keeping Still, Mountain",
+    "zh": "艮",
+    "judgment": "Keeping Still. Keeping his back still\nSo that he no longer feels his body.\nHe goes into his courtyard\nAnd does not see his people.\nNo blame.",
+    "image": "Mountains standing close together:\nThe image of Keeping Still.\nThus the superior man\nDoes not permit his thoughts\nTo go beyond his situation."
+  },
+  {
+    "number": 53,
+    "symbol": "䷴",
+    "name": "Development [Gradual Progress]",
+    "zh": "漸",
+    "judgment": "Development. The maiden\nIs given in marriage.\nGood fortune.\nPerseverance furthers.",
+    "image": "On the mountain, a tree:\nThe image of Development.\nThus the superior man abides in dignity and virtue,\nIn order to improve the mores."
+  },
+  {
+    "number": 54,
+    "symbol": "䷵",
+    "name": "The Marrying Maiden",
+    "zh": "歸妹",
+    "judgment": "The Marrying Maiden.\nUndertakings bring misfortune.\nNothing that would further.",
+    "image": "Thunder over the lake:\nThe image of the Marrying Maiden.\nThus the superior man\nUnderstands the transitory\nIn the light of the eternity of the end."
+  },
+  {
+    "number": 55,
+    "symbol": "䷶",
+    "name": "Abundance [Fullness]",
+    "zh": "豐",
+    "judgment": "Abundance has success.\nThe king attains abundance.\nBe not sad.\nBe like the sun at midday.",
+    "image": "Both thunder and lightning come:\nThe image of Abundance.\nThus the superior man decides lawsuits\nAnd carries out punishments."
+  },
+  {
+    "number": 56,
+    "symbol": "䷷",
+    "name": "The Wanderer",
+    "zh": "旅",
+    "judgment": "The Wanderer. Success through smallness.\nPerseverance brings good fortune\nTo the wanderer.",
+    "image": "Fire on the mountain:\nThe image of the Wanderer.\nThus the superior man\nIs clear-minded and cautious\nIn imposing penalties,\nAnd protracts no lawsuits."
+  },
+  {
+    "number": 57,
+    "symbol": "䷸",
+    "name": "The Gentle [The Penetrating, Wind]",
+    "zh": "巽",
+    "judgment": "The Gentle. Success through what is small.\nIt furthers one to have somewhere to go.\nIt furthers one to see the great man.",
+    "image": "Winds following one upon the other:\nThe image of the Gently Penetrating.\nThus the superior man\nSpreads his commands abroad\nAnd carries out his undertakings."
+  },
+  {
+    "number": 58,
+    "symbol": "䷹",
+    "name": "The Joyous, Lake",
+    "zh": "兌",
+    "judgment": "The Joyous. Success.\nPerseverance is favorable.",
+    "image": "Lakes resting one on the other:\nThe image of the Joyous.\nThus the superior man joins with his friends\nFor discussion and practice."
+  },
+  {
+    "number": 59,
+    "symbol": "䷺",
+    "name": "Dispersion [Dissolution]",
+    "zh": "渙",
+    "judgment": "Dispersion. Success.\nThe king approaches his temple.\nIt furthers one to cross the great water.\nPerseverance furthers.",
+    "image": "The wind drives over the water:\nThe image of Dispersion.\nThus the kings of old sacrificed to the Lord\nAnd built temples."
+  },
+  {
+    "number": 60,
+    "symbol": "䷻",
+    "name": "Limitation",
+    "zh": "節",
+    "judgment": "Limitation. Success.\nGalling limitation must not be persevered in.",
+    "image": "Water over lake: the image of Limitation.\nThus the superior man\nCreates number and measure,\nAnd examines the nature of virtue and correct conduct."
+  },
+  {
+    "number": 61,
+    "symbol": "䷼",
+    "name": "Inner Truth",
+    "zh": "中孚",
+    "judgment": "Inner Truth. Pigs and fishes.\nGood fortune.\nIt furthers one to cross the great water.\nPerseverance furthers.",
+    "image": "Wind over lake: the image of Inner Truth.\nThus the superior man discusses criminal cases\nIn order to delay executions."
+  },
+  {
+    "number": 62,
+    "symbol": "䷽",
+    "name": "Preponderance of the Small",
+    "zh": "小過",
+    "judgment": "Preponderance of the Small. Success.\nPerseverance furthers.\nSmall things may be done; great things should not be done.\nThe flying bird brings the message:\nIt is not well to strive upward,\nIt is well to remain below.\nGreat good fortune.",
+    "image": "Thunder on the mountain:\nThe image of Preponderance of the Small.\nThus in his conduct the superior man gives preponderance to reverence.\nIn bereavement he gives preponderance to grief.\nIn his expenditures he gives preponderance to thrift."
+  },
+  {
+    "number": 63,
+    "symbol": "䷾",
+    "name": "After Completion",
+    "zh": "既濟",
+    "judgment": "After Completion. Success in small matters.\nPerseverance furthers.\nAt the beginning good fortune,\nAt the end disorder.",
+    "image": "Water over fire: the image of the condition\nIn After Completion.\nThus the superior man\nTakes thought of misfortune\nAnd arms himself against it in advance."
+  },
+  {
+    "number": 64,
+    "symbol": "䷿",
+    "name": "Before Completion",
+    "zh": "未濟",
+    "judgment": "Before Completion. Success.\nBut if the little fox, after nearly completing the crossing,\nGets his tail in the water,\nThere is nothing that would further.",
+    "image": "Fire over water:\nThe image of the condition before transition.\nThus the superior man is careful\nIn the differentiation of things,\nSo that each finds its place."
+  }
+]
