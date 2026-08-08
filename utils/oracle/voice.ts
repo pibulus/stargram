@@ -115,17 +115,23 @@ ${
       }. Choose a different kind of opening image - let the thread move on.\n`
       : ""
   }
-80 to 110 words. One paragraph. End on something the reader can carry.`;
+80 to 110 words. One paragraph. Normal sentence capitalisation. End on
+something the reader can carry.`;
 }
 
 /** Sanitize model output — multi-byte punctuation breaks terminal box padding. */
 function sanitize(text: string): string {
-  return text
+  const clean = text
     .replace(/\s*—\s*|\s*–\s*/g, " - ")
     .replace(/[‘’]/g, "'")
     .replace(/[“”]/g, '"')
     .replace(/\s+/g, " ")
     .trim();
+  // backstop for the model's occasional all-lowercase aesthetic roll
+  return clean.replace(
+    /(^|[.!?]\s+)([a-z])/g,
+    (_m, pre, ch) => pre + ch.toUpperCase(),
+  );
 }
 
 /**
