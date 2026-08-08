@@ -319,9 +319,7 @@ function getRiteRows(packet: OraclePacket, source: string) {
     },
     {
       label: "Voice",
-      value: source === "oracle-voice"
-        ? "the oracle spoke"
-        : "composed from the count",
+      value: source === "oracle-voice" ? "oracle" : "composed",
     },
   ];
 }

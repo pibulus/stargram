@@ -102,7 +102,7 @@ const ASPECT_VERB: Record<string, string> = {
   opposition: "stands across from",
   square: "grinds against",
   trine: "flows easily with",
-  sextile: "opens a quiet door to",
+  sextile: "works quietly with",
 };
 
 function pickBy(seedNum: number, options: string[]): string {
@@ -126,10 +126,10 @@ export function composeFallback(packet: Packet, sign: ZodiacSign): string {
   const parts: string[] = [];
 
   const openers = [
-    `The sky tilts your way today, ${cap(sign.name)}.`,
-    `Something in today's sky has your name on it, ${cap(sign.name)}.`,
-    `Today the stars speak plainly to you, ${cap(sign.name)}.`,
-    `The signal comes through clear for you today, ${cap(sign.name)}.`,
+    `Here's the shape of today, ${cap(sign.name)}.`,
+    `Today has a particular lean to it, ${cap(sign.name)}.`,
+    `A few things about today, ${cap(sign.name)}.`,
+    `Today reads clearer than most, ${cap(sign.name)}.`,
   ];
   parts.push(pickBy(seed, openers));
 
@@ -143,33 +143,39 @@ export function composeFallback(packet: Packet, sign: ZodiacSign): string {
   const top = signSky.rulerAspects[0];
   if (top) {
     const other = top.a === ruler.body ? top.b : top.a;
+    const tails = [
+      "worth noticing what surfaces there",
+      "keep half an eye on it",
+      "no drama, just useful to know",
+      "it explains a lot if the day feels off",
+    ];
     parts.push(
-      `It ${ASPECT_VERB[top.type]} ${other}, which stirs ${
+      `It ${
+        ASPECT_VERB[top.type]
+      } ${other} right now, which tends to show up in ${
         PLANET_DOMAIN[other]
-      } — pay attention to what surfaces there.`,
+      } — ${pickBy(seed >>> 5, tails)}.`,
     );
   }
 
   parts.push(
-    `The ${moon.phase.toLowerCase()} in ${signSky.moonSign} sets the emotional weather: ${
+    `The ${moon.phase.toLowerCase()} in ${signSky.moonSign} means ${
       moon.illum >= 50
-        ? "feelings run bright and close to the surface"
-        : "feelings run quiet and deep beneath the surface"
+        ? "feelings sit close to the surface today"
+        : "feelings run quieter than usual today"
     }.`,
   );
 
   parts.push(
-    `In the old count of days it is ${tonalli.name} — ${tonalli.meaning}.`,
+    `In the old count of days it's ${tonalli.name} — ${tonalli.meaning}.`,
   );
 
   const closers = [
-    `The ${draw.rune.name} rune adds its word: ${
-      lowerFirst(draw.rune.meaning)
-    }.`,
-    `The cards echo it — ${draw.tarot.name}${
+    `Today's rune is ${draw.rune.name}: ${lowerFirst(draw.rune.meaning)}.`,
+    `Today's card is ${draw.tarot.name}${
       draw.tarot.reversed ? " reversed" : ""
-    } sits on your table.`,
-    `Motto for the day: ${sign.motto}`,
+    } — worth a thought.`,
+    `For what it's worth: ${lowerFirst(sign.motto)}`,
   ];
   parts.push(pickBy(seed >>> 3, closers));
 
