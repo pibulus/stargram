@@ -1,77 +1,9 @@
 // ===================================================================
-// ORACLE · count.ts — the calendars: JDN, tonalpohualli, moon, planetary hour
+// ORACLE · count.ts — moon state + planetary hour, pure math, zero APIs
 // ===================================================================
-// All pure math, zero APIs. Ported from plenum-engine count.ts; formulas
-// verified against the Caso anchor (13 Aug 1521 = 1 Coatl) and Astrolog 8.00.
-// The +5 % 13 and +16 % 20 offsets are calibrated — do not re-derive.
-
-export const AZTEC_SIGNS = [
-  "Cipactli",
-  "Ehecatl",
-  "Calli",
-  "Cuetzpalin",
-  "Coatl",
-  "Miquiztli",
-  "Mazatl",
-  "Tochtli",
-  "Atl",
-  "Itzcuintli",
-  "Ozomahtli",
-  "Malinalli",
-  "Acatl",
-  "Ocelotl",
-  "Cuauhtli",
-  "Cozcacuauhtli",
-  "Ollin",
-  "Tecpatl",
-  "Quiahuitl",
-  "Xochitl",
-];
-
-export const SIGN_MEANINGS: Record<string, string> = {
-  Cipactli: "crocodile · the primordial",
-  Ehecatl: "wind · the breath",
-  Calli: "house · the shelter",
-  Cuetzpalin: "lizard · the quick",
-  Coatl: "serpent · the coiled",
-  Miquiztli: "death · the turning",
-  Mazatl: "deer · the wild step",
-  Tochtli: "rabbit · the leap",
-  Atl: "water · the current",
-  Itzcuintli: "dog · the loyal",
-  Ozomahtli: "monkey · the play",
-  Malinalli: "grass · the twisting",
-  Acatl: "reed · the hollow bone",
-  Ocelotl: "jaguar · the night hunter",
-  Cuauhtli: "eagle · the high sight",
-  Cozcacuauhtli: "vulture · the elder",
-  Ollin: "movement · the quake",
-  Tecpatl: "obsidian knife · the cut",
-  Quiahuitl: "rain · the falling",
-  Xochitl: "flower · the bloom",
-};
-
-// Fliegel–Van Flandern, calendar date (Y/M/D) → Julian Day Number
-export function jdnFromYmd(y: number, m: number, d: number): number {
-  const a = Math.floor((14 - m) / 12);
-  const yy = y + 4800 - a;
-  const mm = m + 12 * a - 3;
-  return d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4) -
-    Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
-}
-
-export interface Tonal {
-  num: number;
-  sign: string;
-  meaning: string;
-  name: string; // "9 Tecpatl"
-}
-
-export function tonalpohualli(jdn: number): Tonal {
-  const num = ((jdn + 5) % 13) + 1;
-  const sign = AZTEC_SIGNS[(jdn + 16) % 20];
-  return { num, sign, meaning: SIGN_MEANINGS[sign], name: `${num} ${sign}` };
-}
+// Ported from plenum-engine count.ts. (The tonalpohualli port lived here
+// briefly — pulled from the public surface 2026-08-09, Pablo's call: the
+// readings are for everyone. It lives on in plenum-engine and git history.)
 
 export interface MoonState {
   age: number; // days into synodic cycle

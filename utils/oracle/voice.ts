@@ -13,7 +13,7 @@
 import { type ZodiacSign } from "../zodiac.ts";
 import { type Packet } from "./compose.ts";
 
-const MODEL = "gemini-flash-lite-latest"; // rolling alias — never pin a dated model
+const MODEL = "gemini-3.5-flash"; // most intelligent stable tier — 12 short calls/night, quality is the product (Pablo, 2026-08-09)
 const TIMEOUT_MS = 20000;
 
 // Voice register by the planetary hour ruling the rite — a slight lean in
@@ -28,17 +28,20 @@ const HOUR_REGISTER: Record<string, string> = {
   Saturn: "Lean measured and honest.",
 };
 
-const IDENTITY = `You write the daily readings for Stargram, a terminal-styled
-horoscope app. You work from the REAL computed sky - actual planetary positions
-and aspects, calculated, not scraped - and your job is to translate it into
-something a normal person finds genuinely useful. Voice: a thoughtful friend
-who happens to know the sky well. Chill and plain-spoken, warm, specific. A
-touch of strangeness is fine; performance is not. No mystic theatrics, no "the
-universe has plans", no dramatic proclamations, no purple prose. Concrete beats
-cosmic. Plain language, no astrology jargon without a hint of what it means.
-Address the reader as "you". Never generic filler, never horoscope cliches,
-never mention work meetings or productivity. Plain ASCII only: no emoji, no em
-dashes, no headers, no markdown.`;
+const IDENTITY = `You write the readings for Stargram, a horoscope app for real
+people. You work from the REAL computed sky - actual planetary positions and
+aspects, calculated for this moment - and your school is the great newspaper
+astrologers, Jonathan Cainer above all. His method: open with a small, true
+observation about ordinary life - a metaphor anyone recognises (gardens, buses,
+kitchen drawers, the weather). Let it lead naturally into ONE theme, drawn from
+the strongest aspect you are given. Name the sky event once, in passing, the
+way Cainer would ("as Venus squares Mars") - never recite data. Speak to an
+intelligent adult: warm, wry, encouraging, a little philosophical, always
+plain. Trust the reader; never talk down, never doom. End with gentle
+permission or a quiet nudge toward action. No mystic theatrics, no "the
+universe", no productivity talk, no generic filler, no horoscope cliches, no
+jargon without meaning. Plain ASCII only: no emoji, no em dashes, no headers,
+no markdown.`;
 
 function transitLines(packet: Packet): string {
   const p = packet.signSky.rulerPlacement;
@@ -53,11 +56,40 @@ function transitLines(packet: Packet): string {
   return lines.join("\n");
 }
 
+// Each (date, sign) gets its own everyday-image territory, so twelve
+// independent generations don't all reach for the same kitchen drawer.
+const IMAGE_DOMAINS = [
+  "kitchens and cooking",
+  "gardens and growing things",
+  "weather and seasons",
+  "streets, traffic and journeys",
+  "music and sound",
+  "tools, repairs and workbenches",
+  "the sea, rivers and tides",
+  "letters, phones and messages",
+  "maps, doors and thresholds",
+  "light, lamps and shadows",
+  "clothes, pockets and drawers",
+  "games, sport and play",
+];
+
+function hashStr(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
 function buildPrompt(
   packet: Packet,
   sign: ZodiacSign,
   recentJournal: string[],
 ): string {
+  const domain = IMAGE_DOMAINS[
+    hashStr(`${packet.dateKey}:${sign.name}`) % IMAGE_DOMAINS.length
+  ];
   const span = packet.period === "daily"
     ? "today"
     : packet.period === "weekly"
@@ -67,24 +99,20 @@ function buildPrompt(
 
 ${HOUR_REGISTER[packet.hour.ruler] ?? HOUR_REGISTER.Sun}
 
-Write ${span}'s reading for ${sign.name.toUpperCase()} (${sign.element}, ruled
-by ${sign.rulingPlanet}). Ground it ONLY in the strongest of these actual
-computed aspects - two or three of them, no more:
+Write the reading for ${span} for ${sign.name.toUpperCase()} (ruled by
+${sign.rulingPlanet}). Build it around ONE theme from the strongest of these
+actual computed aspects (ignore the rest):
 
 ${transitLines(packet)}
 
-Moon: ${packet.moon.phase}, ${packet.moon.illum}% lit, in ${packet.signSky.moonSign}.
-The old Mexican count of days reads ${packet.tonalli.name} (${packet.tonalli.meaning}) -
-weave it in lightly, one touch, not a lecture.
-The day's draw, if one of them wants to echo the sky (optional, at most one):
-tarot ${packet.draw.tarot.name}${packet.draw.tarot.reversed ? " reversed" : ""},
-rune ${packet.draw.rune.name} (${packet.draw.rune.meaning}),
-hexagram ${packet.draw.hexagram.number} ${packet.draw.hexagram.name}.
+Moon right now: ${packet.moon.phase}, ${packet.moon.illum}% lit, in ${packet.signSky.moonSign}.
+Draw your opening image from the world of ${domain} (loosely - any small true
+thing from that territory).
 ${
     recentJournal.length
-      ? `\nYour recent readings spoke of: ${
+      ? `\nYour recent readings opened with: ${
         recentJournal.join("; ")
-      }. Do not repeat those images - let the thread continue somewhere new.\n`
+      }. Choose a different kind of opening image - let the thread move on.\n`
       : ""
   }
 80 to 110 words. One paragraph. End on something the reader can carry.`;
@@ -132,7 +160,8 @@ export async function speakReading(
           }],
           generationConfig: {
             temperature: Math.round(temperature * 100) / 100,
-            maxOutputTokens: 1024,
+            // thinking tokens count against this on Gemini 3.x — keep it roomy
+            maxOutputTokens: 8192,
           },
         }),
         signal: controller.signal,
@@ -145,10 +174,12 @@ export async function speakReading(
     }
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    // the 2026-08-08 law: verify content, not transaction
+    // the 2026-08-08 law: verify content, not transaction — and a mid-air
+    // truncation is not a reading
     if (typeof text !== "string" || !text.trim()) return null;
     const clean = sanitize(text);
-    return clean.length >= 40 ? clean : null;
+    if (clean.length < 40 || !/[.!?"]$/.test(clean)) return null;
+    return clean;
   } catch (error) {
     console.warn("Oracle voice failed, falling back:", error);
     return null;

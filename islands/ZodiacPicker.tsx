@@ -85,7 +85,6 @@ type CosmicContext = {
 // The sovereign oracle's divination packet — computed sky, old calendars,
 // daily draw, and the braille sigil that seals the reading.
 type OraclePacket = {
-  tonalli: { name: string; meaning: string };
   moon: { phase: string; glyph: string; illum: number };
   signSky: {
     ruler: string;
@@ -308,8 +307,9 @@ function getRiteRows(packet: OraclePacket, source: string) {
       }`,
     },
     {
-      label: "Tonalli",
-      value: `${packet.tonalli.name} · ${packet.tonalli.meaning}`,
+      label: "Moon",
+      value:
+        `${packet.moon.glyph} ${packet.moon.phase} · in ${packet.signSky.moonSign}`,
     },
     {
       label: "Draw",

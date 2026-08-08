@@ -150,11 +150,20 @@ export async function nightlyRite(now = new Date()): Promise<void> {
 
   const sky = buildSky(now);
   const journal = await readJournal(kv);
+  // openers already used THIS rite — so twelve signs don't all get the same
+  // kitchen drawer
+  const riteOpeners: string[] = [];
   let firstReading: Reading | null = null;
 
   for (const sign of ZODIAC_SIGNS) {
     const packet = await buildPacket(sky, sign, "daily", now);
-    const spoken = await speakReading(packet, sign, journal);
+    const spoken = await speakReading(packet, sign, [
+      ...journal,
+      ...riteOpeners,
+    ]);
+    if (spoken) {
+      riteOpeners.push(spoken.split(/\s+/).slice(0, 8).join(" "));
+    }
     const horoscope = spoken ?? composeFallback(packet, sign);
     const reading: Reading = {
       date: packet.dateKey,

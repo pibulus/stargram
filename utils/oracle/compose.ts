@@ -10,13 +10,10 @@
 import { type ZodiacSign } from "../zodiac.ts";
 import { computeSky, type SignSky, type Sky, skyForSign } from "./sky.ts";
 import {
-  jdnFromYmd,
   type MoonState,
   moonState,
   planetaryHour,
   type PlanetHour,
-  type Tonal,
-  tonalpohualli,
 } from "./count.ts";
 import { type DailyDraw, dailyDraw } from "./draw.ts";
 import { mintSigil } from "./sigil.ts";
@@ -28,7 +25,6 @@ export interface Packet {
   period: Period;
   sign: string;
   signSky: SignSky;
-  tonalli: Tonal;
   moon: MoonState;
   hour: PlanetHour; // planetary hour at rite time — tunes the voice register
   draw: DailyDraw;
@@ -60,15 +56,12 @@ export async function buildPacket(
   now = new Date(),
 ): Promise<Packet> {
   const dateKey = periodKey(period, now);
-  const day = melbourneDateKey(now);
-  const [y, m, d] = day.split("-").map(Number);
   const seed = `${period}:${dateKey}:${sign.name}`;
   return {
     dateKey,
     period,
     sign: sign.name,
     signSky: skyForSign(sky, sign.rulingPlanet),
-    tonalli: tonalpohualli(jdnFromYmd(y, m, d)),
     moon: moonState(now),
     hour: planetaryHour(now),
     draw: dailyDraw(`${period}:${dateKey}`, sign.name),
@@ -120,7 +113,7 @@ function hashStr(s: string): number {
 
 /** Compose a readable reading from the packet alone. The floor, not the goal. */
 export function composeFallback(packet: Packet, sign: ZodiacSign): string {
-  const { signSky, tonalli, moon, draw } = packet;
+  const { signSky, moon } = packet;
   const seed = hashStr(`${packet.dateKey}:${packet.sign}`);
   const ruler = signSky.rulerPlacement;
   const parts: string[] = [];
@@ -171,17 +164,10 @@ export function composeFallback(packet: Packet, sign: ZodiacSign): string {
     }.`,
   );
 
-  parts.push(
-    `In the old count of days it's ${tonalli.name} — ${tonalli.meaning}.`,
-  );
-
   const closers = [
-    `The rune for ${span} is ${draw.rune.name}: ${
-      lowerFirst(draw.rune.meaning)
-    }.`,
-    `The card for ${span} is ${draw.tarot.name}${
-      draw.tarot.reversed ? " reversed" : ""
-    } — worth a thought.`,
+    "No need to force anything — noticing it is most of the work.",
+    "Small moves count double under this sky.",
+    "Give it a little room; it tends to sort itself sooner than you'd think.",
     `For what it's worth: ${lowerFirst(sign.motto)}`,
   ];
   parts.push(pickBy(seed >>> 3, closers));
