@@ -107,7 +107,9 @@ export async function getReading(
   now = new Date(),
 ): Promise<Reading | null> {
   const kv = await getKv();
-  const keyStr = `${period}:${periodKey(period, now)}:${signName.toLowerCase()}`;
+  const keyStr = `${period}:${
+    periodKey(period, now)
+  }:${signName.toLowerCase()}`;
   const key = [
     "reading",
     period,
