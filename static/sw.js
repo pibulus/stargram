@@ -4,15 +4,16 @@
 // BUMP THIS on any deploy that touches an unhashed asset (styles.css,
 // modal-shell.css, icons). They're served cache-first, so returning PWA
 // users keep the old copy until the cache name changes.
-const CACHE_NAME = "stargram-v5";
+const CACHE_NAME = "stargram-v6";
 const APP_SHELL = [
   "/",
   "/styles.css",
   "/manifest.json",
-  "/icons/icon-192x192.png",
-  "/icons/icon-512x512.png",
-  "/icons/icon-maskable-512x512.png",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/icon-512-maskable.png",
   "/favicon.ico",
+  "/favicon.svg",
 ];
 
 // Install event - cache essential files

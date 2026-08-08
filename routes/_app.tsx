@@ -94,13 +94,11 @@ export default function App({ Component }: PageProps) {
         <link rel="manifest" href="/manifest.json" />
 
         {/* iOS Icon Support */}
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
         {/* Favicon */}
-        <link
-          rel="icon"
-          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>"
-        />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
         {/* Fonts - JetBrains Mono for better terminal experience */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
