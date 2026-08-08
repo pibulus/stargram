@@ -96,12 +96,18 @@ export async function divineSign(
  * Get the locked-in reading for (period, sign) — or divine and lock it now.
  * This is the serving path AND the self-seeding path after a fresh deploy.
  */
+// In-isolate cache: keeps readings stable (and Gemini calls rare) even when
+// the platform has no KV. ponytail: cleared wholesale past 100 entries —
+// steady state is 12 signs x 3 periods, old period keys just age out.
+const memCache = new Map<string, Reading>();
+
 export async function getReading(
   period: Period,
   signName: string,
   now = new Date(),
 ): Promise<Reading | null> {
   const kv = await getKv();
+  const keyStr = `${period}:${periodKey(period, now)}:${signName.toLowerCase()}`;
   const key = [
     "reading",
     period,
@@ -109,15 +115,25 @@ export async function getReading(
     signName.toLowerCase(),
   ];
 
+  const mem = memCache.get(keyStr);
+  if (mem) return mem;
+
   if (kv) {
     const cached = await kv.get<Reading>(key);
-    if (cached.value?.horoscope) return cached.value;
+    if (cached.value?.horoscope) {
+      memCache.set(keyStr, cached.value);
+      return cached.value;
+    }
   }
 
   const reading = await divineSign(period, signName, now);
-  if (reading && kv) {
-    // ponytail: concurrent misses may divine twice; last write wins, both valid
-    await kv.set(key, reading, { expireIn: EXPIRE_MS[period] });
+  if (reading) {
+    if (memCache.size > 100) memCache.clear();
+    memCache.set(keyStr, reading);
+    if (kv) {
+      // ponytail: concurrent misses may divine twice; last write wins, both valid
+      await kv.set(key, reading, { expireIn: EXPIRE_MS[period] });
+    }
   }
   return reading;
 }
