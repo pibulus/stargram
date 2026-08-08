@@ -120,7 +120,7 @@ async function fetchFromOhmanda(
     }
 
     const data = await response.json();
-    if (data && typeof data.horoscope === "string") {
+    if (data && typeof data.horoscope === "string" && data.horoscope.trim()) {
       return {
         success: true,
         data: {
