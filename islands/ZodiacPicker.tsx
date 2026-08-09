@@ -842,28 +842,28 @@ export default function ZodiacPicker() {
             animation: cosmicCorrupt 7s steps(2, end) infinite;
           }
 
-          /* Foil sheen — holo trading card. Rides the --mx/--my parallax
-             vars, so the shimmer follows the pointer for free; on touch it
-             rests as a faint static gleam. (Borrowed from asciifier's
-             hologram effect in the twins' trade.) */
-          .cosmic-signal-plaque::after {
+          /* Foil sheen — holo trading card, Rite plaque only. A narrow,
+             quiet gleam riding the --mx/--my parallax vars; screen blend
+             (not color-dodge — that amplified the ::before dither into a
+             dark blotch) keeps it classy. */
+          .rite-plaque::after {
             content: "";
             position: absolute;
             inset: 0;
             pointer-events: none;
             background: linear-gradient(
               115deg,
-              transparent 22%,
-              rgba(0, 255, 255, 0.14) 40%,
-              rgba(255, 0, 255, 0.16) 50%,
-              rgba(255, 220, 0, 0.11) 60%,
-              transparent 78%
+              transparent 40%,
+              rgba(160, 240, 255, 0.055) 47%,
+              rgba(255, 170, 250, 0.07) 51%,
+              rgba(255, 240, 180, 0.045) 55%,
+              transparent 62%
             );
-            background-size: 220% 220%;
+            background-size: 260% 260%;
             background-position:
-              calc(50% + var(--mx, 0) * 55%)
-              calc(50% + var(--my, 0) * 55%);
-            mix-blend-mode: color-dodge;
+              calc(50% + var(--mx, 0) * 45%)
+              calc(50% + var(--my, 0) * 45%);
+            mix-blend-mode: screen;
             border-radius: inherit;
           }
 
@@ -1438,7 +1438,7 @@ export default function ZodiacPicker() {
                           {/* The Rite — the seal stamps once the report prints */}
                           {bodyTyped.value && oraclePacket.value && (
                             <div
-                              class="cosmic-signal-plaque border-2 rounded-xl p-3 sm:p-4"
+                              class="cosmic-signal-plaque rite-plaque border-2 rounded-xl p-3 sm:p-4"
                               style={`background: rgba(0,0,0,0.34); border-color: ${accentColor}38; box-shadow: inset 0 0 24px ${accentColor}12, 0 0 16px ${accentGlowColor}14;`}
                             >
                               <div class="relative z-10 flex flex-col sm:flex-row gap-4 sm:items-start">
@@ -1501,19 +1501,57 @@ export default function ZodiacPicker() {
                         </div>
 
                         {
-                          /* Share row — the souvenir stand. Appears with the
-                            plaque, lives outside the capture root. */
+                          /* Console footer — one organised control deck:
+                            segmented period dial, then a uniform action row,
+                            then the quiet support line. */
                         }
-                        {bodyTyped.value && (
-                          <div class="grid grid-cols-2 sm:flex gap-3">
+                        <div
+                          class="space-y-3.5 pt-5 sm:pt-6 border-t"
+                          style={`border-color: ${accentGlowColor}30;`}
+                        >
+                          {/* Period dial */}
+                          <div class="flex justify-center">
+                            <div
+                              class="inline-flex rounded-2xl border-2 overflow-hidden"
+                              style={`border-color: ${accentGlowColor}50; background: rgba(0,0,0,0.55); box-shadow: 0 0 14px ${accentGlowColor}1c;`}
+                            >
+                              {(["daily", "weekly", "monthly"] as Period[])
+                                .map((period) => (
+                                  <button
+                                    key={period}
+                                    type="button"
+                                    onClick={() => handlePeriodChange(period)}
+                                    onMouseEnter={() => sounds.hover()}
+                                    class="min-h-[46px] px-4 min-[390px]:px-5 sm:px-7 font-mono text-xs sm:text-sm uppercase tracking-[0.12em] transition-all"
+                                    style={currentPeriod.value === period
+                                      ? `background: ${accentColor}24; color: ${accentColor}; text-shadow: 0 0 8px ${accentColor}66; box-shadow: inset 0 0 16px ${accentColor}28; font-weight: 700;`
+                                      : `background: transparent; color: ${accentGlowColor}96;`}
+                                  >
+                                    {period}
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+
+                          {/* Action row — one line, one voice */}
+                          <div class="grid grid-cols-3 gap-2.5 sm:gap-3 max-w-md mx-auto">
+                            <button
+                              type="button"
+                              onClick={handleBackToPicker}
+                              onMouseEnter={() => sounds.hover()}
+                              class="min-h-[48px] px-2 border-2 rounded-2xl font-mono text-xs sm:text-sm uppercase tracking-[0.1em] transition-all hover:scale-[1.04] active:scale-95"
+                              style={`background: rgba(0,0,0,0.55); border-color: ${accentGlowColor}66; color: ${accentGlowColor}; box-shadow: 0 0 10px ${accentGlowColor}24;`}
+                            >
+                              ← BACK
+                            </button>
                             <button
                               type="button"
                               onClick={handleCopyReading}
                               onMouseEnter={() => sounds.hover()}
-                              class="min-h-[44px] px-4 py-2.5 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105"
+                              class="min-h-[48px] px-2 border-2 rounded-2xl font-mono text-xs sm:text-sm uppercase tracking-[0.1em] transition-all hover:scale-[1.04] active:scale-95"
                               style={copiedReading.value
-                                ? `background: ${accentColor}30; border-color: ${accentColor}; color: ${accentColor}; box-shadow: 0 0 16px ${accentColor}60;`
-                                : `background: rgba(0,0,0,0.6); border-color: ${accentGlowColor}; color: ${accentGlowColor}; box-shadow: 0 0 12px ${accentGlowColor}40;`}
+                                ? `background: ${accentColor}26; border-color: ${accentColor}; color: ${accentColor}; box-shadow: 0 0 16px ${accentColor}55;`
+                                : `background: rgba(0,0,0,0.55); border-color: ${accentGlowColor}66; color: ${accentGlowColor}; box-shadow: 0 0 10px ${accentGlowColor}24;`}
                             >
                               {copiedReading.value ? "COPIED!" : "COPY"}
                             </button>
@@ -1521,67 +1559,26 @@ export default function ZodiacPicker() {
                               type="button"
                               onClick={handleShareReading}
                               onMouseEnter={() => sounds.hover()}
-                              class="min-h-[44px] px-4 py-2.5 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105"
-                              style={`background: rgba(0,0,0,0.6); border-color: ${accentGlowColor}; color: ${accentGlowColor}; box-shadow: 0 0 12px ${accentGlowColor}40;`}
+                              class="min-h-[48px] px-2 border-2 rounded-2xl font-mono text-xs sm:text-sm uppercase tracking-[0.1em] transition-all hover:scale-[1.04] active:scale-95"
+                              style={`background: rgba(0,0,0,0.55); border-color: ${accentGlowColor}66; color: ${accentGlowColor}; box-shadow: 0 0 10px ${accentGlowColor}24;`}
                             >
                               SAVE PNG
                             </button>
                           </div>
-                        )}
 
-                        {/* Navigation */}
-                        <div class="space-y-4">
-                          <div
-                            class="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 pt-5 sm:pt-6 border-t"
-                            style={`border-color: ${accentGlowColor}30;`}
-                          >
+                          {/* Support — its own quiet moment */}
+                          <div class="flex justify-center pt-1">
                             <button
                               type="button"
-                              onClick={handleBackToPicker}
-                              onMouseEnter={() => sounds.hover()}
-                              class="min-h-[44px] px-4 py-2.5 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105"
-                              style={`background: rgba(0,0,0,0.6); border-color: ${accentGlowColor}; color: ${accentGlowColor}; box-shadow: 0 0 12px ${accentGlowColor}40;`}
-                            >
-                              ← BACK
-                            </button>
-                            {(["daily", "weekly", "monthly"] as Period[]).map((
-                              period,
-                            ) => (
-                              <button
-                                key={period}
-                                type="button"
-                                onClick={() => handlePeriodChange(period)}
-                                onMouseEnter={() => sounds.hover()}
-                                class={`min-h-[44px] px-4 py-2.5 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105 ${
-                                  currentPeriod.value === period
-                                    ? "font-bold"
-                                    : ""
-                                }`}
-                                style={currentPeriod.value === period
-                                  ? `background: ${accentColor}30; border-color: ${accentColor}; color: ${accentColor}; box-shadow: 0 0 16px ${accentColor}60;`
-                                  : `background: rgba(0,0,0,0.4); border-color: ${accentGlowColor}60; color: ${accentGlowColor}; box-shadow: 0 0 8px ${accentGlowColor}20;`}
-                              >
-                                {period}
-                              </button>
-                            ))}
-                          </div>
-                          {/* Ko-fi terminal button */}
-                          <div
-                            class="flex justify-center pt-2 border-t"
-                            style={`border-color: ${accentGlowColor}15;`}
-                          >
-                            <button
-                              type="button"
-                              class="inline-flex min-h-[44px] items-center px-4 py-2.5 border-2 rounded-xl font-mono text-xs uppercase tracking-wider transition-all hover:scale-105"
-                              style={`background: rgba(255, 192, 203, 0.05); border-color: rgba(255, 192, 203, 0.3); color: rgba(255, 192, 203, 0.9); box-shadow: 0 0 8px rgba(255, 192, 203, 0.2);`}
+                              class="inline-flex min-h-[44px] items-center px-5 border-2 rounded-2xl font-mono text-xs uppercase tracking-[0.12em] transition-all hover:scale-[1.04] active:scale-95"
+                              style={`background: rgba(255, 192, 203, 0.06); border-color: rgba(255, 192, 203, 0.32); color: rgba(255, 192, 203, 0.9); box-shadow: 0 0 8px rgba(255, 192, 203, 0.18);`}
                               onMouseEnter={() => sounds.hover()}
                               onClick={() => {
                                 sounds.click();
                                 openKofiModal();
                               }}
                             >
-                              <span style="opacity: 0.7;">{">"}</span>☕ SUPPORT
-                              CREATOR
+                              ☕ SUPPORT CREATOR
                             </button>
                           </div>
                         </div>
