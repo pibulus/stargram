@@ -15,6 +15,7 @@ import { analytics } from "../utils/analytics.ts";
 import { renderFigletText } from "../utils/asciiArtGenerator.ts";
 import { applyColorToArt } from "../utils/colorEffects.ts";
 import { TypedWriter } from "../components/TypedWriter.tsx";
+import { copyReading, shareReadingPNG } from "../utils/exportReading.ts";
 import { openKofiModal } from "./KofiModal.tsx";
 import { openAboutModal } from "./AboutModal.tsx";
 
@@ -113,6 +114,7 @@ const bootMessages = signal<string[]>([]);
 const showHoroscope = signal(false);
 const headerTyped = signal(false);
 const bodyTyped = signal(false);
+const copiedReading = signal(false);
 const cosmicContext = signal<CosmicContext | null>(null);
 const oraclePacket = signal<OraclePacket | null>(null);
 const oracleSource = signal<string>("");
@@ -510,6 +512,29 @@ export default function ZodiacPicker() {
     fetchHoroscope(sign, currentPeriod.value);
   };
 
+  const handleCopyReading = async () => {
+    sounds.click();
+    const ok = await copyReading(
+      horoscopePlainText.value,
+      horoscopeHtml.value,
+    );
+    if (ok) {
+      copiedReading.value = true;
+      setTimeout(() => {
+        copiedReading.value = false;
+      }, 2000);
+    }
+  };
+
+  const handleShareReading = () => {
+    sounds.click();
+    const date = new Date().toISOString().slice(0, 10);
+    shareReadingPNG(
+      ".reading-capture",
+      `stargram-${selectedSign.value}-${currentPeriod.value}-${date}`,
+    );
+  };
+
   const handleBackToPicker = () => {
     sounds.click();
     currentMode.value = "picker";
@@ -815,6 +840,45 @@ export default function ZodiacPicker() {
 
           .cosmic-signal-plaque.cosmic-signal-glitch::before {
             animation: cosmicCorrupt 7s steps(2, end) infinite;
+          }
+
+          /* Foil sheen — holo trading card. Rides the --mx/--my parallax
+             vars, so the shimmer follows the pointer for free; on touch it
+             rests as a faint static gleam. (Borrowed from asciifier's
+             hologram effect in the twins' trade.) */
+          .cosmic-signal-plaque::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(
+              115deg,
+              transparent 22%,
+              rgba(0, 255, 255, 0.14) 40%,
+              rgba(255, 0, 255, 0.16) 50%,
+              rgba(255, 220, 0, 0.11) 60%,
+              transparent 78%
+            );
+            background-size: 220% 220%;
+            background-position:
+              calc(50% + var(--mx, 0) * 55%)
+              calc(50% + var(--my, 0) * 55%);
+            mix-blend-mode: color-dodge;
+            border-radius: inherit;
+          }
+
+          /* High packet corruption bleeds into the reading itself: a faint
+             RGB split that grows with the glitch level. */
+          .cosmic-glitch-3 .reading-capture {
+            text-shadow:
+              -1px 0 2px rgba(255, 0, 255, 0.3),
+              1px 0 2px rgba(0, 255, 255, 0.28);
+          }
+
+          .cosmic-glitch-4 .reading-capture {
+            text-shadow:
+              -2px 0 3px rgba(255, 0, 255, 0.42),
+              2px 0 3px rgba(0, 255, 255, 0.38);
           }
 
           .terminal-content-wrapper {
@@ -1240,189 +1304,228 @@ export default function ZodiacPicker() {
                     ? (
                       // Horoscope content with typewriter
                       <div class="space-y-6">
-                        {/* Fast-typing header */}
-                        <div
-                          class="min-w-0 w-full overflow-hidden border-b pb-4"
-                          style={`border-color: ${accentGlowColor}30;`}
-                        >
-                          <TypedWriter
-                            text={splitHoroscopeAscii(horoscopePlainText.value)
-                              .header}
-                            htmlText={horoscopeHeaderHtml.value}
-                            speed={3}
-                            enabled
-                            showCompletionCursor={false}
-                            reserveLayout
-                            onComplete={() => {
-                              headerTyped.value = true;
-                            }}
-                            className="block w-full font-mono leading-tight min-w-0 max-w-full overflow-hidden"
-                            style="color: #FFD700; font-size: 14px; letter-spacing: 0.02em;"
-                          />
-                        </div>
-                        {activeCosmicContext && (
+                        {
+                          /* Capture root: everything inside ships in the
+                            shared PNG — keep buttons and nav OUT of it. */
+                        }
+                        <div class="reading-capture space-y-6">
+                          {/* Fast-typing header */}
                           <div
-                            class={`cosmic-signal-plaque border-2 rounded-xl p-3 sm:p-4 ${
-                              activeCosmicContext.glitchLevel >= 2
-                                ? "cosmic-signal-glitch"
-                                : ""
-                            }`}
-                            style={`background: rgba(0,0,0,0.34); border-color: ${accentGlowColor}42; box-shadow: inset 0 0 24px ${accentGlowColor}14, 0 0 16px ${accentColor}16;`}
+                            class="min-w-0 w-full overflow-hidden border-b pb-4"
+                            style={`border-color: ${accentGlowColor}30;`}
                           >
-                            <div class="relative z-10 flex flex-col sm:flex-row gap-4 sm:items-start">
-                              <div class="min-w-0 flex-1 space-y-3">
-                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                  <p
-                                    class="font-mono text-[10px] uppercase tracking-[0.34em]"
-                                    style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}66;`}
-                                  >
-                                    Signal Room
-                                  </p>
-                                  <p
-                                    class="font-mono text-[10px] uppercase tracking-[0.18em]"
-                                    style={`color: ${accentGlowColor}96;`}
-                                  >
-                                    live sky packet
-                                  </p>
-                                </div>
-                                <div class="grid gap-2 sm:grid-cols-2">
-                                  {signalRows.map((row) => (
-                                    <div
-                                      key={row.label}
-                                      class="min-w-0 border-b pb-1"
-                                      style={`border-color: ${accentGlowColor}22;`}
+                            <TypedWriter
+                              text={splitHoroscopeAscii(
+                                horoscopePlainText.value,
+                              )
+                                .header}
+                              htmlText={horoscopeHeaderHtml.value}
+                              speed={3}
+                              enabled
+                              showCompletionCursor={false}
+                              reserveLayout
+                              onComplete={() => {
+                                headerTyped.value = true;
+                              }}
+                              className="block w-full font-mono leading-tight min-w-0 max-w-full overflow-hidden"
+                              style="color: #FFD700; font-size: 14px; letter-spacing: 0.02em;"
+                            />
+                          </div>
+                          {activeCosmicContext && (
+                            <div
+                              class={`cosmic-signal-plaque border-2 rounded-xl p-3 sm:p-4 ${
+                                activeCosmicContext.glitchLevel >= 2
+                                  ? "cosmic-signal-glitch"
+                                  : ""
+                              }`}
+                              style={`background: rgba(0,0,0,0.34); border-color: ${accentGlowColor}42; box-shadow: inset 0 0 24px ${accentGlowColor}14, 0 0 16px ${accentColor}16;`}
+                            >
+                              <div class="relative z-10 flex flex-col sm:flex-row gap-4 sm:items-start">
+                                <div class="min-w-0 flex-1 space-y-3">
+                                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                    <p
+                                      class="font-mono text-[10px] uppercase tracking-[0.34em]"
+                                      style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}66;`}
                                     >
-                                      <p
-                                        class="font-mono text-[9px] uppercase tracking-[0.26em]"
-                                        style={`color: ${accentGlowColor}86;`}
+                                      Signal Room
+                                    </p>
+                                    <p
+                                      class="font-mono text-[10px] uppercase tracking-[0.18em]"
+                                      style={`color: ${accentGlowColor}96;`}
+                                    >
+                                      live sky packet
+                                    </p>
+                                  </div>
+                                  <div class="grid gap-2 sm:grid-cols-2">
+                                    {signalRows.map((row) => (
+                                      <div
+                                        key={row.label}
+                                        class="min-w-0 border-b pb-1"
+                                        style={`border-color: ${accentGlowColor}22;`}
                                       >
-                                        {row.label}
-                                      </p>
-                                      <p
-                                        class="font-mono text-[11px] sm:text-xs leading-snug break-words"
-                                        style={`color: ${accentColor}D8;`}
-                                      >
-                                        {row.value}
-                                      </p>
-                                    </div>
-                                  ))}
+                                        <p
+                                          class="font-mono text-[9px] uppercase tracking-[0.26em]"
+                                          style={`color: ${accentGlowColor}86;`}
+                                        >
+                                          {row.label}
+                                        </p>
+                                        <p
+                                          class="font-mono text-[11px] sm:text-xs leading-snug break-words"
+                                          style={`color: ${accentColor}D8;`}
+                                        >
+                                          {row.value}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  {activeCosmicContext.glitchLevel > 0 && (
+                                    <p
+                                      class={`font-mono text-[10px] uppercase tracking-[0.2em] ${
+                                        activeCosmicContext.glitchLevel >= 2
+                                          ? "cosmic-corruption-text"
+                                          : ""
+                                      }`}
+                                      style={`color: ${accentGlowColor}AA;`}
+                                    >
+                                      packet glyphs:{" "}
+                                      {activeCosmicContext.corruptionGlyphs}
+                                    </p>
+                                  )}
                                 </div>
-                                {activeCosmicContext.glitchLevel > 0 && (
-                                  <p
-                                    class={`font-mono text-[10px] uppercase tracking-[0.2em] ${
-                                      activeCosmicContext.glitchLevel >= 2
-                                        ? "cosmic-corruption-text"
-                                        : ""
-                                    }`}
-                                    style={`color: ${accentGlowColor}AA;`}
+                                {activeCosmicContext.charm && (
+                                  <div
+                                    class="shrink-0 border-t sm:border-t-0 sm:border-l pt-3 sm:pt-1 sm:pl-4 text-left sm:text-center"
+                                    style={`border-color: ${accentColor}33; color: ${accentColor};`}
                                   >
-                                    packet glyphs:{" "}
-                                    {activeCosmicContext.corruptionGlyphs}
-                                  </p>
+                                    <pre class="cosmic-charm font-mono text-[10px] sm:text-xs leading-tight">{activeCosmicContext.charm.art}</pre>
+                                    <p
+                                      class="mt-2 font-mono text-[9px] uppercase tracking-[0.18em]"
+                                      style={`color: ${accentGlowColor}A8;`}
+                                    >
+                                      {activeCosmicContext.charm.name}
+                                    </p>
+                                  </div>
                                 )}
                               </div>
-                              {activeCosmicContext.charm && (
+                            </div>
+                          )}
+                          {
+                            /* Slower-typing body — waits for the header so the
+                            two streams never fight over the scroll position */
+                          }
+                          {headerTyped.value && (
+                            <TypedWriter
+                              text={splitHoroscopeAscii(
+                                horoscopePlainText.value,
+                              )
+                                .body}
+                              htmlText={horoscopeBodyHtml.value}
+                              speed={12}
+                              enabled
+                              humanize
+                              showCompletionCursor
+                              onComplete={() => {
+                                bodyTyped.value = true;
+                                globalThis.dispatchEvent(
+                                  new CustomEvent("stargram:reading-complete"),
+                                );
+                              }}
+                              className="font-mono min-w-0 max-w-full overflow-hidden break-words text-[14px] sm:text-[15px] leading-[1.52] sm:leading-relaxed"
+                              style={`color: ${accentColor};`}
+                            />
+                          )}
+
+                          {/* The Rite — the seal stamps once the report prints */}
+                          {bodyTyped.value && oraclePacket.value && (
+                            <div
+                              class="cosmic-signal-plaque border-2 rounded-xl p-3 sm:p-4"
+                              style={`background: rgba(0,0,0,0.34); border-color: ${accentColor}38; box-shadow: inset 0 0 24px ${accentColor}12, 0 0 16px ${accentGlowColor}14;`}
+                            >
+                              <div class="relative z-10 flex flex-col sm:flex-row gap-4 sm:items-start">
+                                <div class="min-w-0 flex-1 space-y-3">
+                                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                    <p
+                                      class="font-mono text-[10px] uppercase tracking-[0.34em]"
+                                      style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}66;`}
+                                    >
+                                      The Rite
+                                    </p>
+                                    <p
+                                      class="font-mono text-[10px] uppercase tracking-[0.18em]"
+                                      style={`color: ${accentGlowColor}96;`}
+                                    >
+                                      ∴∵∷ sky computed · reading locked ∷∵∴
+                                    </p>
+                                  </div>
+                                  <div class="grid gap-2 sm:grid-cols-2">
+                                    {getRiteRows(
+                                      oraclePacket.value,
+                                      oracleSource.value,
+                                    ).map((row) => (
+                                      <div
+                                        key={row.label}
+                                        class="min-w-0 border-b pb-1"
+                                        style={`border-color: ${accentGlowColor}22;`}
+                                      >
+                                        <p
+                                          class="font-mono text-[9px] uppercase tracking-[0.26em]"
+                                          style={`color: ${accentGlowColor}86;`}
+                                        >
+                                          {row.label}
+                                        </p>
+                                        <p
+                                          class="font-mono text-[11px] sm:text-xs leading-snug break-words"
+                                          style={`color: ${accentColor}D8;`}
+                                        >
+                                          {row.value}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                                 <div
                                   class="shrink-0 border-t sm:border-t-0 sm:border-l pt-3 sm:pt-1 sm:pl-4 text-left sm:text-center"
                                   style={`border-color: ${accentColor}33; color: ${accentColor};`}
                                 >
-                                  <pre class="cosmic-charm font-mono text-[10px] sm:text-xs leading-tight">{activeCosmicContext.charm.art}</pre>
+                                  <pre class="cosmic-charm font-mono text-[7px] sm:text-[8px] leading-[1.05]">{oraclePacket.value.sigil}</pre>
                                   <p
                                     class="mt-2 font-mono text-[9px] uppercase tracking-[0.18em]"
                                     style={`color: ${accentGlowColor}A8;`}
                                   >
-                                    {activeCosmicContext.charm.name}
+                                    sigil of the day
                                   </p>
                                 </div>
-                              )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {
-                          /* Slower-typing body — waits for the header so the
-                            two streams never fight over the scroll position */
-                        }
-                        {headerTyped.value && (
-                          <TypedWriter
-                            text={splitHoroscopeAscii(horoscopePlainText.value)
-                              .body}
-                            htmlText={horoscopeBodyHtml.value}
-                            speed={12}
-                            enabled
-                            humanize
-                            showCompletionCursor
-                            onComplete={() => {
-                              bodyTyped.value = true;
-                              globalThis.dispatchEvent(
-                                new CustomEvent("stargram:reading-complete"),
-                              );
-                            }}
-                            className="font-mono min-w-0 max-w-full overflow-hidden break-words text-[14px] sm:text-[15px] leading-[1.52] sm:leading-relaxed"
-                            style={`color: ${accentColor};`}
-                          />
-                        )}
+                          )}
+                        </div>
 
-                        {/* The Rite — the seal stamps once the report prints */}
-                        {bodyTyped.value && oraclePacket.value && (
-                          <div
-                            class="cosmic-signal-plaque border-2 rounded-xl p-3 sm:p-4"
-                            style={`background: rgba(0,0,0,0.34); border-color: ${accentColor}38; box-shadow: inset 0 0 24px ${accentColor}12, 0 0 16px ${accentGlowColor}14;`}
-                          >
-                            <div class="relative z-10 flex flex-col sm:flex-row gap-4 sm:items-start">
-                              <div class="min-w-0 flex-1 space-y-3">
-                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                  <p
-                                    class="font-mono text-[10px] uppercase tracking-[0.34em]"
-                                    style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}66;`}
-                                  >
-                                    The Rite
-                                  </p>
-                                  <p
-                                    class="font-mono text-[10px] uppercase tracking-[0.18em]"
-                                    style={`color: ${accentGlowColor}96;`}
-                                  >
-                                    ∴∵∷ sky computed · reading locked ∷∵∴
-                                  </p>
-                                </div>
-                                <div class="grid gap-2 sm:grid-cols-2">
-                                  {getRiteRows(
-                                    oraclePacket.value,
-                                    oracleSource.value,
-                                  ).map((row) => (
-                                    <div
-                                      key={row.label}
-                                      class="min-w-0 border-b pb-1"
-                                      style={`border-color: ${accentGlowColor}22;`}
-                                    >
-                                      <p
-                                        class="font-mono text-[9px] uppercase tracking-[0.26em]"
-                                        style={`color: ${accentGlowColor}86;`}
-                                      >
-                                        {row.label}
-                                      </p>
-                                      <p
-                                        class="font-mono text-[11px] sm:text-xs leading-snug break-words"
-                                        style={`color: ${accentColor}D8;`}
-                                      >
-                                        {row.value}
-                                      </p>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                              <div
-                                class="shrink-0 border-t sm:border-t-0 sm:border-l pt-3 sm:pt-1 sm:pl-4 text-left sm:text-center"
-                                style={`border-color: ${accentColor}33; color: ${accentColor};`}
-                              >
-                                <pre class="cosmic-charm font-mono text-[7px] sm:text-[8px] leading-[1.05]">{oraclePacket.value.sigil}</pre>
-                                <p
-                                  class="mt-2 font-mono text-[9px] uppercase tracking-[0.18em]"
-                                  style={`color: ${accentGlowColor}A8;`}
-                                >
-                                  sigil of the day
-                                </p>
-                              </div>
-                            </div>
+                        {
+                          /* Share row — the souvenir stand. Appears with the
+                            plaque, lives outside the capture root. */
+                        }
+                        {bodyTyped.value && (
+                          <div class="grid grid-cols-2 sm:flex gap-3">
+                            <button
+                              type="button"
+                              onClick={handleCopyReading}
+                              onMouseEnter={() => sounds.hover()}
+                              class="min-h-[44px] px-4 py-2.5 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105"
+                              style={copiedReading.value
+                                ? `background: ${accentColor}30; border-color: ${accentColor}; color: ${accentColor}; box-shadow: 0 0 16px ${accentColor}60;`
+                                : `background: rgba(0,0,0,0.6); border-color: ${accentGlowColor}; color: ${accentGlowColor}; box-shadow: 0 0 12px ${accentGlowColor}40;`}
+                            >
+                              {copiedReading.value ? "COPIED!" : "COPY"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleShareReading}
+                              onMouseEnter={() => sounds.hover()}
+                              class="min-h-[44px] px-4 py-2.5 border-2 rounded-xl font-mono text-sm uppercase tracking-wider transition-all hover:scale-105"
+                              style={`background: rgba(0,0,0,0.6); border-color: ${accentGlowColor}; color: ${accentGlowColor}; box-shadow: 0 0 12px ${accentGlowColor}40;`}
+                            >
+                              SAVE PNG
+                            </button>
                           </div>
                         )}
 

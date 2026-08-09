@@ -110,6 +110,14 @@ class AnalyticsService {
     });
   }
 
+  // Reading exported (copy / png)
+  trackExport(format: string) {
+    this.trackEvent("reading_exported", {
+      format,
+      timestamp: Date.now(),
+    });
+  }
+
   // Error Tracking
   trackError(errorType: string, context: Record<string, any> = {}) {
     this.trackEvent("error_occurred", {
