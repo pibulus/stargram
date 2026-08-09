@@ -417,6 +417,15 @@ export default function ZodiacPicker() {
     bootMessages.value = ["> opening cosmic context socket..."];
     sounds.bootStep();
 
+    // Head start: the reading is independent of cosmic-context, so fire its
+    // fetch now and let the boot theatre below cover the wait instead of
+    // preceding it. The no-op catch stops an unhandled-rejection if a rapid
+    // re-tap abandons this generation before the await picks the promise up.
+    const horoscopePromise = fetch(
+      `/api/horoscope?sign=${sign}&period=${period}`,
+    );
+    horoscopePromise.catch(() => {});
+
     const context = await fetchCosmicContext(sign, period);
     if (!isCurrent()) return;
     cosmicContext.value = context;
@@ -433,9 +442,7 @@ export default function ZodiacPicker() {
     }
 
     try {
-      const response = await fetch(
-        `/api/horoscope?sign=${sign}&period=${period}`,
-      );
+      const response = await horoscopePromise;
       if (!response.ok) {
         throw new Error(`API returned ${response.status}`);
       }

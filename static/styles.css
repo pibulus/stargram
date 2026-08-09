@@ -16,6 +16,11 @@
 html,
 body {
   overscroll-behavior: none;
+  /* Paint the UA-owned surfaces (iOS PWA home-indicator strip, overscroll,
+     keyboard gaps) the app's own dark — unset they default to white/grey
+     and show as a bar under the terminal in standalone mode. */
+  background: #0a0a0a;
+  color-scheme: dark;
 }
 
 /* Global theme transitions */

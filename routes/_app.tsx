@@ -46,7 +46,7 @@ export default function App({ Component }: PageProps) {
           content="black-translucent"
         />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#a78bfa" />
+        <meta name="theme-color" content="#0a0a0a" />
 
         {/* Open Graph */}
         <meta property="og:site_name" content="Stargram" />

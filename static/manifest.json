@@ -4,8 +4,8 @@
   "description": "A hyperdimensional terminal that sources fortunes from the cosmos — real sky signals, purple phosphor, a bit haunted, a bit funny.",
   "start_url": "/?source=pwa",
   "display": "standalone",
-  "background_color": "#0a0e27",
-  "theme_color": "#a78bfa",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
   "orientation": "portrait-primary",
   "categories": [
     "lifestyle",
