@@ -32,8 +32,6 @@ const ACCENT_COLORS = [
 const selectedSign = signal<string | null>(null);
 const hoveredSign = signal<string | null>(null);
 const flickerTrigger = signal<number>(0);
-const mouseX = signal<number>(0);
-const mouseY = signal<number>(0);
 
 // Horoscope mode states
 type Mode = "picker" | "horoscope";
@@ -361,13 +359,25 @@ export default function ZodiacPicker() {
     }
   }, []);
 
-  // Parallax mouse tracking
+  // Parallax mouse tracking — written straight to CSS vars, at most once per
+  // frame. Routing this through signals read in the render body re-rendered
+  // the entire island at pointer-event rate.
   useEffect(() => {
+    let queued = false;
+    let mx = 0;
+    let my = 0;
+    const applyParallax = () => {
+      queued = false;
+      stageRef.current?.style.setProperty("--mx", String(mx));
+      stageRef.current?.style.setProperty("--my", String(my));
+    };
     const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / globalThis.innerWidth - 0.5) * 2;
-      const y = (e.clientY / globalThis.innerHeight - 0.5) * 2;
-      mouseX.value = x;
-      mouseY.value = y;
+      mx = (e.clientX / globalThis.innerWidth - 0.5) * 2;
+      my = (e.clientY / globalThis.innerHeight - 0.5) * 2;
+      if (!queued) {
+        queued = true;
+        requestAnimationFrame(applyParallax);
+      }
     };
 
     globalThis.addEventListener("mousemove", handleMouseMove);
@@ -390,6 +400,10 @@ export default function ZodiacPicker() {
   // Generation guard: rapid sign/period taps spawn overlapping fetches;
   // only the latest one may write state, or a slow loser clobbers the winner.
   const fetchGeneration = useRef(0);
+
+  // Root element: receives the --mx/--my parallax vars from the mousemove
+  // handler so consumers animate without a single Preact re-render.
+  const stageRef = useRef<HTMLDivElement>(null);
 
   const fetchHoroscope = async (sign: string, period: Period) => {
     const generation = ++fetchGeneration.current;
@@ -567,21 +581,6 @@ export default function ZodiacPicker() {
     : [];
   const dossierCursorColor = previewSign ? accentColor : accentGlowColor;
 
-  // Parallax transforms
-  const parallaxX = mouseX.value * 8; // Subtle movement
-  const parallaxY = mouseY.value * 8;
-  const parallaxRotateX = mouseY.value * 2;
-  const parallaxRotateY = mouseX.value * -2;
-
-  // Dossier panel parallax (different layer depth)
-  const dossierParallaxX = mouseX.value * 12;
-  const dossierParallaxY = mouseY.value * 12;
-  const dossierRotateX = mouseY.value * 3;
-  const dossierRotateY = mouseX.value * -3;
-
-  // Selector panel parallax (middle layer)
-  const selectorParallaxX = mouseX.value * 6;
-  const selectorParallaxY = mouseY.value * 6;
   const isHoroscopeMode = currentMode.value === "horoscope";
   const activeCosmicContext = cosmicContext.value;
   const cosmicGlitchClass = activeCosmicContext
@@ -598,7 +597,7 @@ export default function ZodiacPicker() {
     : [];
 
   return (
-    <div class="relative w-full min-w-0 overflow-hidden">
+    <div ref={stageRef} class="relative w-full min-w-0 overflow-hidden">
       <style>
         {`
           /* Session accent, published for the global scrollbar skin. */
@@ -840,7 +839,7 @@ export default function ZodiacPicker() {
           } border-[3px] sm:border-4 rounded-[18px] sm:rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.8)] terminal-shell ${cosmicGlitchClass} ${cosmicPhaseClass} ${cosmicElementClass} ${
             flickerTrigger.value > 0 ? "crt-flicker" : ""
           }`}
-          style={`background: rgba(2, 4, 12, 0.95); border-color: ${accentGlowColor}80; box-shadow: 0 0 30px ${accentGlowColor}24, 0 18px 60px rgba(0,0,0,0.68), inset 0 0 64px rgba(0,0,0,0.6); animation: cosmicFloat 12s ease-in-out infinite; transform: perspective(1000px) rotateX(${parallaxRotateX}deg) rotateY(${parallaxRotateY}deg) translate3d(${parallaxX}px, ${parallaxY}px, 0); transition: transform 0.3s ease-out;`}
+          style={`background: rgba(2, 4, 12, 0.95); border-color: ${accentGlowColor}80; box-shadow: 0 0 30px ${accentGlowColor}24, 0 18px 60px rgba(0,0,0,0.68), inset 0 0 64px rgba(0,0,0,0.6); animation: cosmicFloat 12s ease-in-out infinite;`}
         >
           {/* Terminal title bar */}
           <div
@@ -888,7 +887,7 @@ export default function ZodiacPicker() {
                 <div class="flex min-h-full min-w-0 flex-col lg:h-full lg:flex-row gap-6 sm:gap-8 lg:gap-12">
                   <div
                     class="min-w-0 flex-1 flex flex-col selector-panel-motion"
-                    style={`animation: cosmicFloat 16s ease-in-out infinite; animation-delay: 0.7s; transform: translate3d(${selectorParallaxX}px, ${selectorParallaxY}px, 0); transition: transform 0.3s ease-out;`}
+                    style="animation: cosmicFloat 16s ease-in-out infinite; animation-delay: 0.7s;"
                   >
                     <div class="picker-crown shrink-0 mb-4 sm:mb-5">
                       <pre
@@ -997,7 +996,7 @@ export default function ZodiacPicker() {
                   }
                   <div
                     class="hidden lg:block lg:w-[320px] xl:w-[360px] lg:max-h-full lg:overflow-y-auto border-[3px] rounded-[18px] sm:rounded-3xl p-4 sm:p-5 bg-black/35 dossier-panel-motion"
-                    style={`border-color: ${accentGlowColor}40; box-shadow: inset 0 0 32px ${accentGlowColor}22; transform: perspective(1000px) rotateX(${dossierRotateX}deg) rotateY(${dossierRotateY}deg) translate3d(${dossierParallaxX}px, ${dossierParallaxY}px, 0); transition: transform 0.3s ease-out; transform-style: preserve-3d;`}
+                    style={`border-color: ${accentGlowColor}40; box-shadow: inset 0 0 32px ${accentGlowColor}22; transform: perspective(1000px) rotateX(calc(var(--my, 0) * 3deg)) rotateY(calc(var(--mx, 0) * -3deg)) translate3d(calc(var(--mx, 0) * 12px), calc(var(--my, 0) * 12px), 0); transition: transform 0.3s ease-out; transform-style: preserve-3d;`}
                   >
                     <div
                       class="text-xs uppercase tracking-[0.4em] mb-4 font-bold"

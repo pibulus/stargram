@@ -49,9 +49,12 @@ export default function BackgroundCanvas() {
     const zOff = 0.0005;
     const backgroundColor = "rgba(6, 6, 8, 1)"; // Deep dark off black
 
-    // Create canvases
+    // Create canvases. canvasGlow is a quarter-res copy of the particle
+    // pass: compositing it back up gives a soft bloom from bilinear scaling
+    // alone, replacing the per-frame ctx.filter blur that ate whole cores.
     const canvasA = document.createElement("canvas");
     const canvasB = document.createElement("canvas");
+    const canvasGlow = document.createElement("canvas");
     canvasB.style.cssText = `
       position: fixed;
       top: 0;
@@ -62,8 +65,9 @@ export default function BackgroundCanvas() {
     container.appendChild(canvasB);
 
     const ctxA = canvasA.getContext("2d");
-    const ctxB = canvasB.getContext("2d");
-    if (!ctxA || !ctxB) return;
+    const ctxB = canvasB.getContext("2d", { alpha: false });
+    const ctxGlow = canvasGlow.getContext("2d");
+    if (!ctxA || !ctxB || !ctxGlow) return;
 
     // Initialize
     const particleProps = new Float32Array(particlePropsLength);
@@ -82,6 +86,13 @@ export default function BackgroundCanvas() {
       canvasB.width = innerWidth;
       canvasB.height = innerHeight;
       ctxB.drawImage(canvasA, 0, 0);
+
+      canvasGlow.width = Math.max(1, innerWidth >> 2);
+      canvasGlow.height = Math.max(1, innerHeight >> 2);
+
+      // Resizing resets context state, so re-pin the stroke style here
+      // instead of save/restore-ing around every particle draw.
+      ctxA.lineCap = "round";
 
       center[0] = 0.5 * canvasA.width;
       center[1] = 0.5 * canvasA.height;
@@ -113,16 +124,12 @@ export default function BackgroundCanvas() {
       radius: number,
       hue: number,
     ) => {
-      ctxA.save();
-      ctxA.lineCap = "round";
       ctxA.lineWidth = radius;
       ctxA.strokeStyle = `hsla(${hue},100%,60%,${fadeInOut(life, ttl)})`;
       ctxA.beginPath();
       ctxA.moveTo(x, y);
       ctxA.lineTo(x2, y2);
       ctxA.stroke();
-      ctxA.closePath();
-      ctxA.restore();
     };
 
     const checkBounds = (x: number, y: number) => {
@@ -173,24 +180,17 @@ export default function BackgroundCanvas() {
     };
 
     const renderGlow = () => {
-      ctxB.save();
-      ctxB.filter = "blur(8px) brightness(200%)";
-      ctxB.globalCompositeOperation = "lighter";
-      ctxB.drawImage(canvasA, 0, 0);
-      ctxB.restore();
-
-      ctxB.save();
-      ctxB.filter = "blur(4px) brightness(200%)";
-      ctxB.globalCompositeOperation = "lighter";
-      ctxB.drawImage(canvasA, 0, 0);
-      ctxB.restore();
+      // Downscale once, additively upscale twice: the scaling blur stands in
+      // for the old blur(8px)/blur(4px) filters, the double draw for their
+      // brightness(200%).
+      ctxGlow.clearRect(0, 0, canvasGlow.width, canvasGlow.height);
+      ctxGlow.drawImage(canvasA, 0, 0, canvasGlow.width, canvasGlow.height);
+      ctxB.drawImage(canvasGlow, 0, 0, canvasA.width, canvasA.height);
+      ctxB.drawImage(canvasGlow, 0, 0, canvasA.width, canvasA.height);
     };
 
     const renderToScreen = () => {
-      ctxB.save();
-      ctxB.globalCompositeOperation = "lighter";
       ctxB.drawImage(canvasA, 0, 0);
-      ctxB.restore();
     };
 
     const draw = () => {
@@ -198,8 +198,10 @@ export default function BackgroundCanvas() {
 
       ctxA.clearRect(0, 0, canvasA.width, canvasA.height);
 
+      ctxB.globalCompositeOperation = "source-over";
       ctxB.fillStyle = backgroundColor;
       ctxB.fillRect(0, 0, canvasA.width, canvasA.height);
+      ctxB.globalCompositeOperation = "lighter";
 
       drawParticles();
       renderGlow();

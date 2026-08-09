@@ -45,7 +45,6 @@ export function TypedWriter({
   const typedRef = useRef<Typed | null>(null);
   const soundsRef = useRef<SimpleTypeWriter | null>(null);
   const lastContentRef = useRef<string>(""); // Track what we last typed
-  const trailTimeoutRef = useRef<number | null>(null);
   const pauseTimeoutRef = useRef<number | null>(null);
   const speedIntervalRef = useRef<number | null>(null);
   const readerTookScrollRef = useRef(false); // Reader scrolled away mid-typing
@@ -89,11 +88,6 @@ export function TypedWriter({
       speedIntervalRef.current = null;
     }
 
-    if (trailTimeoutRef.current) {
-      clearTimeout(trailTimeoutRef.current);
-      trailTimeoutRef.current = null;
-    }
-
     if (pauseTimeoutRef.current) {
       clearTimeout(pauseTimeoutRef.current);
       pauseTimeoutRef.current = null;
@@ -121,6 +115,22 @@ export function TypedWriter({
       passive: true,
     });
 
+    // Follow the caret at most once per frame: the observer fires per typed
+    // character, and measuring layout that often is what made typing janky.
+    let followQueued = false;
+    const followCaret = () => {
+      followQueued = false;
+      if (!scrollHost || !elementRef.current || readerTookScrollRef.current) {
+        return;
+      }
+      const parentBottom = scrollHost.getBoundingClientRect().bottom;
+      const caretBottom = elementRef.current.getBoundingClientRect().bottom;
+      const overshoot = caretBottom - parentBottom + 24;
+      if (overshoot > 0) {
+        scrollHost.scrollTop += overshoot;
+      }
+    };
+
     // Watch for DOM changes to play sounds and add natural pauses
     let lastLength = 0;
     let lastChar = "";
@@ -145,29 +155,9 @@ export function TypedWriter({
 
         // Follow the caret: nudge the scroller only once typing passes the
         // fold, so content above (like the ASCII title) stays in view.
-        const scrollParent = elementRef.current.closest(".overflow-y-auto");
-        if (scrollParent && !readerTookScrollRef.current) {
-          const parentBottom = scrollParent.getBoundingClientRect().bottom;
-          const caretBottom = elementRef.current.getBoundingClientRect().bottom;
-          const overshoot = caretBottom - parentBottom + 24;
-          if (overshoot > 0) {
-            scrollParent.scrollTop += overshoot;
-          }
-        }
-
-        if (elementRef.current) {
-          elementRef.current.classList.remove("typing-trail");
-          void elementRef.current.offsetWidth;
-          elementRef.current.classList.add("typing-trail");
-          if (trailTimeoutRef.current) {
-            clearTimeout(trailTimeoutRef.current);
-          }
-          trailTimeoutRef.current = globalThis.setTimeout(() => {
-            if (elementRef.current) {
-              elementRef.current.classList.remove("typing-trail");
-            }
-            trailTimeoutRef.current = null;
-          }, 320);
+        if (!followQueued) {
+          followQueued = true;
+          requestAnimationFrame(followCaret);
         }
 
         // Add natural pause after punctuation. The resume has to be
@@ -254,10 +244,6 @@ export function TypedWriter({
       if (speedIntervalRef.current) {
         clearInterval(speedIntervalRef.current);
         speedIntervalRef.current = null;
-      }
-      if (trailTimeoutRef.current) {
-        clearTimeout(trailTimeoutRef.current);
-        trailTimeoutRef.current = null;
       }
       if (pauseTimeoutRef.current) {
         clearTimeout(pauseTimeoutRef.current);
