@@ -22,6 +22,9 @@ interface TypedWriterProps {
   onComplete?: () => void;
   /** Whether to append blinking cursor on completion */
   showCompletionCursor?: boolean;
+  /** Human typing rhythm: sentence/clause pauses + per-word hesitation.
+   * Leave off for ASCII art, where pauses read as stalls. */
+  humanize?: boolean;
   /** Reserve the final text box while typing to avoid layout growth */
   reserveLayout?: boolean;
   /** CSS class */
@@ -37,6 +40,7 @@ export function TypedWriter({
   enabled = true,
   onComplete,
   showCompletionCursor = true,
+  humanize = false,
   reserveLayout = false,
   className = "",
   style = "",
@@ -46,7 +50,6 @@ export function TypedWriter({
   const soundsRef = useRef<SimpleTypeWriter | null>(null);
   const lastContentRef = useRef<string>(""); // Track what we last typed
   const pauseTimeoutRef = useRef<number | null>(null);
-  const speedIntervalRef = useRef<number | null>(null);
   const readerTookScrollRef = useRef(false); // Reader scrolled away mid-typing
 
   useEffect(() => {
@@ -81,11 +84,6 @@ export function TypedWriter({
     // Cleanup previous instance
     if (typedRef.current) {
       typedRef.current.destroy();
-    }
-
-    if (speedIntervalRef.current) {
-      clearInterval(speedIntervalRef.current);
-      speedIntervalRef.current = null;
     }
 
     if (pauseTimeoutRef.current) {
@@ -160,22 +158,43 @@ export function TypedWriter({
           requestAnimationFrame(followCaret);
         }
 
-        // Add natural pause after punctuation. The resume has to be
-        // cancellable: without it, switching period mid-sentence leaves a
-        // timer that calls start() on a destroyed instance — or worse, on
-        // the replacement that's already typing.
-        if (lastChar === "." || lastChar === "!" || lastChar === "?") {
-          const paused = typedRef.current;
-          paused.stop();
-          if (pauseTimeoutRef.current) {
-            clearTimeout(pauseTimeoutRef.current);
+        // Human rhythm: pause at real boundaries only. The whitespace guard
+        // means a boundary is confirmed by the character AFTER the mark —
+        // so "..." or "2026.08" never stutter, but a sentence end breathes.
+        // The resume has to be cancellable: without it, switching period
+        // mid-sentence leaves a timer that calls start() on a destroyed
+        // instance — or worse, on the replacement that's already typing.
+        if (humanize) {
+          const isWhitespace = /\s/.test(newChar);
+          let pauseMs = 0;
+          if (isWhitespace && /[.!?]/.test(lastChar)) {
+            pauseMs = 550 + Math.random() * 250; // sentence lands, breathe
+          } else if (isWhitespace && /[,;:—]/.test(lastChar)) {
+            pauseMs = 180 + Math.random() * 120; // clause tick
           }
-          pauseTimeoutRef.current = globalThis.setTimeout(() => {
-            pauseTimeoutRef.current = null;
-            if (typedRef.current === paused) {
-              paused.start();
+
+          if (pauseMs > 0) {
+            const paused = typedRef.current;
+            paused.stop();
+            if (pauseTimeoutRef.current) {
+              clearTimeout(pauseTimeoutRef.current);
             }
-          }, 400); // Pause for 400ms after sentence end
+            pauseTimeoutRef.current = globalThis.setTimeout(() => {
+              pauseTimeoutRef.current = null;
+              if (typedRef.current === paused) {
+                paused.start();
+              }
+            }, pauseMs);
+          } else {
+            // Between pauses the pace itself wobbles like fingers: quick
+            // within words, an occasional held breath before a new one.
+            const typedInstance = typedRef.current as Typed & {
+              typeSpeed: number;
+            };
+            typedInstance.typeSpeed = isWhitespace && Math.random() < 0.05
+              ? speed + 90 + Math.random() * 90
+              : Math.max(4, Math.round(speed * (0.7 + Math.random() * 0.5)));
+          }
         }
 
         lastChar = newChar;
@@ -190,44 +209,31 @@ export function TypedWriter({
       subtree: true,
     });
 
-    // Start typing with typed.js - with human-like variation
+    // Start typing with typed.js — rhythm lives in the observer above
     typedRef.current = new Typed(elementRef.current, {
       strings: [htmlText || text],
       typeSpeed: speed,
       showCursor: false,
       contentType: htmlText ? "html" : "text",
-      // Add randomness to typing speed (±30ms variation)
-      onBegin: (self: Typed) => {
-        // Override typeSpeed dynamically for human feel
-        const originalSpeed = speed;
-        speedIntervalRef.current = globalThis.setInterval(() => {
-          if (self && !self.typingComplete) {
-            // Vary speed between 70-130% of base speed
-            const variation = 0.7 + Math.random() * 0.6;
-            const typedInstance = self as Typed & { typeSpeed: number };
-            typedInstance.typeSpeed = Math.floor(originalSpeed * variation);
-          }
-        }, 100);
-      },
       onComplete: () => {
         observer.disconnect();
-        if (speedIntervalRef.current) {
-          clearInterval(speedIntervalRef.current);
-          speedIntervalRef.current = null;
-        }
 
         if (showCompletionCursor) {
           sounds.transmissionComplete();
         }
 
-        // Add persistent blinking cursor after typing completes
+        // Add persistent blinking cursor after typing completes. It lands
+        // INSIDE the last line span — the colorized lines are display:block,
+        // so appending to the container would drop it onto its own row.
         if (showCompletionCursor && elementRef.current) {
           const cursor = document.createElement("span");
-          cursor.className = "blinking-cursor";
+          cursor.className = "cursor-blink";
           cursor.textContent = "█";
           cursor.style.cssText =
-            "color: #00FF41; font-size: inherit; font-weight: 900; margin-left: 0;";
-          elementRef.current.appendChild(cursor);
+            "color: #00FF41; font-size: inherit; font-weight: 900; margin-left: 0.45ch;";
+          const host = elementRef.current.lastElementChild ??
+            elementRef.current;
+          host.appendChild(cursor);
         }
 
         if (onComplete) onComplete();
@@ -241,16 +247,12 @@ export function TypedWriter({
       if (typedRef.current) {
         typedRef.current.destroy();
       }
-      if (speedIntervalRef.current) {
-        clearInterval(speedIntervalRef.current);
-        speedIntervalRef.current = null;
-      }
       if (pauseTimeoutRef.current) {
         clearTimeout(pauseTimeoutRef.current);
         pauseTimeoutRef.current = null;
       }
     };
-  }, [text, htmlText, speed, enabled]);
+  }, [text, htmlText, speed, enabled, humanize]);
 
   if (reserveLayout && enabled) {
     const reserveStyle = [

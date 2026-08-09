@@ -1347,8 +1347,9 @@ export default function ZodiacPicker() {
                             text={splitHoroscopeAscii(horoscopePlainText.value)
                               .body}
                             htmlText={horoscopeBodyHtml.value}
-                            speed={8}
+                            speed={12}
                             enabled
+                            humanize
                             showCompletionCursor
                             onComplete={() => {
                               bodyTyped.value = true;
