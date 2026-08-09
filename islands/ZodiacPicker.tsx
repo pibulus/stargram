@@ -471,6 +471,13 @@ export default function ZodiacPicker() {
         horoscopeHeaderHtml.value = colorized.headerHtml;
         horoscopeBodyHtml.value = colorized.bodyHtml;
 
+        // A breath between the boot bleeps and the typing clatter. With the
+        // reading prefetched, the theatre ends the instant the last line
+        // lands — without this pause the final bootStep, the success chord,
+        // and the first keystrokes all collide.
+        await new Promise((resolve) => setTimeout(resolve, 550));
+        if (!isCurrent()) return;
+
         showHoroscope.value = true;
         sounds.success();
         analytics.trackHoroscopeViewed(sign, period);

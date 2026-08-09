@@ -1,10 +1,12 @@
 import { signal } from "@preact/signals";
 import { ModalShell } from "../components/modal/ModalShell.tsx";
+import { sounds } from "../utils/sounds.ts";
 
 /**
  * 🎸 About Modal Component
  *
- * Showcase modal explaining Stargram's purpose and Pablo's rapid dev approach.
+ * Terminal-styled about card — same CRT language as WelcomeModal, telling
+ * the sovereign-oracle truth: the sky is computed here, not fetched.
  * Machinery (Escape, backdrop close, scroll-lock, focus trap, animations)
  * lives in the vendored chassis ModalShell — this file is signal + skin only.
  *
@@ -30,145 +32,152 @@ export function AboutModal() {
       open={aboutModalOpen.value}
       onClose={closeAboutModal}
       labelledby="about-modal-title"
-      maxWidth="48rem"
+      maxWidth="42rem"
       showClose={false}
     >
-      {/* Header */}
+      {/* Terminal shell */}
       <div
-        class="p-4 sm:p-6 border-4 border-b-0 rounded-t-3xl"
-        style="background-color: var(--color-secondary, #1a1f3a); border-color: var(--color-border, #a78bfa)"
+        class="relative border-[3px] sm:border-4 rounded-[18px] sm:rounded-3xl overflow-hidden"
+        style="background: rgba(2, 4, 12, 0.98); border-color: #8B5CF6; box-shadow: 0 0 45px rgba(139, 92, 246, 0.3), 0 25px 90px rgba(0,0,0,0.7), inset 0 0 80px rgba(0,0,0,0.6);"
       >
-        <div class="flex items-start justify-between mb-2">
-          <h2
-            id="about-modal-title"
-            class="text-2xl sm:text-3xl font-bold font-mono"
-            style="color: var(--color-text, #e0e7ff)"
+        {/* Terminal title bar */}
+        <div
+          class="flex items-center gap-3 px-4 sm:px-6 py-3 border-b-3"
+          style="border-color: rgba(139, 92, 246, 0.3); background: rgba(0, 0, 0, 0.9);"
+        >
+          <div class="flex gap-2">
+            <span class="w-3 h-3 rounded-full bg-[#ff5f56]" />
+            <span class="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+            <span class="w-3 h-3 rounded-full bg-[#27c93f]" />
+          </div>
+          <div
+            class="flex-1 text-sm font-mono tracking-wider uppercase"
+            style="color: #8B5CF6;"
           >
-            About STARGRAM ✨
-          </h2>
+            ~/cosmic/about.txt
+          </div>
           <button
             type="button"
-            onClick={closeAboutModal}
-            class="-mt-2 -mr-2 w-11 h-11 shrink-0 flex items-center justify-center text-2xl sm:text-3xl leading-none font-bold transition-transform hover:scale-110"
-            style="color: var(--color-text, #e0e7ff)"
+            onClick={() => {
+              sounds.click();
+              closeAboutModal();
+            }}
+            class="-mr-2 w-11 h-11 shrink-0 flex items-center justify-center text-2xl leading-none font-mono font-bold transition-transform hover:scale-110"
+            style="color: #8B5CF6;"
             aria-label="Close about dialog"
           >
             ×
           </button>
         </div>
-        <p
-          class="text-base sm:text-lg font-mono font-bold"
-          style="color: var(--color-accent, #f0abfc)"
-        >
-          Horoscopes styled as cosmic art 🌙
-        </p>
-      </div>
 
-      {/* Content */}
-      <div
-        class="p-4 sm:p-8 border-4 rounded-b-3xl shadow-brutal-xl space-y-4 sm:space-y-6"
-        style="background-color: var(--color-base, #0a0e27); border-color: var(--color-border, #a78bfa)"
-      >
-        {/* Story */}
-        <p
-          class="text-base sm:text-lg leading-relaxed"
-          style="color: var(--color-text, #e0e7ff)"
-        >
-          Your horoscope as shareable cosmic art. Because your daily guidance
-          deserves to look as good as it reads.
-        </p>
+        {/* Terminal content */}
+        <div class="p-4 sm:p-8 space-y-5 font-mono">
+          <h2
+            id="about-modal-title"
+            class="text-xl sm:text-2xl font-bold tracking-[0.2em] uppercase"
+            style="color: #8B5CF6; text-shadow: 0 0 12px rgba(139, 92, 246, 0.6);"
+          >
+            About Stargram
+          </h2>
 
-        {/* What it's for */}
-        <div
-          class="py-4 px-4 border-2 rounded-xl space-y-2"
-          style="background-color: var(--color-secondary, #1a1f3a); border-color: var(--color-border, #a78bfa)"
-        >
-          <p
-            class="text-sm sm:text-base font-medium"
-            style="color: var(--color-text, #e0e7ff)"
-          >
-            Pick your sign. Get daily, weekly, or monthly readings typed out
-            live, tuned to real sky signals. Share the vibe.
+          <p class="text-sm" style="color: rgba(139, 92, 246, 0.9);">
+            <span style="color: #00FF41;">$</span>{" "}
+            Your horoscope as cosmic terminal art
           </p>
-          <p
-            class="text-sm sm:text-base font-medium"
-            style="color: var(--color-text, #e0e7ff)"
-          >
-            Quick, free, no fuss.
-          </p>
-          <p
-            class="text-sm sm:text-base font-medium pt-2"
-            style="color: var(--color-accent, #f0abfc)"
-          >
-            ✨ Real astrologer wisdom, zero AI
-          </p>
-        </div>
 
-        {/* Links */}
-        <div class="pt-2">
-          <p
-            class="text-sm font-medium mb-3 text-center"
-            style="color: var(--color-text, #e0e7ff)"
+          {/* The sovereign oracle */}
+          <div
+            class="p-4 border-2 rounded-xl space-y-2"
+            style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3);"
           >
-            Check out more of my work:
-          </p>
-          <div class="flex flex-wrap gap-3 justify-center">
-            <a
-              href="https://pibul.us"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 px-4 py-2 border-3 rounded-lg font-mono font-bold transition-all hover:scale-105 shadow-brutal-sm"
-              style="background-color: var(--color-accent, #FF69B4); color: var(--color-base, #FAF9F6); border-color: var(--color-border, #0A0A0A)"
+            <p class="text-sm font-bold text-center" style="color: #EC4899;">
+              THE SOVEREIGN ORACLE
+            </p>
+            <p
+              class="text-xs sm:text-sm text-center"
+              style="color: rgba(139, 92, 246, 0.85);"
             >
-              🌐 Portfolio
-            </a>
-            <a
-              href="https://github.com/pibulus"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 px-4 py-2 border-3 rounded-lg font-mono font-bold transition-all hover:scale-105 shadow-brutal-sm"
-              style="background-color: var(--color-secondary, #FFE5B4); color: var(--color-text, #0A0A0A); border-color: var(--color-border, #0A0A0A)"
+              Stargram computes its own sky — real planetary positions, the
+              moon's phase, the tonalpohualli day-count, seeded card and rune
+              draws, a sigil stamped on every reading. Divined nightly at
+              1:33am. One reading per day, same sky for everyone.
+            </p>
+          </div>
+
+          {/* Prompt lines */}
+          <div class="space-y-2 text-xs sm:text-sm">
+            <p style="color: rgba(139, 92, 246, 0.7);">
+              <span style="color: #00FF41;">{">"}</span>{" "}
+              No vendors, no feeds — the sky can't go blank
+            </p>
+            <p style="color: rgba(139, 92, 246, 0.7);">
+              <span style="color: #00FF41;">{">"}</span>{" "}
+              Daily, weekly, monthly — typed out live
+            </p>
+            <p style="color: rgba(139, 92, 246, 0.7);">
+              <span style="color: #00FF41;">{">"}</span> Quick, free, no fuss
+            </p>
+          </div>
+
+          {/* Links */}
+          <div class="pt-1">
+            <p
+              class="text-xs sm:text-sm mb-3 text-center"
+              style="color: rgba(139, 92, 246, 0.7);"
             >
-              💻 GitHub
-            </a>
+              More from the same workbench:
+            </p>
+            <div class="flex flex-wrap gap-3 justify-center">
+              <a
+                href="https://pibul.us"
+                target="_blank"
+                rel="noopener noreferrer"
+                onMouseEnter={() => sounds.hover()}
+                class="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] border-3 rounded-xl font-mono font-bold text-sm transition-all hover:scale-105 active:scale-95"
+                style="background: rgba(139, 92, 246, 0.2); color: #8B5CF6; border-color: #8B5CF6; box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);"
+              >
+                🌐 Portfolio
+              </a>
+              <a
+                href="https://github.com/pibulus"
+                target="_blank"
+                rel="noopener noreferrer"
+                onMouseEnter={() => sounds.hover()}
+                class="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] border-3 rounded-xl font-mono font-bold text-sm transition-all hover:scale-105 active:scale-95"
+                style="background: rgba(0, 255, 65, 0.08); color: #00FF41; border-color: rgba(0, 255, 65, 0.6); box-shadow: 0 0 12px rgba(0, 255, 65, 0.2);"
+              >
+                💻 GitHub
+              </a>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div
+            class="pt-4 text-center border-t-2"
+            style="border-color: rgba(139, 92, 246, 0.25);"
+          >
+            <p class="text-xs" style="color: rgba(139, 92, 246, 0.6);">
+              Made in Melbourne with care 🎸
+            </p>
           </div>
         </div>
 
-        {/* Footer */}
+        {/* CRT scanlines overlay */}
         <div
-          class="pt-4 text-center border-t-2"
-          style="border-color: var(--color-border, #0A0A0A)"
-        >
-          <p
-            class="text-xs opacity-60"
-            style="color: var(--color-text, #0A0A0A)"
-          >
-            Made in Melbourne with care 🎸
-          </p>
-        </div>
+          class="absolute inset-0 pointer-events-none rounded-[18px] sm:rounded-3xl"
+          style="background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 2px); opacity: 0.3;"
+        />
       </div>
 
       {/* Footer hint */}
       <div class="text-center mt-4">
         <p
           class="text-xs font-mono opacity-60"
-          style="color: var(--color-text, #e0e7ff)"
+          style="color: rgba(139, 92, 246, 0.9);"
         >
           Tap outside or press ESC to close
         </p>
       </div>
-
-      <style>
-        {`
-          .shadow-brutal-xl {
-            box-shadow: 12px 12px 0px var(--color-border, #0A0A0A);
-          }
-
-          .shadow-brutal-sm {
-            box-shadow: 4px 4px 0px var(--color-border, #0A0A0A);
-          }
-        `}
-      </style>
     </ModalShell>
   );
 }
