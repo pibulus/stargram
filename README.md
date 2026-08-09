@@ -133,7 +133,7 @@ git push origin main
 Manual deploy fallback:
 
 ```bash
-deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
+deno task build && DENO_DEPLOY_TOKEN="$DENO_DEPLOY_TOKEN_NEW" deno deploy --prod --non-interactive  # verified 2026-08-09; deployctl/classic died 2026-07-20
 ```
 
 Canonical URL: `https://stargram.app`

@@ -33,7 +33,7 @@ git push origin main
 Manual Deno Deploy fallback:
 
 ```bash
-deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
+deno task build && DENO_DEPLOY_TOKEN="$DENO_DEPLOY_TOKEN_NEW" deno deploy --prod --non-interactive  # verified 2026-08-09; deployctl/classic died 2026-07-20
 ```
 
 Optional production env vars:
