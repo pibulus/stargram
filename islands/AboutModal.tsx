@@ -1,14 +1,15 @@
 import { signal } from "@preact/signals";
 import { ModalShell } from "../components/modal/ModalShell.tsx";
 import { sounds } from "../utils/sounds.ts";
+import { openKofiModal } from "./KofiModal.tsx";
 
 /**
  * 🎸 About Modal Component
  *
- * Terminal-styled about card — same CRT language as WelcomeModal, telling
- * the sovereign-oracle truth: the sky is computed here, not fetched.
- * Machinery (Escape, backdrop close, scroll-lock, focus trap, animations)
- * lives in the vendored chassis ModalShell — this file is signal + skin only.
+ * Terminal-styled about card — same CRT language as WelcomeModal, kept
+ * short and chill. Machinery (Escape, backdrop close, scroll-lock, focus
+ * trap, animations) lives in the vendored chassis ModalShell — this file
+ * is signal + skin only.
  *
  * Built by Pablo for SoftStack apps 🎸
  */
@@ -32,7 +33,7 @@ export function AboutModal() {
       open={aboutModalOpen.value}
       onClose={closeAboutModal}
       labelledby="about-modal-title"
-      maxWidth="42rem"
+      maxWidth="38rem"
       showClose={false}
     >
       {/* Terminal shell */}
@@ -85,80 +86,45 @@ export function AboutModal() {
             Your horoscope as cosmic terminal art
           </p>
 
-          {/* The sovereign oracle */}
+          {/* The download */}
           <div
             class="p-4 border-2 rounded-xl space-y-2"
             style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3);"
           >
             <p class="text-sm font-bold text-center" style="color: #EC4899;">
-              THE SOVEREIGN ORACLE
+              COSMIC DOWNLOAD
             </p>
             <p
               class="text-xs sm:text-sm text-center"
               style="color: rgba(139, 92, 246, 0.85);"
             >
-              Stargram computes its own sky — real planetary positions, the
-              moon's phase, the tonalpohualli day-count, seeded card and rune
-              draws, a sigil stamped on every reading. Divined nightly at
-              1:33am. One reading per day, same sky for everyone.
+              Pulled fresh from the sky each night at 1:33am — real planetary
+              math, moon phase, a card, a rune, a sigil. One reading per day,
+              same sky for everyone.
             </p>
-          </div>
-
-          {/* Prompt lines */}
-          <div class="space-y-2 text-xs sm:text-sm">
-            <p style="color: rgba(139, 92, 246, 0.7);">
-              <span style="color: #00FF41;">{">"}</span>{" "}
-              No vendors, no feeds — the sky can't go blank
-            </p>
-            <p style="color: rgba(139, 92, 246, 0.7);">
-              <span style="color: #00FF41;">{">"}</span>{" "}
-              Daily, weekly, monthly — typed out live
-            </p>
-            <p style="color: rgba(139, 92, 246, 0.7);">
-              <span style="color: #00FF41;">{">"}</span> Quick, free, no fuss
-            </p>
-          </div>
-
-          {/* Links */}
-          <div class="pt-1">
-            <p
-              class="text-xs sm:text-sm mb-3 text-center"
-              style="color: rgba(139, 92, 246, 0.7);"
-            >
-              More from the same workbench:
-            </p>
-            <div class="flex flex-wrap gap-3 justify-center">
-              <a
-                href="https://pibul.us"
-                target="_blank"
-                rel="noopener noreferrer"
-                onMouseEnter={() => sounds.hover()}
-                class="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] border-3 rounded-xl font-mono font-bold text-sm transition-all hover:scale-105 active:scale-95"
-                style="background: rgba(139, 92, 246, 0.2); color: #8B5CF6; border-color: #8B5CF6; box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);"
-              >
-                🌐 Portfolio
-              </a>
-              <a
-                href="https://github.com/pibulus"
-                target="_blank"
-                rel="noopener noreferrer"
-                onMouseEnter={() => sounds.hover()}
-                class="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] border-3 rounded-xl font-mono font-bold text-sm transition-all hover:scale-105 active:scale-95"
-                style="background: rgba(0, 255, 65, 0.08); color: #00FF41; border-color: rgba(0, 255, 65, 0.6); box-shadow: 0 0 12px rgba(0, 255, 65, 0.2);"
-              >
-                💻 GitHub
-              </a>
-            </div>
           </div>
 
           {/* Footer */}
           <div
-            class="pt-4 text-center border-t-2"
+            class="pt-4 flex flex-col items-center gap-3 border-t-2"
             style="border-color: rgba(139, 92, 246, 0.25);"
           >
             <p class="text-xs" style="color: rgba(139, 92, 246, 0.6);">
-              Made in Melbourne with care 🎸
+              Made by Pablo 🎸
             </p>
+            <button
+              type="button"
+              onClick={() => {
+                sounds.click();
+                closeAboutModal();
+                openKofiModal();
+              }}
+              onMouseEnter={() => sounds.hover()}
+              class="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] border-3 rounded-xl font-mono font-bold text-sm transition-all hover:scale-105 active:scale-95"
+              style="background: rgba(139, 92, 246, 0.2); color: #8B5CF6; border-color: #8B5CF6; box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);"
+            >
+              ☕ Buy me a coffee
+            </button>
           </div>
         </div>
 
