@@ -146,10 +146,6 @@ const COSMIC_ANIMATION_STYLES = `
   50% { filter: brightness(1.25); }
   100% { filter: brightness(1); }
 }
-@keyframes scanlineScroll {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 8px; }
-}
 .cursor-blink {
   animation: cursorBlink 1s steps(2, start) infinite;
 }
@@ -699,7 +695,9 @@ export default function ZodiacPicker() {
               transparent 1px,
               transparent 2px
             );
-            animation: scanlineScroll 8s linear infinite;
+            /* Static scanlines. The old scanlineScroll drifted the pattern at
+               1px/second — invisible to humans, but animating
+               background-position repainted the whole shell every frame. */
             opacity: 0.4;
             z-index: 100;
             border-radius: inherit;
@@ -752,7 +750,6 @@ export default function ZodiacPicker() {
 
           .terminal-shell.cosmic-element-water::after {
             opacity: 0.18;
-            animation-duration: 9s;
           }
 
           .terminal-shell.cosmic-element-air::before {
@@ -766,7 +763,7 @@ export default function ZodiacPicker() {
           .terminal-shell.cosmic-glitch-2::after,
           .terminal-shell.cosmic-glitch-3::after,
           .terminal-shell.cosmic-glitch-4::after {
-            animation: scanlineScroll 5s linear infinite, cosmicCorrupt 9s steps(2, end) infinite;
+            animation: cosmicCorrupt 9s steps(2, end) infinite;
           }
 
           .terminal-shell.cosmic-glitch-3::after {

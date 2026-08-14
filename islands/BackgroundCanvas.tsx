@@ -193,8 +193,18 @@ export default function BackgroundCanvas() {
       ctxB.drawImage(canvasA, 0, 0);
     };
 
-    const draw = () => {
-      tick++;
+    // Render at 30fps with TWO sim steps per drawn frame: swirl speed and
+    // trail density stay identical, but the full-screen clear/fill/glow
+    // composites — the expensive half — happen half as often. An ambient
+    // background has no business drawing at display rate (120Hz ProMotion
+    // was paying quadruple).
+    const FRAME_MS = 1000 / 30;
+    let lastFrame = 0;
+
+    const draw = (now: number) => {
+      animationId = requestAnimationFrame(draw);
+      if (now - lastFrame < FRAME_MS - 1) return;
+      lastFrame = now;
 
       ctxA.clearRect(0, 0, canvasA.width, canvasA.height);
 
@@ -203,11 +213,13 @@ export default function BackgroundCanvas() {
       ctxB.fillRect(0, 0, canvasA.width, canvasA.height);
       ctxB.globalCompositeOperation = "lighter";
 
+      tick++;
       drawParticles();
+      tick++;
+      drawParticles();
+
       renderGlow();
       renderToScreen();
-
-      animationId = requestAnimationFrame(draw);
     };
 
     // Initialize particles
@@ -222,7 +234,7 @@ export default function BackgroundCanvas() {
       ctxB.fillStyle = backgroundColor;
       ctxB.fillRect(0, 0, canvasA.width, canvasA.height);
     } else {
-      draw();
+      draw(performance.now());
     }
 
     return () => {
