@@ -528,6 +528,7 @@ export default function ZodiacPicker() {
     shareReadingPNG(
       ".reading-capture",
       `stargram-${selectedSign.value}-${currentPeriod.value}-${date}`,
+      `~/cosmic/${selectedSign.value}/${currentPeriod.value}.txt`,
     );
   };
 
