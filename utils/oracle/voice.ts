@@ -13,11 +13,14 @@
 import { type ZodiacSign } from "../zodiac.ts";
 import { type Packet } from "./compose.ts";
 
-// Quality is the product, so we stay on the intelligent stable tier (Pablo,
-// 2026-08-09). Thinking is capped in generationConfig below: uncapped, this
-// model spent ~3.5k output tokens to write ~200 tokens of prose and drained
-// the prepay balance in two weeks (2026-08-23).
-const MODEL = "gemini-3.5-flash";
+// Quality is the product, so we stay on the intelligent tier (Pablo,
+// 2026-08-09) - but on the ROLLING alias, not a dated slug. gemini-2.0-flash-exp
+// vanished from the API while still referenced elsewhere in the fleet; a pinned
+// model is an outage with a delay on it. Google repoints *-latest, so this
+// cannot rot. Thinking is capped in generationConfig below: uncapped, this tier
+// spent ~3.5k output tokens to write ~200 tokens of prose and drained the
+// prepay balance in two weeks (2026-08-23).
+const MODEL = "gemini-flash-latest";
 const TIMEOUT_MS = 45000; // longer periods think longer; the rite has all night
 
 // Voice register by the planetary hour ruling the rite — a slight lean in
@@ -200,7 +203,10 @@ ${
     recentJournal.length
       ? `\nYour recent readings opened with: ${
         recentJournal.join("; ")
-      }. Choose a different kind of opening image - let the thread move on.\n`
+      }. Choose a different kind of opening image AND a different grammatical
+shape from those - vary how the sentence itself is built, not just what it
+points at. Six of twelve readings opening "When you..." is a tic, however
+different the pictures are.\n`
       : ""
   }
 ${shape} Normal sentence capitalisation. End on something the reader carries.`;
