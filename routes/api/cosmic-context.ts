@@ -4,46 +4,19 @@
 
 import { FreshContext } from "$fresh/server.ts";
 import { getZodiacSign } from "../../utils/zodiac.ts";
+import {
+  getNearestVisitor,
+  getSpaceWeather,
+  type Visitor,
+} from "../../utils/oracle/live-sky.ts";
 
 const TIME_ZONE = "Australia/Melbourne";
 const SYNODIC_MONTH_DAYS = 29.530588853;
 const KNOWN_NEW_MOON_UTC = Date.UTC(2000, 0, 6, 18, 14);
 const DAY_MS = 86_400_000;
-const LUNAR_DISTANCE_AU = 0.00256955529;
-const SWPC_KP_URL =
-  "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json";
-const SWPC_FLUX_URL = "https://services.swpc.noaa.gov/json/f107_cm_flux.json";
-const JPL_CAD_URL =
-  "https://ssd-api.jpl.nasa.gov/cad.api?date-min=now&date-max=%2B7&dist-max=20LD&sort=dist&limit=1&fullname=true";
-const UPSTREAM_TIMEOUT_MS = 2600;
 
 type Period = "daily" | "weekly" | "monthly";
 type MoonPhaseTone = "new" | "waxing" | "full" | "waning";
-
-type KpRecord = {
-  time_tag?: string;
-  kp_index?: number;
-  estimated_kp?: number;
-  kp?: string;
-};
-
-type FluxRecord = {
-  time_tag?: string;
-  flux?: number;
-};
-
-type CadPayload = {
-  count?: number;
-  fields?: string[];
-  data?: string[][];
-};
-
-type Visitor = {
-  name: string;
-  closeApproach: string;
-  lunarDistance: number;
-  relativeVelocityKmS: number;
-};
 
 type Charm = {
   name: string;
@@ -207,77 +180,6 @@ function rollDie(sides: number) {
   } while (buffer[0] >= max);
 
   return buffer[0] % sides + 1;
-}
-
-async function fetchJson<T>(url: string): Promise<T | null> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) return null;
-    return await response.json() as T;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-function latest<T>(items: T[] | null | undefined): T | null {
-  if (!Array.isArray(items) || items.length === 0) return null;
-  return items[items.length - 1];
-}
-
-async function getSpaceWeather() {
-  const [kpPayload, fluxPayload] = await Promise.all([
-    fetchJson<KpRecord[]>(SWPC_KP_URL),
-    fetchJson<FluxRecord[]>(SWPC_FLUX_URL),
-  ]);
-
-  const kpRecord = latest(kpPayload);
-  const fluxRecord = latest(fluxPayload);
-  const kp = Number(kpRecord?.estimated_kp ?? kpRecord?.kp_index ?? 0);
-  const flux = Number(fluxRecord?.flux ?? 0);
-
-  if (!kpRecord && !fluxRecord) return null;
-
-  const label = kp >= 5
-    ? "storming"
-    : kp >= 4
-    ? "active"
-    : kp >= 3
-    ? "unsettled"
-    : "quiet";
-
-  return {
-    kp: Number(kp.toFixed(1)),
-    label,
-    flux: flux ? Math.round(flux) : null,
-    observedAt: kpRecord?.time_tag ?? fluxRecord?.time_tag ?? null,
-  };
-}
-
-async function getNearestVisitor(): Promise<Visitor | null> {
-  const payload = await fetchJson<CadPayload>(JPL_CAD_URL);
-  const record = payload?.data?.[0];
-  const fields = payload?.fields;
-
-  if (!record || !fields) return null;
-
-  const indexFor = (name: string) => fields.indexOf(name);
-  const read = (name: string) => record[indexFor(name)] ?? "";
-  const distAu = Number(read("dist"));
-  const lunarDistance = distAu / LUNAR_DISTANCE_AU;
-  const fullname = read("fullname").trim();
-  const des = read("des").trim();
-
-  return {
-    name: fullname || des || "unnamed visitor",
-    closeApproach: read("cd"),
-    lunarDistance: Number(lunarDistance.toFixed(1)),
-    relativeVelocityKmS: Number(Number(read("v_rel")).toFixed(1)),
-  };
 }
 
 function getGlitchLevel(

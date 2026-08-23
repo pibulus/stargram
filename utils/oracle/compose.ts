@@ -2,7 +2,7 @@
 // ORACLE · compose.ts — packet builder + the never-blank fallback
 // ===================================================================
 // The packet is the full divination state for one (period, sign, date):
-// real sky, tonalpohualli, moon, planetary hour, draws, sigil. The AI
+// computed sky, measured sky, moon, planetary hour, draws, sigil. The AI
 // voice interprets it; if the voice ever fails, composeFallback() writes
 // a readable reading from the same packet. This chain cannot go blank —
 // that law was paid for in production on 2026-08-08.
@@ -16,6 +16,7 @@ import {
   type PlanetHour,
 } from "./count.ts";
 import { type DailyDraw, dailyDraw } from "./draw.ts";
+import { type LiveSky, liveSky } from "./live-sky.ts";
 import { mintSigil } from "./sigil.ts";
 
 export type Period = "daily" | "weekly" | "monthly";
@@ -29,6 +30,8 @@ export interface Packet {
   hour: PlanetHour; // planetary hour at rite time — tunes the voice register
   draw: DailyDraw;
   sigil: string; // braille talisman
+  retrogrades: string[]; // bodies walking backwards right now
+  live: LiveSky; // the measured sky: geomagnetic field, solar flux, visitor
 }
 
 /** Melbourne "today" as YYYY-MM-DD — the rite lives on Melbourne time. */
@@ -66,6 +69,8 @@ export async function buildPacket(
     hour: planetaryHour(now),
     draw: dailyDraw(`${period}:${dateKey}`, sign.name),
     sigil: await mintSigil(seed),
+    retrogrades: sky.placements.filter((p) => p.retrograde).map((p) => p.body),
+    live: await liveSky(),
   };
 }
 

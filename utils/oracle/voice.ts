@@ -13,7 +13,11 @@
 import { type ZodiacSign } from "../zodiac.ts";
 import { type Packet } from "./compose.ts";
 
-const MODEL = "gemini-3.5-flash"; // most intelligent stable tier — 12 short calls/night, quality is the product (Pablo, 2026-08-09)
+// Quality is the product, so we stay on the intelligent stable tier (Pablo,
+// 2026-08-09). Thinking is capped in generationConfig below: uncapped, this
+// model spent ~3.5k output tokens to write ~200 tokens of prose and drained
+// the prepay balance in two weeks (2026-08-23).
+const MODEL = "gemini-3.5-flash";
 const TIMEOUT_MS = 45000; // longer periods think longer; the rite has all night
 
 // Voice register by the planetary hour ruling the rite — a slight lean in
@@ -41,7 +45,8 @@ Your school is a blend, and the blend matters:
   letting things be what they are. A gentle paradox is welcome; a lecture is
   not.
 - Carl Sagan's quiet awe: we are part of the sky we are reading. Wonder
-  without mysticism, sometimes a glance at how small and lucky we are.
+  without mysticism - found in one specific ordinary thing, never in the scale
+  of space itself.
 - A modern astro-loving friend's warmth: talk about actual life - friendships,
   doubts, timing, small joys, the text you haven't answered. Relatable, never
   cutesy.
@@ -53,7 +58,12 @@ that's the thread to what's real, matched to the period you are writing for. Bey
 degrees, no orbs, no jargon, no system talk. People don't need the math; they
 need what it means. Speak to an intelligent adult. Trust the reader; never
 talk down, never doom. Never new age filler: no "energies", no "vibrations",
-no "manifest", no "the universe has plans". End with a line that could stick
+no "manifest", no "the universe has plans". Never reach for cosmic scale as a
+feeling: no stardust, no specks or dots or motes, no "vastness", no
+"insignificance", no "we are made of the same stuff as the stars", no zooming
+out to the galaxy to land a point. The sky is your evidence, not your
+metaphor - keep the reading at human scale, in the room, in the day. End with
+a line that could stick
 to a fridge - something the reader carries into their day without noticing
 they picked it up. Plain ASCII only: no emoji, no em dashes, no headers, no
 markdown.`;
@@ -65,10 +75,61 @@ function transitLines(packet: Packet): string {
       p.retrograde ? ", retrograde" : ""
     }`,
   ];
-  for (const a of packet.signSky.rulerAspects.slice(0, 4)) {
+  for (const a of packet.signSky.rulerAspects.slice(0, 5)) {
     lines.push(`${a.a} ${a.type} ${a.b} (orb ${a.orb}, power ${a.power})`);
   }
+  if (packet.retrogrades.length) {
+    lines.push(`walking backwards today: ${packet.retrogrades.join(", ")}`);
+  }
   return lines.join("\n");
+}
+
+/**
+ * The draw is the reading's twin - the same (date, sign) seeded both, and the
+ * app prints them on the same page. The Oracle gets it so the two agree
+ * instead of being strangers. It names none of it: a reading that says "the
+ * Tower, reversed" turns the page into a glossary.
+ */
+function drawLines(packet: Packet): string {
+  const { tarot, hexagram, rune } = packet.draw;
+  return `
+The draw sitting beside this reading (PRIVATE. Let exactly ONE of these
+quietly agree with the aspect you chose, so the page feels like a single
+object. Never name a card, a hexagram or a rune; never mention tarot, the I
+Ching or runes at all):
+- ${tarot.name}${tarot.reversed ? ", reversed" : ""}: ${tarot.meaning}
+- Hexagram ${hexagram.number}, ${hexagram.name}: ${hexagram.judgment}
+- ${rune.name}: ${rune.meaning}
+`;
+}
+
+/**
+ * The measured sky: real instruments reading the real heliosphere, arriving
+ * on their own schedule. Mood only - quoting a Kp index in a horoscope is
+ * precisely the jargon the identity forbids.
+ */
+function measuredLines(packet: Packet): string {
+  const { weather, visitor } = packet.live;
+  const bits: string[] = [];
+  if (weather) {
+    bits.push(
+      `the geomagnetic field is ${weather.label} (Kp ${weather.kp})${
+        weather.flux ? `, solar flux ${weather.flux}` : ""
+      }`,
+    );
+  }
+  if (visitor) {
+    bits.push(
+      `the nearest tracked visitor is ${visitor.name}, passing ${visitor.lunarDistance} lunar distances out at ${visitor.relativeVelocityKmS} km/s`,
+    );
+  }
+  if (!bits.length) return "";
+  return `
+Measured right now by instruments, not computed: ${bits.join("; ")}. This is
+real weather in a real sky. Let it set the temperature of the writing - a
+storming field is not a quiet day - but never quote a number, never name an
+instrument or a rock.
+`;
 }
 
 // Each (date, sign) gets its own everyday-image territory, so twelve
@@ -76,7 +137,7 @@ function transitLines(packet: Packet): string {
 const IMAGE_DOMAINS = [
   "kitchens and cooking",
   "gardens and growing things",
-  "weather and seasons",
+  "weather, wind and rain",
   "streets, traffic and journeys",
   "music and sound",
   "tools, repairs and workbenches",
@@ -125,7 +186,14 @@ actual computed aspects (ignore the rest; never recite them):
 
 ${transitLines(packet)}
 
-Moon right now: ${packet.moon.phase}, ${packet.moon.illum}% lit, in ${packet.signSky.moonSign}.
+Moon right now: ${packet.moon.phase}, ${packet.moon.illum}% lit, ${packet.moon.age} days into the cycle, in ${packet.signSky.moonSign}.
+
+This reading is one text, read at the same moment in both hemispheres and in
+every climate. Never name a date, a month, a season or a holiday, and never
+assume the reader's weather, temperature or daylight. Weather may appear only
+as a passing condition - a wind, rain on a window - never as a marker of the
+time of year.
+${measuredLines(packet)}${drawLines(packet)}
 Draw your opening image from the world of ${domain} (loosely - any small true
 thing from that territory).
 ${
@@ -185,7 +253,12 @@ export async function speakReading(
           }],
           generationConfig: {
             temperature: Math.round(temperature * 100) / 100,
-            // thinking tokens count against this on Gemini 3.x — keep it roomy
+            // Gemini 3.x bills thinking tokens as output. thinkingLevel is the
+            // 3.x control; thinkingBudget is the legacy 2.5 one and 400s if both
+            // are sent. Knob: minimal | low | medium | high.
+            thinkingConfig: { thinkingLevel: "medium" },
+            // a ceiling, not a target: we only pay for what is generated, and a
+            // tight cap truncates mid-thought and returns no text at all
             maxOutputTokens: 8192,
           },
         }),

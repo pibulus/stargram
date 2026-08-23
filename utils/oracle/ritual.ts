@@ -17,12 +17,6 @@ import {
   periodKey,
 } from "./compose.ts";
 import { speakReading } from "./voice.ts";
-import {
-  fetchStoredJournal,
-  fetchStoredReading,
-  storeJournal,
-  storeReading,
-} from "./storage.ts";
 
 export interface Reading {
   date: string;
@@ -44,8 +38,15 @@ const EXPIRE_MS: Record<Period, number> = {
 const JOURNAL_KEY = ["oracle-journal"];
 const JOURNAL_DEPTH = 6;
 
-// KV is native on Deploy; locally it needs --unstable-kv. If it's absent the
-// oracle still works — every request divines on demand, nothing breaks.
+// KV needs a database ATTACHED to the app on Deploy (deno deploy database
+// assign <db> --app stargram), plus --unstable-kv locally.
+// 🚨 The trap that cost the fleet its Gemini credits (2026-08-23): with no
+// database attached, Deno.openKv() does NOT throw - it hands back a temporary
+// in-memory store, per instance, silently. This try/catch never fired, the
+// oracle believed it had persistence, and every rite re-divined all 36
+// readings while every page view divined its own. Absence is only visible in
+// the deploy logs ("no KV database is attached to this app") and in the bill.
+// If readings stop being stable across requests, check the ATTACHMENT first.
 let kvPromise: Promise<Deno.Kv | null> | null = null;
 function getKv(): Promise<Deno.Kv | null> {
   kvPromise ??= (async () => {
@@ -64,8 +65,6 @@ function findSign(name: string): ZodiacSign | undefined {
 }
 
 async function readJournal(kv: Deno.Kv | null): Promise<string[]> {
-  const stored = await fetchStoredJournal();
-  if (stored) return stored;
   if (!kv) return [];
   const entry = await kv.get<string[]>(JOURNAL_KEY);
   return entry.value ?? [];
@@ -128,17 +127,7 @@ export async function getReading(
   const mem = memCache.get(keyStr);
   if (mem) return mem;
 
-  // the shared notebook: whatever was written first, anywhere, is the canon
-  const canon = await fetchStoredReading<Reading>(
-    period,
-    periodKey(period, now),
-    signName.toLowerCase(),
-  );
-  if (canon) {
-    memCache.set(keyStr, canon);
-    return canon;
-  }
-
+  // KV is the canon: attached on Deploy, it is shared across every instance
   if (kv) {
     const cached = await kv.get<Reading>(key);
     if (cached.value?.horoscope) {
@@ -151,24 +140,23 @@ export async function getReading(
   if (reading) {
     if (memCache.size > 100) memCache.clear();
     memCache.set(keyStr, reading);
-    // first write wins in the notebook (ignore-duplicates), so a concurrent
-    // instance's copy can't fork the canon; then re-fetch the winner
-    await storeReading(
-      period,
-      periodKey(period, now),
-      signName.toLowerCase(),
-      reading,
-    );
-    const winner = await fetchStoredReading<Reading>(
-      period,
-      periodKey(period, now),
-      signName.toLowerCase(),
-    );
-    if (winner) memCache.set(keyStr, winner);
     if (kv) {
-      await kv.set(key, winner ?? reading, { expireIn: EXPIRE_MS[period] });
+      // first write wins: create-if-absent (versionstamp null), so two
+      // instances racing the same (period, sign) can't fork the canon. Lose
+      // the race and we adopt the winner rather than overwrite it.
+      const written = await kv.atomic()
+        .check({ key, versionstamp: null })
+        .set(key, reading, { expireIn: EXPIRE_MS[period] })
+        .commit();
+      if (!written.ok) {
+        const winner = await kv.get<Reading>(key);
+        if (winner.value?.horoscope) {
+          memCache.set(keyStr, winner.value);
+          return winner.value;
+        }
+      }
     }
-    return winner ?? reading;
+    return reading;
   }
   return reading;
 }
@@ -209,7 +197,6 @@ export async function nightlyRite(now = new Date()): Promise<void> {
       generatedAt: new Date().toISOString(),
     };
     firstReading ??= reading;
-    await storeReading("daily", packet.dateKey, sign.name, reading);
     if (kv) {
       await kv.set(
         ["reading", "daily", packet.dateKey, sign.name],
@@ -235,7 +222,6 @@ export async function nightlyRite(now = new Date()): Promise<void> {
       top ? `${top.a} ${top.type} ${top.b}` : "a quiet sky"
     }, ${firstReading.packet.moon.phase} - "${glimpse}..."`;
     const next = [...journal, line].slice(-JOURNAL_DEPTH);
-    await storeJournal(next);
     if (kv) await kv.set(JOURNAL_KEY, next);
   }
 
