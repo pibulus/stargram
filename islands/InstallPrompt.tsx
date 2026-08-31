@@ -122,10 +122,22 @@ export default function InstallPrompt() {
           style="border-color: rgba(0, 255, 65, 0.2); background: rgba(0, 0, 0, 0.9);"
         >
           <div class="flex items-center gap-2">
-            <div class="flex gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-              <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-              <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+            <div class="flex gap-1.5 items-center">
+              <button
+                type="button"
+                onClick={handleDismiss}
+                class="w-2.5 h-2.5 rounded-full bg-[#ff5f56] transition-all hover:scale-125 hover:shadow-[0_0_8px_#ff5f56] active:scale-90 focus:outline-none cursor-pointer"
+                title="Dismiss"
+                aria-label="Dismiss install prompt"
+              />
+              <button
+                type="button"
+                onClick={handleDismiss}
+                class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] transition-all hover:scale-125 hover:shadow-[0_0_8px_#ffbd2e] active:scale-90 focus:outline-none cursor-pointer"
+                title="Dismiss"
+                aria-label="Dismiss install prompt"
+              />
+              <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f] opacity-60" />
             </div>
             <span
               class="text-xs font-mono uppercase tracking-wider"

@@ -537,6 +537,26 @@ export default function ZodiacPicker() {
     currentMode.value = "picker";
     horoscopeHtml.value = "";
     showHoroscope.value = false;
+    hoveredSign.value = null;
+    flickerTrigger.value = Date.now();
+  };
+
+  const handleRandomSign = () => {
+    sounds.click();
+    const randomIndex = Math.floor(Math.random() * ZODIAC_SIGNS.length);
+    const randomSign = ZODIAC_SIGNS[randomIndex];
+    handleSignClick(randomSign.name);
+  };
+
+  const handleToggleFullscreen = () => {
+    sounds.click();
+    if (typeof document !== "undefined") {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.().catch(() => {});
+      } else {
+        document.exitFullscreen?.().catch(() => {});
+      }
+    }
   };
 
   const handlePeriodChange = (period: Period) => {
@@ -922,19 +942,54 @@ export default function ZodiacPicker() {
             class="shrink-0 flex items-center gap-3 px-4 sm:px-8 py-3 border-b-[3px] sm:border-b-4 terminal-content-wrapper"
             style="border-color: rgba(0, 255, 65, 0.18); background: rgba(0, 0, 0, 0.8);"
           >
-            <div class="flex gap-2">
-              <span class="w-3 h-3 rounded-full bg-[#ff5f56]" />
-              <span class="w-3 h-3 rounded-full bg-[#ffbd2e]" />
-              <span class="w-3 h-3 rounded-full bg-[#27c93f]" />
+            <div class="flex gap-2 items-center">
+              <button
+                type="button"
+                onClick={handleBackToPicker}
+                onMouseEnter={() => sounds.hover()}
+                class="w-3 h-3 rounded-full bg-[#ff5f56] transition-all hover:scale-125 hover:shadow-[0_0_8px_#ff5f56] active:scale-90 focus:outline-none cursor-pointer"
+                title="Back to front page"
+                aria-label="Back to front page"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (currentMode.value === "horoscope") {
+                    handleBackToPicker();
+                  } else {
+                    handleRandomSign();
+                  }
+                }}
+                onMouseEnter={() => sounds.hover()}
+                class="w-3 h-3 rounded-full bg-[#ffbd2e] transition-all hover:scale-125 hover:shadow-[0_0_8px_#ffbd2e] active:scale-90 focus:outline-none cursor-pointer"
+                title={currentMode.value === "horoscope"
+                  ? "Minimize to front page"
+                  : "Surprise random sign"}
+                aria-label={currentMode.value === "horoscope"
+                  ? "Minimize to front page"
+                  : "Surprise random sign"}
+              />
+              <button
+                type="button"
+                onClick={handleToggleFullscreen}
+                onMouseEnter={() => sounds.hover()}
+                class="w-3 h-3 rounded-full bg-[#27c93f] transition-all hover:scale-125 hover:shadow-[0_0_8px_#27c93f] active:scale-90 focus:outline-none cursor-pointer"
+                title="Toggle fullscreen"
+                aria-label="Toggle fullscreen"
+              />
             </div>
-            <div
-              class="min-w-0 flex-1 truncate text-[10px] sm:text-sm font-mono tracking-[0.08em] sm:tracking-[0.18em] uppercase"
+            <button
+              type="button"
+              onClick={handleBackToPicker}
+              onMouseEnter={() => sounds.hover()}
+              class="min-w-0 flex-1 truncate text-left text-[10px] sm:text-sm font-mono tracking-[0.08em] sm:tracking-[0.18em] uppercase transition-opacity hover:opacity-80 focus:outline-none cursor-pointer"
               style={`color: ${accentColor};`}
+              title="Return to front page"
             >
               {currentMode.value === "picker"
                 ? "~/cosmic/bin/zodiac.sh"
                 : `~/cosmic/${selectedSign.value}/${currentPeriod.value}.txt`}
-            </div>
+            </button>
             <button
               type="button"
               onClick={() => {

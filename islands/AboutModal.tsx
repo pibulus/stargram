@@ -46,10 +46,30 @@ export function AboutModal() {
           class="flex items-center gap-3 px-4 sm:px-6 py-3 border-b-3"
           style="border-color: rgba(139, 92, 246, 0.3); background: rgba(0, 0, 0, 0.9);"
         >
-          <div class="flex gap-2">
-            <span class="w-3 h-3 rounded-full bg-[#ff5f56]" />
-            <span class="w-3 h-3 rounded-full bg-[#ffbd2e]" />
-            <span class="w-3 h-3 rounded-full bg-[#27c93f]" />
+          <div class="flex gap-2 items-center">
+            <button
+              type="button"
+              onClick={() => {
+                sounds.click();
+                closeAboutModal();
+              }}
+              onMouseEnter={() => sounds.hover()}
+              class="w-3 h-3 rounded-full bg-[#ff5f56] transition-all hover:scale-125 hover:shadow-[0_0_8px_#ff5f56] active:scale-90 focus:outline-none cursor-pointer"
+              title="Close modal"
+              aria-label="Close about dialog"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                sounds.click();
+                closeAboutModal();
+              }}
+              onMouseEnter={() => sounds.hover()}
+              class="w-3 h-3 rounded-full bg-[#ffbd2e] transition-all hover:scale-125 hover:shadow-[0_0_8px_#ffbd2e] active:scale-90 focus:outline-none cursor-pointer"
+              title="Close modal"
+              aria-label="Close about dialog"
+            />
+            <span class="w-3 h-3 rounded-full bg-[#27c93f] opacity-60" />
           </div>
           <div
             class="flex-1 text-sm font-mono tracking-wider uppercase"
