@@ -233,51 +233,20 @@ function buildLoadingLines({
   period,
   element,
   moon,
-  discordianDate,
-  slackRoll,
-  spaceWeather,
-  visitor,
-  glitchLevel,
-  corruptionGlyphs,
-  charm,
 }: {
   sign: string;
   period: Period;
   element: string;
   moon: ReturnType<typeof getMoonPhase>;
-  discordianDate: ReturnType<typeof getDiscordianDate>;
-  slackRoll: number;
-  spaceWeather: Awaited<ReturnType<typeof getSpaceWeather>>;
-  visitor: Visitor | null;
-  glitchLevel: number;
-  corruptionGlyphs: string;
-  charm: Charm | null;
 }) {
   const lines = [
-    "> opening chaos channel...",
-    `> moon: ${moon.phase.toUpperCase()} / ${moon.illumination}% lit`,
-    `> discordian date: ${discordianDate.text}`,
-    spaceWeather
-      ? `> NOAA solar static: Kp ${spaceWeather.kp} / ${spaceWeather.label}`
-      : "> NOAA solar static: unavailable; using quiet carrier",
-    visitor
-      ? `> JPL visitor: ${visitor.name} / ${visitor.lunarDistance} LD / ${visitor.relativeVelocityKmS} km/s`
-      : "> JPL visitor ledger: no close pass under 20 LD",
-    `> slack roll: d23 = ${slackRoll}`,
+    "> aligning celestial telemetry...",
+    `> moon transit: ${moon.phase.toUpperCase()} (${moon.illumination}% illuminated)`,
+    `> casting ${element.toUpperCase()} harmonics for ${sign.toUpperCase()}...`,
+    "> divining tarot, hexagram & rune omens...",
+    `> tuning ${period.toUpperCase()} oracle transmission...`,
+    "> cosmic signal locked.",
   ];
-
-  if (glitchLevel >= 2) {
-    lines.push(`> packet corruption: ${corruptionGlyphs} accepted as omen`);
-  }
-
-  if (charm) {
-    lines.push(`> charm manifest: ${charm.name} via ${charm.trigger}`);
-  }
-
-  lines.push(
-    `> routing ${sign.toUpperCase()} through ${element.toUpperCase()} channel...`,
-    `> downloading ${period} horoscope transmission...`,
-  );
 
   return lines;
 }
@@ -323,13 +292,6 @@ export const handler = async (
     period,
     element: zodiac.element,
     moon,
-    discordianDate,
-    slackRoll,
-    spaceWeather,
-    visitor,
-    glitchLevel,
-    corruptionGlyphs,
-    charm,
   });
 
   return jsonResponse({

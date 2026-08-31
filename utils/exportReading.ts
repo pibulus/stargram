@@ -79,41 +79,46 @@ export async function shareReadingPNG(
 
   // Off-screen stage: stays in the document so Tailwind classes keep
   // applying to the clone, but never flashes on screen.
+  // Sized at 600px width with balanced padding for a mobile/story-friendly card.
   const card = document.createElement("div");
   card.className = "share-card-stage";
   card.style.cssText = [
     "position: fixed",
     "left: -12000px",
     "top: 0",
-    "width: 820px",
+    "width: 600px",
     "box-sizing: border-box",
-    "padding: 36px 40px 28px",
+    "padding: 24px 28px 20px",
     `border: 3px solid ${accent}66`,
-    "border-radius: 24px",
+    "border-radius: 20px",
     "background: radial-gradient(120% 90% at 50% 0%, #0b0716 0%, #030509 68%)",
     "box-shadow: inset 0 0 64px rgba(0, 0, 0, 0.6)",
     "font-family: 'JetBrains Mono', 'Fira Code', monospace",
   ].join(";");
 
-  // Freeze the theatre: no mid-float charms or half-blinked glyphs.
+  // Freeze the theatre: no mid-float charms or half-blinked glyphs,
+  // and tighten spacing for a clean phone-friendly share card.
   const still = document.createElement("style");
-  still.textContent =
-    ".share-card-stage * { animation: none !important; transform: none !important; }";
+  still.textContent = [
+    ".share-card-stage * { animation: none !important; transform: none !important; }",
+    ".share-card-stage .reading-capture { gap: 14px !important; }",
+    ".share-card-stage .reading-capture > div { margin-top: 0 !important; }",
+  ].join("\n");
   card.appendChild(still);
 
   // Terminal title bar, same lights as the live shell.
   const bar = document.createElement("div");
   bar.style.cssText =
-    `display: flex; align-items: center; gap: 12px; padding-bottom: 18px; margin-bottom: 26px; border-bottom: 2px solid ${accent}30;`;
+    `display: flex; align-items: center; gap: 10px; padding-bottom: 14px; margin-bottom: 18px; border-bottom: 2px solid ${accent}30;`;
   for (const light of ["#ff5f56", "#ffbd2e", "#27c93f"]) {
     const dot = document.createElement("span");
     dot.style.cssText =
-      `width: 12px; height: 12px; border-radius: 9999px; background: ${light};`;
+      `width: 10px; height: 10px; border-radius: 9999px; background: ${light};`;
     bar.appendChild(dot);
   }
   const path = document.createElement("span");
   path.style.cssText =
-    `font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: ${accent};`;
+    `font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: ${accent};`;
   path.textContent = terminalPath;
   bar.appendChild(path);
   card.appendChild(bar);
@@ -125,7 +130,7 @@ export async function shareReadingPNG(
   // Footer sign-off.
   const footer = document.createElement("div");
   footer.style.cssText =
-    `margin-top: 30px; padding-top: 18px; border-top: 2px solid ${accent}30; text-align: center; font-size: 13px; letter-spacing: 0.34em; text-transform: uppercase; color: ${accent};`;
+    `margin-top: 18px; padding-top: 14px; border-top: 2px solid ${accent}30; text-align: center; font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: ${accent};`;
   footer.textContent = "✦ stargram.app";
   card.appendChild(footer);
 

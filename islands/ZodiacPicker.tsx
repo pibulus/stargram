@@ -81,8 +81,8 @@ type CosmicContext = {
   };
   loadingLines: string[];
 };
-// The sovereign oracle's divination packet — computed sky, old calendars,
-// daily draw, and the braille sigil that seals the reading.
+// The sovereign oracle's divination packet — computed sky,
+// daily draw, and secret fortunes that seal the reading.
 type OraclePacket = {
   moon: { phase: string; glyph: string; illum: number };
   signSky: {
@@ -96,9 +96,19 @@ type OraclePacket = {
     moonSign: string;
   };
   draw: {
-    tarot: { name: string; reversed: boolean };
-    hexagram: { number: number; symbol: string; name: string };
-    rune: { name: string; symbol: string };
+    tarot: {
+      name: string;
+      reversed: boolean;
+      meaning: string;
+      arcana?: string;
+    };
+    hexagram: {
+      number: number;
+      symbol: string;
+      name: string;
+      judgment: string;
+    };
+    rune: { name: string; symbol: string; meaning: string };
   };
   sigil: string;
 };
@@ -123,14 +133,12 @@ const PICKER_TITLE_ASCII = renderFigletText("STARGRAM", {
   font: "ANSI Shadow",
   width: 72,
 });
-const PICKER_HINT_TEXT = "COSMIC ACCESS PANEL";
-const IDLE_PREVIEW_ASCII = [
-  " /\\  /\\ ",
-  "/  \\/  \\",
-  "\\      /",
-  " \\_/\\_/ ",
-].join("\n");
-const ASCII_DIVIDER = "::::::::::::::::::::::::::::::::::::::::";
+const PICKER_HINT_TEXT = "SELECT A CONSTELLATION TO REVEAL TRANSITS";
+const IDLE_PREVIEW_ASCII = renderFigletText("STARGRAM", {
+  font: "ANSI Shadow",
+  width: 32,
+});
+const ASCII_DIVIDER = "═══════════════════════════════════════════";
 const COSMIC_ANIMATION_STYLES = `
 @keyframes cosmicFloat {
   0% { transform: translate3d(0, 0, 0); }
@@ -182,11 +190,11 @@ function getSignData(name: string): ZodiacSign | undefined {
   return ZODIAC_SIGNS.find((sign) => sign.name === name);
 }
 
-function rollClientNumber(max: number) {
+function rollClientNumber(max = 100): number {
   if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    const buffer = new Uint32Array(1);
-    crypto.getRandomValues(buffer);
-    return buffer[0] % max + 1;
+    const arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return (arr[0] % max) + 1;
   }
 
   return Math.floor(Math.random() * max) + 1;
@@ -257,67 +265,26 @@ async function fetchCosmicContext(sign: string, period: Period) {
 
 function getFallbackLoadingLines(sign: string, period: Period) {
   return [
-    "> opening chaos channel...",
-    "> moon phase: local signal obscured",
-    "> NOAA solar static: quiet carrier fallback",
-    `> slack roll: deferred`,
+    "> aligning celestial telemetry...",
+    "> tuning cosmic frequencies...",
+    "> divining tarot, hexagram & rune omens...",
     `> routing ${sign.toUpperCase()} through zodiac channel...`,
     `> downloading ${period} horoscope transmission...`,
   ];
 }
 
-function getSignalRows(context: CosmicContext) {
-  const spaceWeather = context.spaceWeather
-    ? `Kp ${context.spaceWeather.kp} / ${context.spaceWeather.label}${
-      context.spaceWeather.flux ? ` / F10.7 ${context.spaceWeather.flux}` : ""
-    }`
-    : "quiet carrier fallback";
-  const visitor = context.nearestVisitor
-    ? `${context.nearestVisitor.name.trim()} / ${context.nearestVisitor.lunarDistance} LD / ${context.nearestVisitor.relativeVelocityKmS} km/s`
-    : "no close pass under 20 LD";
-
-  return [
-    {
-      label: "Moon",
-      value:
-        `${context.moon.glyph} ${context.moon.phase} / ${context.moon.illumination}% lit`,
-    },
-    { label: "Eris", value: context.discordianDate.text },
-    { label: "NOAA", value: spaceWeather },
-    { label: "JPL", value: visitor },
-    {
-      label: "Slack",
-      value:
-        `${context.slackRoll.die}=${context.slackRoll.value} / glitch ${context.glitchLevel}/4`,
-    },
-  ];
-}
-
-function getRiteRows(packet: OraclePacket, source: string) {
-  const ruler = packet.signSky.rulerPlacement;
-  return [
-    {
-      label: "Ruler",
-      value: `${ruler.body} ${ruler.degree}° ${ruler.sign}${
-        ruler.retrograde ? " ℞" : ""
-      }`,
-    },
-    {
-      label: "Moon",
-      value:
-        `${packet.moon.glyph} ${packet.moon.phase} · in ${packet.signSky.moonSign}`,
-    },
-    {
-      label: "Draw",
-      value: `${packet.draw.tarot.name}${
-        packet.draw.tarot.reversed ? " rev" : ""
-      } / ${packet.draw.hexagram.symbol} ${packet.draw.hexagram.name} / ${packet.draw.rune.symbol} ${packet.draw.rune.name}`,
-    },
-    {
-      label: "Voice",
-      value: source === "oracle-voice" ? "oracle" : "composed",
-    },
-  ];
+function cleanOmenText(text?: string, maxLen = 140): string {
+  if (!text) return "";
+  const clean = text.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
+  const firstSentence = clean.split(/(?<=[.!?])\s+/)[0];
+  if (
+    firstSentence && firstSentence.length >= 25 &&
+    firstSentence.length <= maxLen
+  ) {
+    return firstSentence;
+  }
+  if (clean.length <= maxLen) return clean;
+  return clean.slice(0, maxLen).replace(/[,;:\s]+$/, "") + "...";
 }
 
 export default function ZodiacPicker() {
@@ -648,9 +615,6 @@ export default function ZodiacPicker() {
   const cosmicElementClass = activeCosmicContext
     ? `cosmic-element-${activeCosmicContext.microTheme.element}`
     : "";
-  const signalRows = activeCosmicContext
-    ? getSignalRows(activeCosmicContext)
-    : [];
 
   return (
     <div ref={stageRef} class="relative w-full min-w-0 overflow-hidden">
@@ -1311,40 +1275,20 @@ export default function ZodiacPicker() {
                         ))}
                         {activeCosmicContext && (
                           <div
-                            class="grid gap-2 sm:grid-cols-2 border-t pt-4 mt-4 font-mono text-[10px] sm:text-xs uppercase tracking-[0.16em]"
+                            class="flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-3 mt-3 font-mono text-[10px] sm:text-xs uppercase tracking-[0.14em]"
                             style={`border-color: ${accentGlowColor}24; color: ${accentGlowColor}B8;`}
                           >
                             <p>
                               {activeCosmicContext.moon.glyph}{" "}
                               {activeCosmicContext.moon.phase} ·{" "}
-                              {activeCosmicContext.moon.illumination}%
+                              {activeCosmicContext.moon.illumination}% lit
                             </p>
-                            <p>
-                              Kp {activeCosmicContext.spaceWeather?.kp ?? "?"} ·
-                              {" "}
-                              {activeCosmicContext.spaceWeather?.label ??
-                                "quiet fallback"}
-                            </p>
-                            <p>
-                              d23 · {activeCosmicContext.slackRoll.value}
-                            </p>
-                            <p>
-                              glitch · {activeCosmicContext.glitchLevel}/4
-                            </p>
-                          </div>
-                        )}
-                        {activeCosmicContext?.charm && (
-                          <div
-                            class="pt-2"
-                            style={`color: ${accentColor};`}
-                          >
-                            <pre class="cosmic-charm inline-block font-mono text-[11px] sm:text-xs leading-tight">{activeCosmicContext.charm.art}</pre>
-                            <p
-                              class="mt-2 font-mono text-[10px] uppercase tracking-[0.22em]"
-                              style={`color: ${accentGlowColor}A8;`}
-                            >
-                              {activeCosmicContext.charm.trigger}
-                            </p>
+                            {previewSign && (
+                              <p>
+                                {previewSign.element.toUpperCase()} ·{" "}
+                                {previewSign.rulingPlanet}
+                              </p>
+                            )}
                           </div>
                         )}
                         <span
@@ -1361,7 +1305,7 @@ export default function ZodiacPicker() {
                           /* Capture root: everything inside ships in the
                             shared PNG — keep buttons and nav OUT of it. */
                         }
-                        <div class="reading-capture space-y-6">
+                        <div class="reading-capture space-y-5">
                           {/* Fast-typing header */}
                           <div
                             class="min-w-0 w-full overflow-hidden border-b pb-4"
@@ -1384,84 +1328,50 @@ export default function ZodiacPicker() {
                               style="color: #FFD700; font-size: 14px; letter-spacing: 0.02em;"
                             />
                           </div>
-                          {activeCosmicContext && (
-                            <div
-                              class={`cosmic-signal-plaque border-2 rounded-xl p-3 sm:p-4 ${
-                                activeCosmicContext.glitchLevel >= 2
-                                  ? "cosmic-signal-glitch"
-                                  : ""
-                              }`}
-                              style={`background: rgba(0,0,0,0.34); border-color: ${accentGlowColor}42; box-shadow: inset 0 0 24px ${accentGlowColor}14, 0 0 16px ${accentColor}16;`}
-                            >
-                              <div class="relative z-10 flex flex-col sm:flex-row gap-4 sm:items-start">
-                                <div class="min-w-0 flex-1 space-y-3">
-                                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                    <p
-                                      class="font-mono text-[10px] uppercase tracking-[0.34em]"
-                                      style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}66;`}
-                                    >
-                                      Signal Room
-                                    </p>
-                                    <p
-                                      class="font-mono text-[10px] uppercase tracking-[0.18em]"
-                                      style={`color: ${accentGlowColor}96;`}
-                                    >
-                                      live sky packet
-                                    </p>
-                                  </div>
-                                  <div class="grid gap-2 sm:grid-cols-2">
-                                    {signalRows.map((row) => (
-                                      <div
-                                        key={row.label}
-                                        class="min-w-0 border-b pb-1"
-                                        style={`border-color: ${accentGlowColor}22;`}
-                                      >
-                                        <p
-                                          class="font-mono text-[9px] uppercase tracking-[0.26em]"
-                                          style={`color: ${accentGlowColor}86;`}
-                                        >
-                                          {row.label}
-                                        </p>
-                                        <p
-                                          class="font-mono text-[11px] sm:text-xs leading-snug break-words"
-                                          style={`color: ${accentColor}D8;`}
-                                        >
-                                          {row.value}
-                                        </p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  {activeCosmicContext.glitchLevel > 0 && (
-                                    <p
-                                      class={`font-mono text-[10px] uppercase tracking-[0.2em] ${
-                                        activeCosmicContext.glitchLevel >= 2
-                                          ? "cosmic-corruption-text"
-                                          : ""
-                                      }`}
-                                      style={`color: ${accentGlowColor}AA;`}
-                                    >
-                                      packet glyphs:{" "}
-                                      {activeCosmicContext.corruptionGlyphs}
-                                    </p>
-                                  )}
-                                </div>
-                                {activeCosmicContext.charm && (
-                                  <div
-                                    class="shrink-0 border-t sm:border-t-0 sm:border-l pt-3 sm:pt-1 sm:pl-4 text-left sm:text-center"
-                                    style={`border-color: ${accentColor}33; color: ${accentColor};`}
-                                  >
-                                    <pre class="cosmic-charm font-mono text-[10px] sm:text-xs leading-tight">{activeCosmicContext.charm.art}</pre>
-                                    <p
-                                      class="mt-2 font-mono text-[9px] uppercase tracking-[0.18em]"
-                                      style={`color: ${accentGlowColor}A8;`}
-                                    >
-                                      {activeCosmicContext.charm.name}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
+
+                          {/* Sleek Cosmic Sky Alignment */}
+                          <div
+                            class="cosmic-signal-plaque border-2 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[11px] sm:text-xs font-mono"
+                            style={`background: rgba(0,0,0,0.4); border-color: ${accentGlowColor}35; box-shadow: inset 0 0 16px ${accentGlowColor}10;`}
+                          >
+                            <div class="flex items-center gap-2">
+                              <span class="text-sm">
+                                {activeCosmicContext?.moon.glyph ?? "🌙"}
+                              </span>
+                              <span
+                                style={`color: ${accentColor}; font-weight: 600;`}
+                              >
+                                {activeCosmicContext?.moon.phase ??
+                                  "Lunar Phase"}
+                              </span>
+                              {activeCosmicContext && (
+                                <span style={`color: ${accentGlowColor}99;`}>
+                                  ({activeCosmicContext.moon.illumination}% lit)
+                                </span>
+                              )}
                             </div>
-                          )}
+                            <div class="flex items-center gap-3">
+                              {previewSign && (
+                                <span style={`color: ${accentGlowColor}CC;`}>
+                                  Ruled by{" "}
+                                  <span
+                                    style={`color: ${accentColor}; font-weight: 600;`}
+                                  >
+                                    {previewSign.rulingPlanet}
+                                  </span>
+                                </span>
+                              )}
+                              {previewSign && (
+                                <span
+                                  class="px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider"
+                                  style={`background: ${accentColor}18; color: ${accentColor}; border: 1px solid ${accentColor}33;`}
+                                >
+                                  {previewSign.element}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
                           {
                             /* Slower-typing body — waits for the header so the
                             two streams never fight over the scroll position */
@@ -1488,65 +1398,127 @@ export default function ZodiacPicker() {
                             />
                           )}
 
-                          {/* The Rite — the seal stamps once the report prints */}
+                          {/* Secret Fortunes & Hidden Omens */}
                           {bodyTyped.value && oraclePacket.value && (
                             <div
-                              class="cosmic-signal-plaque rite-plaque border-2 rounded-xl p-3 sm:p-4"
-                              style={`background: rgba(0,0,0,0.34); border-color: ${accentColor}38; box-shadow: inset 0 0 24px ${accentColor}12, 0 0 16px ${accentGlowColor}14;`}
+                              class="cosmic-signal-plaque rite-plaque border-2 rounded-2xl p-4 sm:p-5 space-y-4"
+                              style={`background: rgba(0,0,0,0.45); border-color: ${accentColor}40; box-shadow: inset 0 0 28px ${accentColor}12, 0 8px 24px rgba(0,0,0,0.5);`}
                             >
-                              <div class="relative z-10 flex flex-col sm:flex-row gap-4 sm:items-start">
-                                <div class="min-w-0 flex-1 space-y-3">
-                                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                              <div
+                                class="flex flex-wrap items-center justify-between gap-2 border-b pb-2.5"
+                                style={`border-color: ${accentColor}25;`}
+                              >
+                                <div class="flex items-center gap-2">
+                                  <span
+                                    class="text-sm"
+                                    style={`color: ${accentColor};`}
+                                  >
+                                    ✦
+                                  </span>
+                                  <p
+                                    class="font-mono text-[11px] sm:text-xs uppercase tracking-[0.22em] font-bold"
+                                    style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}66;`}
+                                  >
+                                    Secret Fortunes & Hidden Omens
+                                  </p>
+                                </div>
+                                <p
+                                  class="font-mono text-[10px] uppercase tracking-[0.14em]"
+                                  style={`color: ${accentGlowColor}99;`}
+                                >
+                                  daily oracle spread
+                                </p>
+                              </div>
+
+                              <div class="grid gap-3 sm:grid-cols-3">
+                                {/* Tarot Card */}
+                                <div
+                                  class="rounded-xl p-3 border border-dashed flex flex-col justify-between"
+                                  style="background: rgba(139, 92, 246, 0.07); border-color: rgba(139, 92, 246, 0.4);"
+                                >
+                                  <div>
                                     <p
-                                      class="font-mono text-[10px] uppercase tracking-[0.34em]"
-                                      style={`color: ${accentColor}; text-shadow: 0 0 10px ${accentColor}66;`}
+                                      class="font-mono text-[9px] uppercase tracking-[0.2em]"
+                                      style="color: #b179ff;"
                                     >
-                                      The Rite
+                                      🎴 Tarot Omen
                                     </p>
-                                    <p
-                                      class="font-mono text-[10px] uppercase tracking-[0.18em]"
-                                      style={`color: ${accentGlowColor}96;`}
-                                    >
-                                      ∴∵∷ sky computed · reading locked ∷∵∴
+                                    <p class="font-mono text-xs sm:text-[13px] font-bold mt-1 text-white">
+                                      {oraclePacket.value.draw.tarot.name}
+                                      {oraclePacket.value.draw.tarot.reversed &&
+                                        (
+                                          <span class="text-[10px] font-normal text-[#ff9a3c] ml-1.5">
+                                            (Reversed)
+                                          </span>
+                                        )}
                                     </p>
-                                  </div>
-                                  <div class="grid gap-2 sm:grid-cols-2">
-                                    {getRiteRows(
-                                      oraclePacket.value,
-                                      oracleSource.value,
-                                    ).map((row) => (
-                                      <div
-                                        key={row.label}
-                                        class="min-w-0 border-b pb-1"
-                                        style={`border-color: ${accentGlowColor}22;`}
-                                      >
-                                        <p
-                                          class="font-mono text-[9px] uppercase tracking-[0.26em]"
-                                          style={`color: ${accentGlowColor}86;`}
-                                        >
-                                          {row.label}
-                                        </p>
-                                        <p
-                                          class="font-mono text-[11px] sm:text-xs leading-snug break-words"
-                                          style={`color: ${accentColor}D8;`}
-                                        >
-                                          {row.value}
-                                        </p>
-                                      </div>
-                                    ))}
+                                    <p class="font-mono text-[11px] leading-relaxed mt-2 text-white/80">
+                                      {cleanOmenText(
+                                        oraclePacket.value.draw.tarot.meaning,
+                                        130,
+                                      )}
+                                    </p>
                                   </div>
                                 </div>
+
+                                {/* I Ching Hexagram */}
                                 <div
-                                  class="shrink-0 border-t sm:border-t-0 sm:border-l pt-3 sm:pt-1 sm:pl-4 text-left sm:text-center"
-                                  style={`border-color: ${accentColor}33; color: ${accentColor};`}
+                                  class="rounded-xl p-3 border border-dashed flex flex-col justify-between"
+                                  style="background: rgba(0, 255, 157, 0.06); border-color: rgba(0, 255, 157, 0.35);"
                                 >
-                                  <pre class="cosmic-charm font-mono text-[7px] sm:text-[8px] leading-[1.05]">{oraclePacket.value.sigil}</pre>
-                                  <p
-                                    class="mt-2 font-mono text-[9px] uppercase tracking-[0.18em]"
-                                    style={`color: ${accentGlowColor}A8;`}
-                                  >
-                                    sigil of the day
-                                  </p>
+                                  <div>
+                                    <p
+                                      class="font-mono text-[9px] uppercase tracking-[0.2em]"
+                                      style="color: #00ff9d;"
+                                    >
+                                      ☯️ I Ching Hexagram
+                                    </p>
+                                    <p class="font-mono text-xs sm:text-[13px] font-bold mt-1 text-white flex items-center gap-1.5">
+                                      <span class="text-base">
+                                        {oraclePacket.value.draw.hexagram
+                                          .symbol}
+                                      </span>
+                                      <span>
+                                        {oraclePacket.value.draw.hexagram.name}
+                                      </span>
+                                    </p>
+                                    <p class="font-mono text-[11px] leading-relaxed mt-2 text-white/80">
+                                      {cleanOmenText(
+                                        oraclePacket.value.draw.hexagram
+                                          .judgment,
+                                        130,
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Nordic Rune */}
+                                <div
+                                  class="rounded-xl p-3 border border-dashed flex flex-col justify-between"
+                                  style="background: rgba(255, 154, 60, 0.07); border-color: rgba(255, 154, 60, 0.4);"
+                                >
+                                  <div>
+                                    <p
+                                      class="font-mono text-[9px] uppercase tracking-[0.2em]"
+                                      style="color: #ff9a3c;"
+                                    >
+                                      ᚱ Nordic Rune
+                                    </p>
+                                    <p class="font-mono text-xs sm:text-[13px] font-bold mt-1 text-white flex items-center gap-1.5">
+                                      <span class="text-base text-[#ffdb8a]">
+                                        {oraclePacket.value.draw.rune.symbol}
+                                      </span>
+                                      <span>
+                                        {oraclePacket.value.draw.rune.name}
+                                      </span>
+                                    </p>
+                                    <p class="font-mono text-[11px] leading-relaxed mt-2 text-white/80">
+                                      {cleanOmenText(
+                                        oraclePacket.value.draw.rune.meaning,
+                                        130,
+                                      )}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             </div>
