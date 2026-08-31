@@ -233,16 +233,22 @@ function buildLoadingLines({
   period,
   element,
   moon,
+  discordianDate,
+  slackRoll,
 }: {
   sign: string;
   period: Period;
   element: string;
   moon: ReturnType<typeof getMoonPhase>;
+  discordianDate: ReturnType<typeof getDiscordianDate>;
+  slackRoll: number;
 }) {
   const lines = [
     "> aligning celestial telemetry...",
     `> moon transit: ${moon.phase.toUpperCase()} (${moon.illumination}% illuminated)`,
+    `> discordian calendar: ${discordianDate.text.toUpperCase()}`,
     `> casting ${element.toUpperCase()} harmonics for ${sign.toUpperCase()}...`,
+    `> subgenius slack check: d23 roll = ${slackRoll}`,
     "> divining tarot, hexagram & rune omens...",
     `> tuning ${period.toUpperCase()} oracle transmission...`,
     "> cosmic signal locked.",
@@ -292,6 +298,8 @@ export const handler = async (
     period,
     element: zodiac.element,
     moon,
+    discordianDate,
+    slackRoll,
   });
 
   return jsonResponse({

@@ -52,6 +52,11 @@ type CosmicContext = {
   };
   discordianDate: {
     text: string;
+    yold?: number;
+    season?: string;
+    weekday?: string;
+    dayOfSeason?: number;
+    holyday?: string;
   };
   slackRoll: {
     die: string;
@@ -285,6 +290,22 @@ function cleanOmenText(text?: string, maxLen = 140): string {
   }
   if (clean.length <= maxLen) return clean;
   return clean.slice(0, maxLen).replace(/[,;:\s]+$/, "") + "...";
+}
+
+const DISCORDIAN_SLACK_FORTUNES = [
+  "True order emerges when you stop wrestling with the chaos. Keep your Slack high.",
+  "Eris smiles on the unfettered mind: when plans scramble, look for the hidden punchline.",
+  "Praise 'Bob'! The universe is far weirder than anyone's spreadsheet. Take five.",
+  "Give yourself some Slack — the golden apple always rolls toward the unbothered.",
+  "Bureaucracy is just organized confusion; follow the golden thread of joyful mischief.",
+  "When the cosmic signal wobbles, don't panic — lean back and let the chaos cook.",
+  "A little holy discord shakes loose the answers that rigid discipline couldn't reach.",
+  "Stay slack, keep the pipe lit, and let the cosmic comedy unfold in your favor.",
+];
+
+function getDiscordianSlackDecree(yold = 3192, roll = 23): string {
+  const index = Math.abs((yold + roll) % DISCORDIAN_SLACK_FORTUNES.length);
+  return DISCORDIAN_SLACK_FORTUNES[index];
 }
 
 export default function ZodiacPicker() {
@@ -1329,7 +1350,7 @@ export default function ZodiacPicker() {
                             />
                           </div>
 
-                          {/* Sleek Cosmic Sky Alignment */}
+                          {/* Sleek Cosmic Sky Alignment with Lunar, Discordian & Slack Epoch */}
                           <div
                             class="cosmic-signal-plaque border-2 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[11px] sm:text-xs font-mono"
                             style={`background: rgba(0,0,0,0.4); border-color: ${accentGlowColor}35; box-shadow: inset 0 0 16px ${accentGlowColor}10;`}
@@ -1350,15 +1371,36 @@ export default function ZodiacPicker() {
                                 </span>
                               )}
                             </div>
-                            <div class="flex items-center gap-3">
-                              {previewSign && (
-                                <span style={`color: ${accentGlowColor}CC;`}>
-                                  Ruled by{" "}
+
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                              {activeCosmicContext?.discordianDate && (
+                                <span
+                                  class="text-[10px] font-mono"
+                                  style={`color: ${accentGlowColor}CC;`}
+                                  title={`Principia Discordia: ${activeCosmicContext.discordianDate.text}`}
+                                >
+                                  🍏{" "}
                                   <span
                                     style={`color: ${accentColor}; font-weight: 600;`}
                                   >
-                                    {previewSign.rulingPlanet}
-                                  </span>
+                                    {activeCosmicContext.discordianDate.season}
+                                    {" "}
+                                    {activeCosmicContext.discordianDate
+                                      .dayOfSeason}
+                                  </span>{" "}
+                                  ({activeCosmicContext.discordianDate.yold}
+                                  {" "}
+                                  YOLD)
+                                </span>
+                              )}
+                              {activeCosmicContext?.slackRoll && (
+                                <span
+                                  class="px-2 py-0.5 rounded-md text-[10px] font-mono tracking-wider"
+                                  style={`background: ${accentColor}18; color: ${accentColor}; border: 1px solid ${accentColor}33;`}
+                                  title="SubGenius Slack Roll (d23)"
+                                >
+                                  SLACK:{" "}
+                                  {activeCosmicContext.slackRoll.value}/23
                                 </span>
                               )}
                               {previewSign && (
@@ -1430,7 +1472,7 @@ export default function ZodiacPicker() {
                                 </p>
                               </div>
 
-                              <div class="grid gap-3 sm:grid-cols-3">
+                              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                                 {/* Tarot Card */}
                                 <div
                                   class="rounded-xl p-3 border border-dashed flex flex-col justify-between"
@@ -1516,6 +1558,54 @@ export default function ZodiacPicker() {
                                       {cleanOmenText(
                                         oraclePacket.value.draw.rune.meaning,
                                         130,
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Discordian & SubGenius Slack */}
+                                <div
+                                  class="rounded-xl p-3 border border-dashed flex flex-col justify-between"
+                                  style="background: rgba(236, 72, 153, 0.07); border-color: rgba(236, 72, 153, 0.4);"
+                                >
+                                  <div>
+                                    <div class="flex items-center justify-between">
+                                      <p
+                                        class="font-mono text-[9px] uppercase tracking-[0.2em]"
+                                        style="color: #f472b6;"
+                                      >
+                                        🍏 Erisian Slack
+                                      </p>
+                                      {activeCosmicContext?.charm && (
+                                        <pre
+                                          class="font-mono text-[9px] leading-tight"
+                                          style={`color: ${accentColor};`}
+                                        >
+                                          {activeCosmicContext.charm.art.split("\n")[0]}
+                                        </pre>
+                                      )}
+                                    </div>
+                                    <p class="font-mono text-xs sm:text-[13px] font-bold mt-1 text-white flex items-center justify-between">
+                                      <span>
+                                        {activeCosmicContext?.discordianDate
+                                          ?.season ?? "Chaos"}{" "}
+                                        {activeCosmicContext?.discordianDate
+                                          ?.dayOfSeason ?? "23"}
+                                      </span>
+                                      <span
+                                        class="text-[10px] font-normal"
+                                        style={`color: ${accentGlowColor};`}
+                                      >
+                                        d23={activeCosmicContext?.slackRoll
+                                          ?.value ?? 23}
+                                      </span>
+                                    </p>
+                                    <p class="font-mono text-[11px] leading-relaxed mt-2 text-white/80">
+                                      {getDiscordianSlackDecree(
+                                        activeCosmicContext?.discordianDate
+                                          ?.yold ?? 3192,
+                                        activeCosmicContext?.slackRoll?.value ??
+                                          23,
                                       )}
                                     </p>
                                   </div>

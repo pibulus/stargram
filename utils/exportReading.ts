@@ -97,12 +97,13 @@ export async function shareReadingPNG(
   ].join(";");
 
   // Freeze the theatre: no mid-float charms or half-blinked glyphs,
-  // and tighten spacing for a clean phone-friendly share card.
+  // and format fortune cards into a balanced 2x2 grid on the 600px stage.
   const still = document.createElement("style");
   still.textContent = [
     ".share-card-stage * { animation: none !important; transform: none !important; }",
     ".share-card-stage .reading-capture { gap: 14px !important; }",
     ".share-card-stage .reading-capture > div { margin-top: 0 !important; }",
+    ".share-card-stage .rite-plaque .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }",
   ].join("\n");
   card.appendChild(still);
 
