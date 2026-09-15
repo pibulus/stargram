@@ -8,7 +8,14 @@
 // that law was paid for in production on 2026-08-08.
 
 import { type ZodiacSign } from "../zodiac.ts";
-import { computeSky, type SignSky, type Sky, skyForSign } from "./sky.ts";
+import {
+  computeSky,
+  type Ingress,
+  type SignSky,
+  type Sky,
+  skyForSign,
+  type Station,
+} from "./sky.ts";
 import {
   type MoonState,
   moonState,
@@ -21,6 +28,14 @@ import { mintSigil } from "./sigil.ts";
 
 export type Period = "daily" | "weekly" | "monthly";
 
+/**
+ * A void moon has to have this many hours left at the rite to count. The
+ * reading is divined once and served all day, so a void expiring shortly
+ * after the rite would put a "let today be small" reading in front of readers
+ * for whom it had already passed.
+ */
+const VOID_MIN_HOURS = 6;
+
 export interface Packet {
   dateKey: string; // Melbourne calendar date "YYYY-MM-DD" (or week/month key)
   period: Period;
@@ -31,6 +46,16 @@ export interface Packet {
   draw: DailyDraw;
   /** For weekly/monthly: the moon's arc across the span, not one frozen instant. */
   moonArc?: string;
+  /** Moon has no aspects left before it changes sign — "nothing will come of it". */
+  moonVoid: boolean;
+  /** Hours until the Moon changes sign. */
+  moonSignHoursLeft: number;
+  /** The sign the Moon moves into next. */
+  moonNextSign: string;
+  /** Planets turning direction this week. Rare, and worth a whole reading. */
+  stations: Station[];
+  /** Sign boundaries being crossed, nearest first. */
+  ingresses: Ingress[];
   sigil: string; // braille talisman
   retrogrades: string[]; // bodies walking backwards right now
   live: LiveSky; // the measured sky: geomagnetic field, solar flux, visitor
@@ -144,6 +169,18 @@ export async function buildPacket(
     signSky: skyForSign(periodSky, sign.rulingPlanet, sign.name),
     moon: moonState(at),
     moonArc: moonArcFor(period, now),
+    // Void-of-course is an hours-long condition, so it only means anything to
+    // a daily reading; a week does not have one mood about it. It also has to
+    // still be running for a decent part of the day the reading is locked for
+    // - a void that expires an hour after the rite is not the day's character.
+    moonVoid: period === "daily" && periodSky.moonVoid &&
+      periodSky.moonSignHoursLeft >= VOID_MIN_HOURS,
+    moonSignHoursLeft: periodSky.moonSignHoursLeft,
+    moonNextSign: periodSky.moonNextSign,
+    stations: periodSky.stations,
+    ingresses: periodSky.ingresses.sort((a, b) =>
+      Math.abs(a.daysAway) - Math.abs(b.daysAway)
+    ),
     hour: planetaryHour(now),
     draw: dailyDraw(`${period}:${dateKey}`, sign.name),
     sigil: await mintSigil(seed),
@@ -263,6 +300,13 @@ export function composeFallback(packet: Packet, sign: ZodiacSign): string {
       `${top.a} ${ASPECT_VERB[top.type]} ${
         isCusp ? "your sign" : top.b
       } right now and ${motion}, ${lands} — ${pickBy(seed >>> 5, tails)}.`,
+    );
+  }
+
+  if (packet.moonVoid) {
+    parts.push(
+      "The moon is void of course for the rest of the day — the old advice is " +
+        "not to start anything, which is really just permission to let today be small.",
     );
   }
 

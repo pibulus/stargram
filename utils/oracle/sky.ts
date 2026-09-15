@@ -82,9 +82,37 @@ export interface Aspect {
   daysLeft: number;
 }
 
+/** A planet hanging motionless before it turns direction. Rare and loud. */
+export interface Station {
+  body: string;
+  direction: "retrograde" | "direct"; // the direction it is turning TO
+  daysAway: number; // 0 = stationing today
+}
+
+/** A body crossing from one sign into the next. */
+export interface Ingress {
+  body: string;
+  from: string;
+  into: string;
+  daysAway: number; // negative = already crossed, that many days ago
+}
+
 export interface Sky {
   placements: Placement[];
   aspects: Aspect[]; // ranked by power, descending
+  /**
+   * The Moon has made its last aspect before leaving its sign. Traditionally
+   * "nothing will come of it" - do not start things. A few times a week, for
+   * hours at a time, and it is the signal practitioners actually use. Without
+   * it a void day reads exactly like any other.
+   */
+  moonVoid: boolean;
+  /** Hours until the Moon leaves its current sign. */
+  moonSignHoursLeft: number;
+  /** The sign the Moon moves into next. */
+  moonNextSign: string;
+  stations: Station[]; // stationing within the week
+  ingresses: Ingress[]; // crossed in the last 2 days or crossing in the next 3
 }
 
 // The audit (docs/ORACLE_AUDIT.md) found the old power formula handing the
@@ -135,6 +163,14 @@ function geoLongitude(body: Astronomy.Body, date: Date): number {
 
 function norm360(x: number): number {
   return ((x % 360) + 360) % 360;
+}
+
+/** Shortest signed difference — motion across 0 Aries wraps. */
+function norm180(x: number): number {
+  let v = x;
+  if (v > 180) v -= 360;
+  if (v < -180) v += 360;
+  return v;
 }
 
 /** Compute the full sky state for a moment: placements + ranked aspects. */
@@ -195,7 +231,139 @@ export function computeSky(date: Date): Sky {
     }
   }
   aspects.sort((x, y) => y.power - x.power);
-  return { placements, aspects };
+
+  const moon = placements.find((p) => p.body === "Moon")!;
+  const { voidOfCourse, hoursLeft } = moonCourse(date, moon);
+
+  return {
+    placements,
+    aspects,
+    moonVoid: voidOfCourse,
+    moonSignHoursLeft: hoursLeft,
+    moonNextSign: ZODIAC[(Math.floor(moon.lon / 30) + 1) % 12],
+    stations: findStations(date, placements),
+    ingresses: findIngresses(placements),
+  };
+}
+
+/** Aspect angles the Moon can still perfect before it changes sign. */
+const MOON_ANGLES = [0, 60, 90, 120, 180];
+
+/**
+ * Is the Moon void of course, and how long until it changes sign?
+ *
+ * Walks the Moon forward in small steps to its next sign boundary and watches
+ * for any aspect to a planet perfecting on the way - a sign change in
+ * (sep - angle) between two samples is an exact hit. No aspects left means
+ * void.
+ */
+function moonCourse(
+  date: Date,
+  moon: Placement,
+): { voidOfCourse: boolean; hoursLeft: number } {
+  const boundary = (Math.floor(moon.lon / 30) + 1) * 30;
+  const toGo = norm360(boundary - moon.lon);
+  const speed = moon.speed > 0.1 ? moon.speed : 13.2; // guard, the Moon never retrogrades
+  const daysLeft = toGo / speed;
+  const hoursLeft = Math.round(daysLeft * 24 * 10) / 10;
+
+  const others = BODIES.filter(([n]) => n !== "Moon");
+  const steps = Math.max(2, Math.ceil(daysLeft / 0.05));
+  let prev: number[] | null = null;
+  for (let i = 0; i <= steps; i++) {
+    const t = new Date(date.getTime() + (daysLeft * (i / steps)) * 86400000);
+    const moonLon = norm360(geoLongitude(Astronomy.Body.Moon, t));
+    const deltas: number[] = [];
+    for (const [, body] of others) {
+      const lon = norm360(geoLongitude(body, t));
+      // SIGNED separation, not the 0..180 folded one. Folding makes
+      // (sep - 0) always >= 0 and (sep - 180) always <= 0, so conjunctions and
+      // oppositions can never cross zero and were invisible here - which let
+      // them fail to close a void and roughly doubled every void's length.
+      const d = norm180(moonLon - lon);
+      for (const angle of MOON_ANGLES) {
+        deltas.push(norm180(d - angle));
+        if (angle !== 0 && angle !== 180) deltas.push(norm180(d + angle));
+      }
+    }
+    if (prev) {
+      for (let k = 0; k < deltas.length; k++) {
+        // a sign flip means the aspect perfected in between. norm180 wraps at
+        // +/-180, so ignore jumps too big to be real motion at this step size.
+        const crossed = prev[k] === 0 ||
+          (prev[k] * deltas[k] < 0 && Math.abs(prev[k] - deltas[k]) < 90);
+        if (crossed) return { voidOfCourse: false, hoursLeft };
+      }
+    }
+    prev = deltas;
+  }
+  return { voidOfCourse: true, hoursLeft };
+}
+
+/** Planets turning direction within the week — speed crossing through zero. */
+function findStations(date: Date, placements: Placement[]): Station[] {
+  const out: Station[] = [];
+  for (const [name, body] of BODIES) {
+    if (name === "Sun" || name === "Moon") continue; // never retrograde
+    const now = placements.find((p) => p.body === name)!;
+    for (let d = 0; d <= 7; d++) {
+      const t = new Date(date.getTime() + d * 86400000);
+      const t2 = new Date(t.getTime() + 86400000);
+      const speed = norm180(
+        norm360(geoLongitude(body, t2)) - norm360(geoLongitude(body, t)),
+      );
+      if (speed === 0 || now.speed * speed < 0) {
+        out.push({
+          body: name,
+          direction: speed < 0 ? "retrograde" : "direct",
+          daysAway: d,
+        });
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+/** Bodies that just crossed a sign boundary, or are about to. */
+function findIngresses(placements: Placement[]): Ingress[] {
+  const out: Ingress[] = [];
+  for (const p of placements) {
+    if (p.body === "Moon") continue; // the Moon does this every 2.5 days
+    const speed = p.speed;
+    if (Math.abs(speed) < 0.0005) continue;
+    const idx = ZODIAC.indexOf(p.sign);
+    if (speed > 0) {
+      const daysAway = (30 - p.degree) / speed;
+      const since = p.degree / speed;
+      if (daysAway <= 3) {
+        out.push({
+          body: p.body,
+          from: p.sign,
+          into: ZODIAC[(idx + 1) % 12],
+          daysAway: Math.round(daysAway * 10) / 10,
+        });
+      } else if (since <= 2) {
+        out.push({
+          body: p.body,
+          from: ZODIAC[(idx + 11) % 12],
+          into: p.sign,
+          daysAway: -Math.round(since * 10) / 10,
+        });
+      }
+    } else {
+      const daysAway = p.degree / -speed;
+      if (daysAway <= 3) {
+        out.push({
+          body: p.body,
+          from: p.sign,
+          into: ZODIAC[(idx + 11) % 12],
+          daysAway: Math.round(daysAway * 10) / 10,
+        });
+      }
+    }
+  }
+  return out;
 }
 
 /** Aspects to a POINT (a sign cusp) get tighter orbs than body-to-body. */
