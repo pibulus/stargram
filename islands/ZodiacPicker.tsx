@@ -1041,22 +1041,31 @@ export default function ZodiacPicker() {
                         const isHovered = hoveredSign.value === zodiac.name;
                         const cardTitle = getSignTitle(zodiac.name);
                         const elementLabel = zodiac.element.toUpperCase();
+                        // The resting state used to sit at 27% border and 67%
+                        // title alpha, which read as "disabled" rather than
+                        // "not yet chosen" on a phone in daylight. Lifted so
+                        // the grid is legible at rest; hover and selection
+                        // still own the full-strength accent plus the glow, so
+                        // the delta that signals interaction is intact.
                         const titleColor = isSelected || isHovered
                           ? accentColor
-                          : `${accentColor}AA`;
+                          : `${accentColor}E6`;
                         const borderColor = isSelected || isHovered
                           ? accentColor
-                          : `${accentGlowColor}44`;
+                          : `${accentGlowColor}7A`;
+                        const metaColor = isSelected || isHovered
+                          ? `${accentGlowColor}F2`
+                          : `${accentGlowColor}D9`;
                         const backgroundColor = isSelected
                           ? "rgba(0, 30, 8, 0.92)"
                           : isHovered
                           ? "rgba(0, 0, 0, 0.6)"
-                          : "rgba(0, 0, 0, 0.45)";
+                          : "rgba(0, 0, 0, 0.5)";
                         const glow = isSelected
                           ? `inset 0 0 8px ${accentColor}40, 0 0 32px ${accentColor}80, 0 12px 35px rgba(0,0,0,0.55), 0 0 2px ${accentColor}ff`
                           : isHovered
                           ? `inset 0 0 6px ${accentColor}30, 0 0 16px ${accentColor}40, 0 8px 22px rgba(0,0,0,0.5)`
-                          : "0 6px 18px rgba(0,0,0,0.55)";
+                          : `0 0 10px ${accentGlowColor}1f, 0 6px 18px rgba(0,0,0,0.55)`;
 
                         return (
                           <button
@@ -1095,7 +1104,7 @@ export default function ZodiacPicker() {
                             </div>
                             <div
                               class="mt-2 text-[8px] min-[390px]:text-[9px] sm:text-xs uppercase tracking-[0.06em] sm:tracking-[0.24em] leading-snug"
-                              style={`color: ${accentGlowColor}CC;`}
+                              style={`color: ${metaColor};`}
                             >
                               {zodiac.dates.toUpperCase()} • {elementLabel}
                             </div>
@@ -1621,80 +1630,106 @@ export default function ZodiacPicker() {
                             then the quiet support line. */
                         }
                         <div
-                          class="space-y-3.5 pt-5 sm:pt-6 border-t"
+                          class="pt-5 sm:pt-6 border-t"
                           style={`border-color: ${accentGlowColor}30;`}
                         >
-                          {/* Period dial */}
-                          <div class="flex justify-center">
+                          {
+                            /* One column governs every row below, so the dial,
+                              the actions and the support line share the exact
+                              same left and right edges. They used to be three
+                              separately-centred blocks at three intrinsic
+                              widths, which read as a ragged stack of buttons. */
+                          }
+                          <div class="mx-auto w-full max-w-md space-y-3">
+                            {/* Period dial — equal thirds, full width */}
                             <div
-                              class="inline-flex rounded-2xl border-2 overflow-hidden"
+                              class="grid grid-cols-3 rounded-2xl border-2 overflow-hidden"
                               style={`border-color: ${accentGlowColor}50; background: rgba(0,0,0,0.55); box-shadow: 0 0 14px ${accentGlowColor}1c;`}
                             >
                               {(["daily", "weekly", "monthly"] as Period[])
-                                .map((period) => (
+                                .map((period, idx) => (
                                   <button
                                     key={period}
                                     type="button"
                                     onClick={() => handlePeriodChange(period)}
                                     onMouseEnter={() => sounds.hover()}
-                                    class="min-h-[46px] px-4 min-[390px]:px-5 sm:px-7 font-mono text-xs sm:text-sm uppercase tracking-[0.12em] transition-all"
-                                    style={currentPeriod.value === period
-                                      ? `background: ${accentColor}24; color: ${accentColor}; text-shadow: 0 0 8px ${accentColor}66; box-shadow: inset 0 0 16px ${accentColor}28; font-weight: 700;`
-                                      : `background: transparent; color: ${accentGlowColor}96;`}
+                                    class="min-h-[46px] px-2 font-mono text-xs sm:text-sm uppercase tracking-[0.12em] transition-all"
+                                    style={`${
+                                      idx > 0
+                                        ? `border-left: 1px solid ${accentGlowColor}33;`
+                                        : ""
+                                    }${
+                                      currentPeriod.value === period
+                                        ? `background: ${accentColor}24; color: ${accentColor}; text-shadow: 0 0 8px ${accentColor}66; box-shadow: inset 0 0 16px ${accentColor}28; font-weight: 700;`
+                                        : `background: transparent; color: ${accentGlowColor}B3;`
+                                    }`}
                                   >
                                     {period}
                                   </button>
                                 ))}
                             </div>
-                          </div>
 
-                          {/* Action row — one line, one voice */}
-                          <div class="grid grid-cols-3 gap-2.5 sm:gap-3 max-w-md mx-auto">
-                            <button
-                              type="button"
-                              onClick={handleBackToPicker}
-                              onMouseEnter={() => sounds.hover()}
-                              class="min-h-[48px] px-2 border-2 rounded-2xl font-mono text-xs sm:text-sm uppercase tracking-[0.1em] transition-all hover:scale-[1.04] active:scale-95"
-                              style={`background: rgba(0,0,0,0.55); border-color: ${accentGlowColor}66; color: ${accentGlowColor}; box-shadow: 0 0 10px ${accentGlowColor}24;`}
-                            >
-                              ← BACK
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleCopyReading}
-                              onMouseEnter={() => sounds.hover()}
-                              class="min-h-[48px] px-2 border-2 rounded-2xl font-mono text-xs sm:text-sm uppercase tracking-[0.1em] transition-all hover:scale-[1.04] active:scale-95"
-                              style={copiedReading.value
-                                ? `background: ${accentColor}26; border-color: ${accentColor}; color: ${accentColor}; box-shadow: 0 0 16px ${accentColor}55;`
-                                : `background: rgba(0,0,0,0.55); border-color: ${accentGlowColor}66; color: ${accentGlowColor}; box-shadow: 0 0 10px ${accentGlowColor}24;`}
-                            >
-                              {copiedReading.value ? "COPIED!" : "COPY"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleShareReading}
-                              onMouseEnter={() => sounds.hover()}
-                              class="min-h-[48px] px-2 border-2 rounded-2xl font-mono text-xs sm:text-sm uppercase tracking-[0.1em] transition-all hover:scale-[1.04] active:scale-95"
-                              style={`background: rgba(0,0,0,0.55); border-color: ${accentGlowColor}66; color: ${accentGlowColor}; box-shadow: 0 0 10px ${accentGlowColor}24;`}
-                            >
-                              SAVE PNG
-                            </button>
-                          </div>
+                            {/* Action row — one line, one voice */}
+                            <div class="grid grid-cols-3 gap-2.5 sm:gap-3">
+                              <button
+                                type="button"
+                                onClick={handleBackToPicker}
+                                onMouseEnter={() => sounds.hover()}
+                                class="min-h-[48px] px-2 border-2 rounded-2xl font-mono text-xs sm:text-sm uppercase tracking-[0.1em] transition-all hover:scale-[1.04] active:scale-95"
+                                style={`background: rgba(0,0,0,0.55); border-color: ${accentGlowColor}66; color: ${accentGlowColor}; box-shadow: 0 0 10px ${accentGlowColor}24;`}
+                              >
+                                ← BACK
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleCopyReading}
+                                onMouseEnter={() => sounds.hover()}
+                                class="min-h-[48px] px-2 border-2 rounded-2xl font-mono text-xs sm:text-sm uppercase tracking-[0.1em] transition-all hover:scale-[1.04] active:scale-95"
+                                style={copiedReading.value
+                                  ? `background: ${accentColor}26; border-color: ${accentColor}; color: ${accentColor}; box-shadow: 0 0 16px ${accentColor}55;`
+                                  : `background: rgba(0,0,0,0.55); border-color: ${accentGlowColor}66; color: ${accentGlowColor}; box-shadow: 0 0 10px ${accentGlowColor}24;`}
+                              >
+                                {copiedReading.value ? "COPIED!" : "COPY"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleShareReading}
+                                onMouseEnter={() => sounds.hover()}
+                                class="min-h-[48px] px-2 border-2 rounded-2xl font-mono text-xs sm:text-sm uppercase tracking-[0.1em] transition-all hover:scale-[1.04] active:scale-95"
+                                style={`background: rgba(0,0,0,0.55); border-color: ${accentGlowColor}66; color: ${accentGlowColor}; box-shadow: 0 0 10px ${accentGlowColor}24;`}
+                              >
+                                SAVE PNG
+                              </button>
+                            </div>
 
-                          {/* Support — its own quiet moment */}
-                          <div class="flex justify-center pt-1">
-                            <button
-                              type="button"
-                              class="inline-flex min-h-[44px] items-center px-5 border-2 rounded-2xl font-mono text-xs uppercase tracking-[0.12em] transition-all hover:scale-[1.04] active:scale-95"
-                              style={`background: rgba(255, 192, 203, 0.06); border-color: rgba(255, 192, 203, 0.32); color: rgba(255, 192, 203, 0.9); box-shadow: 0 0 8px rgba(255, 192, 203, 0.18);`}
-                              onMouseEnter={() => sounds.hover()}
-                              onClick={() => {
-                                sounds.click();
-                                openKofiModal();
-                              }}
-                            >
-                              ☕ SUPPORT CREATOR
-                            </button>
+                            {
+                              /* Support reads as a footer line, not a third
+                                row of buttons. Same bordered weight as the two
+                                rows above made it compete with the controls
+                                that actually do something. Still a 44px target. */
+                            }
+                            <div class="text-center">
+                              <button
+                                type="button"
+                                class="inline-flex min-h-[44px] items-center justify-center px-3 font-mono text-[11px] uppercase tracking-[0.18em] transition-colors"
+                                style="color: rgba(255, 192, 203, 0.65);"
+                                onMouseEnter={(event) => {
+                                  sounds.hover();
+                                  (event.currentTarget as HTMLButtonElement)
+                                    .style.color = "rgba(255, 192, 203, 0.98)";
+                                }}
+                                onMouseLeave={(event) => {
+                                  (event.currentTarget as HTMLButtonElement)
+                                    .style.color = "rgba(255, 192, 203, 0.65)";
+                                }}
+                                onClick={() => {
+                                  sounds.click();
+                                  openKofiModal();
+                                }}
+                              >
+                                ☕ Support the creator
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
