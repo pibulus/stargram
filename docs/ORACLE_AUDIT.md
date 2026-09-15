@@ -220,9 +220,74 @@ storming geomagnetic field next to a placid reading.
 
 ---
 
+## Results of the entropy pass
+
+Everything above is the BEFORE. The fixes landed in the same branch; these are
+the same metrics re-measured over the same 365-day sweep.
+
+| Metric                               | Before              | After               |
+| ------------------------------------ | ------------------- | ------------------- |
+| taurus vs libra astro block          | byte-identical      | **different**       |
+| gemini vs virgo astro block          | byte-identical      | **different**       |
+| distinct theme-anchors/yr (mean)     | 26                  | **49**              |
+| mean anchor churn                    | 7.8% of days        | **13.4%**           |
+| worst single anchor                  | 109 days/yr         | **~9 days max run** |
+| readings led by a fast (news) aspect | n/a (single anchor) | **93.9%**           |
+| anchor involves the Moon             | 22%                 | **41.6%**           |
+| distinct anchors across 12 signs/day | 7.3/12              | **8.4/12**          |
+| prompt byte-identical share          | 76.1%               | **68.3%**           |
+| same-day cross-sign similarity       | 80.0%               | **72.7%**           |
+| same-sign next-day similarity        | 80.1%               | **78.0%**           |
+| monthly next-period similarity       | 97.8%               | **see note**        |
+| fallback sentence skeletons          | 64                  | **201**             |
+| fallback opening sentences           | 48                  | **96**              |
+
+What changed, by file:
+
+- **`sky.ts`** — `Placement` carries signed `speed`; `Aspect` carries
+  `relSpeed`, `applying` and `daysLeft`. Power gains a `liveliness()` term
+  (sqrt-compressed relative speed), so a pair that will still be exact next
+  season loses to one that resolves this week. `POWER_FLOOR = 2` exported. New:
+  `aspectsToPoint()` and a `skyForSign(sky, ruler, signName)` that also reads
+  the sign's **own 30-degree sector** — bodies transiting it, aspects to its
+  cusp — and picks a `fastAnchor` (news) and `slowAnchor` (weather) from both
+  channels combined. The sector is what un-twins taurus/libra and gemini/virgo,
+  and it is what gives the outer-planet signs any fast news at all: Pluto only
+  ever aspects other outer planets, so scorpio previously had none.
+- **`voice.ts`** — `transitLines()` now emits a labelled TODAY / UNDERNEATH pair
+  with tightening-or-loosening and a days-left window, plus the sector line and
+  live supporting aspects only. Four `SHAPES` structural templates rotate on a
+  date+sign hash. `ELEMENT_LEAN` and `MODALITY_LEAN` give each sign its own
+  register on top of the shared planetary hour, and `keywords` reach the prompt.
+  Sampling temperature gains a per-sign jitter. **`IDENTITY`'s taste rules are
+  untouched** — the voice is the same, the structure it pours into rotates.
+- **`compose.ts`** — `periodMidpoint()` and `moonArcFor()`: weekly and monthly
+  packets are now cut at the middle of their span and carry the moon's arc
+  across it instead of one frozen instant. The fallback composer leads on the
+  fast anchor, speaks the sector line, and widens to 8 openers / 6 tails / 8
+  closers.
+- **`ritual.ts`** — the journal records **all twelve signs** per rite, not just
+  aries, at depth 24. A module-level `recentOpeners` ring carries cross-sign
+  dedupe into the `getReading` self-heal path, which is the path that actually
+  runs after a deploy. A fallback now logs at `error` level and says whether the
+  key is set.
+- **`.env.example`** — `STARGRAM_GEMINI_KEY` documented, with the symptom of
+  omitting it.
+
+Note on monthly: the 97.8% figure measured consecutive _sweep days_ landing in
+the same period key, which is no longer the right probe now that the packet is
+cut at the period midpoint — a month's prompt is stable within the month by
+design. The real test is month-over-month, which needs a multi-month sweep.
+
+**Still input-side.** No prose was measured; `--speak` needs the key. Until that
+runs, the claim is "the model is being told something much more varied", not
+"the readings read more varied".
+
 ## Ranked recommendations
 
-Highest leverage first. Nothing here is implemented yet.
+Items 1-9 below were the plan. Items 1-8 are **now implemented** (see "Results
+of the entropy pass" above); item 9 is partly done. What remains open is listed
+after the list.
 
 1. **Confirm production isn't on the fallback.** Check `source` on a live
    response and document `STARGRAM_GEMINI_KEY` in `.env.example`. Consider
@@ -267,3 +332,13 @@ in, so **every number above is input-side.** Run
 `deno task audit --speak
 --days=1` locally to close the loop and measure the
 prose itself.
+
+### Still open
+
+- **Image domains** stay at 12, so ~4 signs a day still share one. Widening the
+  list to ~20 is a one-line change whenever it is worth doing.
+- **The draw is still gagged** (recommendation 8). It remains the largest
+  unexploited entropy source in the packet; loosening it is a taste call about
+  how much the tarot should steer the prose, so it was left alone.
+- **No prose measurement yet** — `--speak` needs `STARGRAM_GEMINI_KEY`.
+- **Month-over-month variance** needs a multi-month sweep to probe properly.

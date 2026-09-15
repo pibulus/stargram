@@ -65,6 +65,7 @@ export interface Placement {
   sign: string;
   degree: number; // 0..30 within sign
   retrograde: boolean;
+  speed: number; // signed degrees/day, measured against tomorrow
 }
 
 export interface Aspect {
@@ -73,12 +74,30 @@ export interface Aspect {
   type: string;
   orb: number; // degrees off exact
   power: number; // ranking score
+  /** |speedA - speedB| in deg/day — how fast the pair is coming apart */
+  relSpeed: number;
+  /** true = orb is closing (building), false = opening (fading) */
+  applying: boolean;
+  /** days until the orb leaves range, at the current rate. Infinity if static. */
+  daysLeft: number;
 }
 
 export interface Sky {
   placements: Placement[];
   aspects: Aspect[]; // ranked by power, descending
 }
+
+// The audit (docs/ORACLE_AUDIT.md) found the old power formula handing the
+// theme to whatever was slowest: Uranus trine Pluto anchored scorpio 109 days
+// a year because it never went out of orb. Power now carries a liveliness
+// term — a pair that will still be exact next season is weather, not news.
+// sqrt-compressed so the Moon (13 deg/day) leads without erasing everything else.
+function liveliness(relSpeed: number): number {
+  return 0.35 + Math.sqrt(Math.min(relSpeed, 14)) * 0.55;
+}
+
+/** Aspects below this are listed as context at most, never as a theme. */
+export const POWER_FLOOR = 2;
 
 function geoLongitude(body: Astronomy.Body, date: Date): number {
   if (body === Astronomy.Body.Sun) {
@@ -111,27 +130,42 @@ export function computeSky(date: Date): Sky {
       sign: ZODIAC[Math.floor(lon / 30)],
       degree: Math.round((lon % 30) * 10) / 10,
       retrograde: motion < 0,
+      speed: Math.round(motion * 1000) / 1000,
     };
   });
+
+  const separation = (lonA: number, lonB: number) =>
+    Math.abs(((lonA - lonB + 540) % 360) - 180); // 0..180
 
   const aspects: Aspect[] = [];
   for (let i = 0; i < placements.length; i++) {
     for (let j = i + 1; j < placements.length; j++) {
-      const sep = Math.abs(
-        ((placements[i].lon - placements[j].lon + 540) % 360) - 180,
-      ); // angular separation 0..180
+      const p = placements[i], q = placements[j];
+      const sep = separation(p.lon, q.lon);
+      // where the pair sits tomorrow tells us applying vs separating without
+      // a second ephemeris pass — the speeds are already measured
+      const sepNext = separation(p.lon + p.speed, q.lon + q.speed);
       for (const [type, angle, maxOrb, weight] of ASPECTS) {
         const orb = Math.abs(sep - angle);
         if (orb <= maxOrb) {
+          const orbNext = Math.abs(sepNext - angle);
+          const applying = orbNext < orb;
+          const drift = Math.abs(orbNext - orb);
+          const relSpeed = Math.abs(p.speed - q.speed);
           const tightness = 1 - orb / maxOrb;
           const power = weight * tightness *
-            BODY_WEIGHT[placements[i].body] * BODY_WEIGHT[placements[j].body];
+            BODY_WEIGHT[p.body] * BODY_WEIGHT[q.body] * liveliness(relSpeed);
           aspects.push({
-            a: placements[i].body,
-            b: placements[j].body,
+            a: p.body,
+            b: q.body,
             type,
             orb: Math.round(orb * 10) / 10,
             power: Math.round(power * 100) / 100,
+            relSpeed: Math.round(relSpeed * 100) / 100,
+            applying,
+            daysLeft: drift > 0.0001
+              ? Math.round((maxOrb - orb) / drift * 10) / 10
+              : Infinity,
           });
           break; // a pair forms at most one aspect
         }
@@ -142,24 +176,127 @@ export function computeSky(date: Date): Sky {
   return { placements, aspects };
 }
 
+/** Aspects to a POINT (a sign cusp) get tighter orbs than body-to-body. */
+const CUSP_ASPECTS: [string, number, number, number][] = [
+  ["conjunction", 0, 6, 3],
+  ["opposition", 180, 6, 2.5],
+  ["square", 90, 5, 2],
+  ["trine", 120, 5, 2],
+  ["sextile", 60, 3, 1.5],
+];
+
 export interface SignSky {
   ruler: string;
   rulerPlacement: Placement;
   rulerAspects: Aspect[]; // ranked, involving the ruler
   moonSign: string;
   sunSign: string;
+  // --- added by the entropy pass: the sign as an object in its own right ---
+  /** The sign this sky was cut for, e.g. "Taurus". */
+  signName: string;
+  /** Bodies currently transiting the sign's own 30 degrees. */
+  inSign: Placement[];
+  /** Aspects from every body to the sign's 0-degree cusp. */
+  cuspAspects: Aspect[];
+  /** Highest-power fast-moving aspect: what is true TODAY. May be null. */
+  fastAnchor: Aspect | null;
+  /** Highest-power slow aspect: the standing weather. May be null. */
+  slowAnchor: Aspect | null;
 }
 
-/** The slice of the sky that speaks to one zodiac sign, via its ruler. */
-export function skyForSign(sky: Sky, rulingPlanet: string): SignSky {
+/** Below this relative speed an aspect is a season, not a day. */
+const FAST_THRESHOLD = 0.5; // deg/day
+
+/** Aspects from every body to a fixed point on the ecliptic. */
+function aspectsToPoint(
+  sky: Sky,
+  pointLon: number,
+  label: string,
+): Aspect[] {
+  const out: Aspect[] = [];
+  for (const p of sky.placements) {
+    const sep = Math.abs(((p.lon - pointLon + 540) % 360) - 180);
+    const sepNext = Math.abs(((p.lon + p.speed - pointLon + 540) % 360) - 180);
+    for (const [type, angle, maxOrb, weight] of CUSP_ASPECTS) {
+      const orb = Math.abs(sep - angle);
+      if (orb <= maxOrb) {
+        const orbNext = Math.abs(sepNext - angle);
+        const drift = Math.abs(orbNext - orb);
+        const relSpeed = Math.abs(p.speed);
+        const tightness = 1 - orb / maxOrb;
+        out.push({
+          a: p.body,
+          b: label,
+          type,
+          orb: Math.round(orb * 10) / 10,
+          // the cusp is a point, not a body, so only the body carries weight
+          power: Math.round(
+            weight * tightness * BODY_WEIGHT[p.body] * liveliness(relSpeed) *
+              100,
+          ) / 100,
+          relSpeed: Math.round(relSpeed * 100) / 100,
+          applying: orbNext < orb,
+          daysLeft: drift > 0.0001
+            ? Math.round((maxOrb - orb) / drift * 10) / 10
+            : Infinity,
+        });
+        break;
+      }
+    }
+  }
+  return out.sort((x, y) => y.power - x.power);
+}
+
+/**
+ * The slice of the sky that speaks to one zodiac sign.
+ *
+ * Two channels, deliberately: the ruling planet (classical, and what the app
+ * always did) AND the sign's own 30-degree sector. Before the sector existed,
+ * taurus and libra both resolved to Venus and received byte-identical skies
+ * forever, as did gemini and virgo. The sector is what makes a reading belong
+ * to the sign rather than to its ruler.
+ */
+export function skyForSign(
+  sky: Sky,
+  rulingPlanet: string,
+  signName?: string,
+): SignSky {
   const find = (b: string) => sky.placements.find((p) => p.body === b)!;
+  const rulerAspects = sky.aspects.filter(
+    (a) => a.a === rulingPlanet || a.b === rulingPlanet,
+  );
+
+  // Signs arrive lowercase from utils/zodiac.ts; ZODIAC here is capitalised.
+  const idx = signName
+    ? ZODIAC.findIndex((z) => z.toLowerCase() === signName.toLowerCase())
+    : -1;
+  const cuspLon = idx >= 0 ? idx * 30 : 0;
+  const inSign = idx >= 0
+    ? sky.placements.filter((p) => Math.floor(p.lon / 30) === idx)
+    : [];
+  const cuspAspects = idx >= 0 ? aspectsToPoint(sky, cuspLon, `your sign`) : [];
+
+  // Both channels compete for the two anchors. The sector is what saves the
+  // outer-planet signs: Pluto only ever aspects other outer planets, so
+  // scorpio had no fast news at all until its own sector could be transited.
+  const pool = [...rulerAspects, ...cuspAspects]
+    .sort((x, y) => y.power - x.power);
+  const fastAnchor =
+    pool.find((a) => a.relSpeed >= FAST_THRESHOLD && a.power >= POWER_FLOOR) ??
+      pool.find((a) => a.relSpeed >= FAST_THRESHOLD) ?? null;
+  const slowAnchor =
+    pool.find((a) => a.relSpeed < FAST_THRESHOLD && a !== fastAnchor) ?? null;
+
   return {
     ruler: rulingPlanet,
     rulerPlacement: find(rulingPlanet),
-    rulerAspects: sky.aspects.filter(
-      (a) => a.a === rulingPlanet || a.b === rulingPlanet,
-    ),
+    rulerAspects,
     moonSign: find("Moon").sign,
     sunSign: find("Sun").sign,
+    signName: idx >= 0 ? ZODIAC[idx] : "",
+    inSign,
+    cuspAspects,
+    fastAnchor,
+    slowAnchor,
   };
 }

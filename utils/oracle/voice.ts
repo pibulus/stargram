@@ -12,6 +12,7 @@
 
 import { type ZodiacSign } from "../zodiac.ts";
 import { type Packet } from "./compose.ts";
+import { type Aspect, POWER_FLOOR } from "./sky.ts";
 
 // Quality is the product, so we stay on the intelligent tier (Pablo,
 // 2026-08-09) - but on the ROLLING alias, not a dated slug. gemini-2.0-flash-exp
@@ -71,16 +72,68 @@ to a fridge - something the reader carries into their day without noticing
 they picked it up. Plain ASCII only: no emoji, no em dashes, no headers, no
 markdown.`;
 
+/** One aspect, written the way an astrologer would read it aloud. */
+function aspectLine(a: Aspect): string {
+  const motion = a.applying ? "tightening" : "loosening";
+  const window = a.daysLeft === Infinity
+    ? "holds for months"
+    : a.daysLeft <= 1.5
+    ? "gone by tomorrow"
+    : `about ${Math.round(a.daysLeft)} days left`;
+  return `${a.a} ${a.type} ${a.b} - ${motion}, ${window}`;
+}
+
+/**
+ * What the sky is doing to THIS sign, in two registers.
+ *
+ * The audit (docs/ORACLE_AUDIT.md) found a single "strongest aspect" handing
+ * the theme to whatever moved slowest: scorpio spent 109 days a year on
+ * Uranus trine Pluto. So the model now gets two anchors and is told which one
+ * leads — the fast one is the news, the slow one is the weather behind it.
+ */
 function transitLines(packet: Packet): string {
-  const p = packet.signSky.rulerPlacement;
-  const lines = [
+  const sky = packet.signSky;
+  const p = sky.rulerPlacement;
+  const lines: string[] = [];
+
+  if (sky.fastAnchor) {
+    lines.push(`TODAY (lead with this): ${aspectLine(sky.fastAnchor)}`);
+  }
+  if (sky.slowAnchor) {
+    lines.push(
+      `UNDERNEATH (the standing weather): ${aspectLine(sky.slowAnchor)}`,
+    );
+  }
+  if (!sky.fastAnchor && !sky.slowAnchor) {
+    lines.push(
+      "TODAY: nothing is in aspect. A quiet sky is a real reading - write the quiet.",
+    );
+  }
+
+  if (sky.inSign.length) {
+    lines.push(
+      `moving through your own sign right now: ${
+        sky.inSign.map((b) =>
+          `${b.body} at ${b.degree} degrees${b.retrograde ? " retrograde" : ""}`
+        ).join(", ")
+      }`,
+    );
+  }
+
+  lines.push(
     `${p.body} (this sign's ruler) at ${p.degree} degrees ${p.sign}${
       p.retrograde ? ", retrograde" : ""
     }`,
-  ];
-  for (const a of packet.signSky.rulerAspects.slice(0, 5)) {
-    lines.push(`${a.a} ${a.type} ${a.b} (orb ${a.orb}, power ${a.power})`);
-  }
+  );
+
+  // supporting cast: live aspects only, and never the two already named
+  const supporting = [...sky.rulerAspects, ...sky.cuspAspects]
+    .filter((a) =>
+      a !== sky.fastAnchor && a !== sky.slowAnchor && a.power >= POWER_FLOOR
+    )
+    .slice(0, 3);
+  for (const a of supporting) lines.push(`also in play: ${aspectLine(a)}`);
+
   if (packet.retrogrades.length) {
     lines.push(`walking backwards today: ${packet.retrogrades.join(", ")}`);
   }
@@ -161,15 +214,57 @@ function hashStr(s: string): number {
   return h >>> 0;
 }
 
+// The audit found 76% of the prompt byte-identical across every reading, and
+// IDENTITY prescribes one three-act shape: observation, theme, fridge line.
+// The taste rules stay exactly as written (Pablo's call) — what rotates is the
+// STRUCTURE the taste is poured into, seeded on date+sign so twelve readings
+// on one night are built four different ways.
+const SHAPES = [
+  `STRUCTURE - observation first: open on the small true thing itself, plainly,
+before any meaning is attached. Let the meaning arrive late and almost by
+accident. Do not open with "When" or "There is".`,
+  `STRUCTURE - question first: open with a real question the reader might
+actually be sitting with, then spend the reading circling it honestly without
+fully answering it. The last line may answer it sideways.`,
+  `STRUCTURE - scene first: open mid-moment, a specific small scene already in
+progress, second person. Stay inside it longer than feels comfortable, then
+step out once, briefly, near the end.`,
+  `STRUCTURE - flat declarative: open with a short blunt sentence of fact.
+Build in short sentences that accumulate rather than elaborate. No subordinate
+clause in the first three sentences. Earn one longer sentence at the close.`,
+];
+
+// Signs differed from each other by almost nothing in the old prompt: the
+// voice register came from the planetary hour, which is shared by all twelve
+// on a given night. Element and modality are per-sign and already written.
+const ELEMENT_LEAN: Record<ZodiacSign["element"], string> = {
+  fire:
+    "This sign runs hot and forward: keep the verbs active, the sentences moving.",
+  earth:
+    "This sign runs tactile and slow: stay concrete, name real objects, resist abstraction.",
+  air:
+    "This sign runs quick and associative: let the thought turn once mid-paragraph.",
+  water:
+    "This sign runs by feel and undertow: let what is unsaid carry weight.",
+};
+
+const MODALITY_LEAN: Record<ZodiacSign["modality"], string> = {
+  cardinal: "It is a starter, so the reading can push.",
+  fixed:
+    "It is a holder, so the reading should respect what it will not move on.",
+  mutable: "It is a shifter, so the reading can leave an edge unresolved.",
+};
+
 /** Exported for scripts/oracle-audit.ts — the audit measures the real prompt. */
 export function buildPrompt(
   packet: Packet,
   sign: ZodiacSign,
   recentJournal: string[],
 ): string {
-  const domain = IMAGE_DOMAINS[
-    hashStr(`${packet.dateKey}:${sign.name}`) % IMAGE_DOMAINS.length
-  ];
+  const seed = hashStr(`${packet.dateKey}:${sign.name}`);
+  const domain = IMAGE_DOMAINS[seed % IMAGE_DOMAINS.length];
+  // a different hash slice, so shape and domain don't move in lockstep
+  const structure = SHAPES[(seed >>> 7) % SHAPES.length];
   const span = packet.period === "daily"
     ? "today"
     : packet.period === "weekly"
@@ -182,15 +277,25 @@ export function buildPrompt(
     : "250 to 320 words, two or three paragraphs - a month is an arc, give it a slow build and a place to land.";
   return `${IDENTITY}
 
-${HOUR_REGISTER[packet.hour.ruler] ?? HOUR_REGISTER.Sun}
+${HOUR_REGISTER[packet.hour.ruler] ?? HOUR_REGISTER.Sun} ${
+    ELEMENT_LEAN[sign.element]
+  } ${MODALITY_LEAN[sign.modality]}
 
 Write the reading for ${span} for ${sign.name.toUpperCase()} (ruled by
-${sign.rulingPlanet}). Build it around ONE theme from the strongest of these
-actual computed aspects (ignore the rest; never recite them):
+${sign.rulingPlanet}; this sign reads as ${sign.keywords.join(", ")}).
+
+Below is the actual computed sky for this sign. Build the reading around the
+TODAY line - that is what is true for this reader right now. The UNDERNEATH
+line is the long weather behind it: let it colour the reading, never lead it.
+Ignore everything else here; never recite any of it:
 
 ${transitLines(packet)}
 
-Moon right now: ${packet.moon.phase}, ${packet.moon.illum}% lit, ${packet.moon.age} days into the cycle, in ${packet.signSky.moonSign}.
+Moon: ${packet.moon.phase}, ${packet.moon.illum}% lit, ${packet.moon.age} days into the cycle, in ${packet.signSky.moonSign}.${
+    packet.moonArc
+      ? `\n${packet.moonArc} - write the arc, not the snapshot.`
+      : ""
+  }
 
 This reading is one text, read at the same moment in both hemispheres and in
 every climate. Never name a date, a month, a season or a holiday, and never
@@ -210,6 +315,8 @@ points at. Six of twelve readings opening "When you..." is a tic, however
 different the pictures are.\n`
       : ""
   }
+${structure}
+
 ${shape} Normal sentence capitalisation. End on something the reader carries.`;
 }
 
@@ -240,8 +347,15 @@ export async function speakReading(
   const key = Deno.env.get("STARGRAM_GEMINI_KEY");
   if (!key) return null;
 
-  // full moon = hot and vivid, new moon = cool and spare
-  const temperature = 0.75 + (packet.moon.illum / 100) * 0.45;
+  // full moon = hot and vivid, new moon = cool and spare. The moon is shared
+  // by all twelve signs on a night, so a per-sign jitter keeps them from being
+  // sampled at the identical setting as well as prompted alike.
+  const jitter = ((hashStr(`${packet.dateKey}:${sign.name}:temp`) % 17) - 8) /
+    100;
+  const temperature = Math.max(
+    0.6,
+    Math.min(1.3, 0.75 + (packet.moon.illum / 100) * 0.45 + jitter),
+  );
 
   try {
     const controller = new AbortController();

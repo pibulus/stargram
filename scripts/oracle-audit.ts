@@ -66,7 +66,7 @@ function packetFor(
     dateKey,
     period: PERIOD,
     sign: sign.name,
-    signSky: skyForSign(sky, sign.rulingPlanet),
+    signSky: skyForSign(sky, sign.rulingPlanet, sign.name),
     moon: moonState(now),
     hour: planetaryHour(now),
     draw: dailyDraw(`${PERIOD}:${dateKey}`, sign.name),
@@ -132,6 +132,9 @@ type Row = {
   moonIllum: number;
   hourRuler: string;
   domain: string;
+  structure: string;
+  anchorIsFast: boolean;
+  anchorBodies: string;
   prompt: string;
   fallback: string;
 };
@@ -142,7 +145,8 @@ for (let d = 0; d < DAYS; d++) {
   for (const sign of ZODIAC_SIGNS) {
     const packet = packetFor(sign, now, live);
     const prompt = buildPrompt(packet, sign, []);
-    const top = packet.signSky.rulerAspects[0];
+    // the theme is now the fast anchor: what the prompt tells the model to lead on
+    const top = packet.signSky.fastAnchor ?? packet.signSky.slowAnchor;
     rows.push({
       day: d,
       dateKey: packet.dateKey,
@@ -150,14 +154,18 @@ for (let d = 0; d < DAYS; d++) {
       ruler: sign.rulingPlanet,
       // the astro block is everything between the "actual computed aspects"
       // header and the Moon line — exactly what transitLines() emitted
-      astro: prompt.split("never recite them):\n\n")[1]?.split("\n\nMoon")[0] ??
-        "",
+      astro:
+        prompt.split("never recite any of it:\n\n")[1]?.split("\n\nMoon")[0] ??
+          "",
       topAspect: top ? `${top.a} ${top.type} ${top.b}` : "(none)",
       moonPhase: packet.moon.phase,
       moonIllum: packet.moon.illum,
       hourRuler: packet.hour.ruler,
       domain: prompt.match(/opening image from the world of ([^(]+)\(/)?.[1]
         ?.trim() ?? "",
+      structure: prompt.match(/STRUCTURE - ([a-z ]+):/)?.[1] ?? "(none)",
+      anchorIsFast: packet.signSky.fastAnchor !== null,
+      anchorBodies: top ? `${top.a}/${top.b}` : "(none)",
       prompt,
       fallback: composeFallback(packet, sign),
     });
@@ -222,10 +230,11 @@ if (!AS_JSON) {
     shared: Object.fromEntries(shared),
   };
   if (!AS_JSON) {
-    h2("1. RULER COLLISIONS (astro input is keyed on the ruling planet only)");
+    h2("1. RULER COLLISIONS (two signs sharing a ruling planet)");
     console.log(
       `12 signs -> ${groups.size} distinct ruling planets. ` +
-        `${shared.length} planet(s) shared by 2 signs:`,
+        `${shared.length} planet(s) shared by 2 signs. Since the sign's own\n` +
+        `sector is also read, a shared ruler no longer means a shared sky:`,
     );
     for (const [planet, signs] of shared) {
       const a = rows.find((r) => r.sign === signs[0])!;
@@ -391,13 +400,16 @@ if (!AS_JSON) {
         `(${[...hourCounts.keys()].join(", ")})`,
     );
     console.log(
-      "   NOTE: the register is computed once per rite, so all 12 signs on a",
+      "   the planetary hour is computed once per rite and shared by all 12,",
     );
-    console.log("   given night share one register.");
+    console.log(
+      "   but element + modality leans are per-sign, so the register differs",
+    );
+    console.log("   across signs as well as across nights.");
     console.log(
       `   temperature (moon-driven): ${Math.min(...temps)} .. ${
         Math.max(...temps)
-      }  — also shared by all 12 signs that night`,
+      }, plus a per-sign jitter of +/-0.08`,
     );
   }
 }
@@ -419,8 +431,32 @@ if (!AS_JSON) {
     imageDomainCount: 12,
     distinctDrawSeeds: distinctDraws,
   };
+  const dayDistinctShapes = [...byDay.values()].map((rs) =>
+    new Set(rs.map((r) => r.structure)).size
+  );
+  const meanShapes = dayDistinctShapes.reduce((a, b) => a + b, 0) /
+    dayDistinctShapes.length;
+  const fastShare = rows.filter((r) => r.anchorIsFast).length / rows.length;
+  const moonShare = rows.filter((r) => r.anchorBodies.includes("Moon")).length /
+    rows.length;
+  metrics.anchors = {
+    fastShare,
+    moonShare,
+    meanDistinctShapesPerDay: meanShapes,
+  };
   if (!AS_JSON) {
     h2("5. PER-SIGN FLAVOUR — the parts that DO differ by sign");
+    console.log(
+      `   structural templates: 4 available, mean ${
+        meanShapes.toFixed(1)
+      }/4 distinct across the 12 signs on a given day`,
+    );
+    console.log(
+      `   readings anchored on a FAST (news) aspect: ${pct(fastShare)}`,
+    );
+    console.log(
+      `   readings whose anchor involves the Moon: ${pct(moonShare)}`,
+    );
     console.log(
       `   image domains: 12 available, mean ${
         meanDistinct.toFixed(1)
@@ -456,8 +492,9 @@ if (!AS_JSON) {
       `   ${fallbacks.length} fallback readings -> ${openers.size} distinct opening sentences,`,
     );
     console.log(
-      `   ${shapes.size} distinct sentence skeletons. 4 openers x 4 tails x 4 closers = 64 max.`,
+      `   ${shapes.size} distinct sentence skeletons (8 openers x 6 tails x 8 closers,`,
     );
+    console.log("   times the sector line being present or absent).");
     console.log("   Example:");
     console.log(`     ${fallbacks[0].slice(0, 200)}...`);
     console.log(
