@@ -333,6 +333,55 @@ in, so **every number above is input-side.** Run
 --days=1` locally to close the loop and measure the
 prose itself.
 
+## The practitioner pass
+
+The entropy pass made the sky vary. This pass made it mean something — three
+signals real astrologers actually use, and one subtraction.
+
+**Void-of-course Moon.** When the Moon has made its last aspect before leaving
+its sign, it is void: traditionally, nothing started now comes to anything. It
+is the single most-used day-signal in practice and the app had no concept of it,
+so a void day read exactly like any other. Now `computeSky()` walks the Moon
+forward to its sign boundary and watches for any Ptolemaic aspect perfecting on
+the way.
+
+Measured against tradition: **23.6% of clock time is void**, in 25 stretches
+over 60 days — one per sign ingress, as the definition requires. That matches
+the usual 20-25% figure. Gated to voids with 6+ hours still to run (the reading
+is locked for a whole day, so a void expiring just after the rite is not the
+day's character), **11.5% of days** carry it — roughly four a month.
+
+Two bugs were caught getting there, both by checking the output against what the
+tradition predicts rather than by any metric:
+
+- Separation is folded to 0..180, so `sep - 0` can never go negative and
+  `sep - 180` can never go positive. Conjunctions and oppositions were therefore
+  **undetectable**, and neither could close a void — which roughly doubled every
+  void's length (median 14h against a corrected 10h). Detection now uses signed
+  longitude difference with a wrap guard.
+- The void instruction originally told the model to write a reading about
+  letting the day be small. At 20% of days that is a recognisable recurring mode
+  — the exact sameness this whole audit exists to kill. It is now a lean, not a
+  subject, and the model is told never to name the condition.
+
+**Stations.** `retrograde` as a boolean throws away the loud part: a planet
+hanging motionless before it turns is the rare, singular moment. Speed was
+already computed, so detection is close to free. In range on 109 days a year.
+
+**Ingresses.** "Mars enters your sign on Thursday" is the most legible sentence
+in the genre. Bodies crossing a sign boundary in the next 3 days or the last 2
+are surfaced, and the reader's own sign gets first call on the slot. In range on
+183 days a year.
+
+**And a subtraction.** The entropy pass handed the model more of everything: two
+anchors, sector, in-sign bodies, three supporting aspects, a retrograde roster,
+three draw items, measured sky. That is a pile of evidence for 140 words, and
+more input in the prompt buys mush rather than richness. Supporting aspects went
+from three to one, and the retrograde roster was dropped entirely — a station
+says something, four slow planets walking backwards for months does not. Prompt
+boilerplate share held at ~68% while three higher-signal lines replaced four
+low-signal ones.
+
 ### Still open
 
 - **Image domains** stay at 12, so ~4 signs a day still share one. Widening the

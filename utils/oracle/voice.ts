@@ -110,6 +110,51 @@ function transitLines(packet: Packet): string {
     );
   }
 
+  // The void moon outranks everything. It is the one condition that should
+  // change what KIND of reading this is, not just what it is about.
+  if (packet.moonVoid) {
+    lines.push(
+      `THE MOON IS VOID OF COURSE for the next ${
+        Math.round(packet.moonSignHoursLeft)
+      } hour${
+        Math.round(packet.moonSignHoursLeft) === 1 ? "" : "s"
+      } - it has ` +
+        `finished aspecting and is drifting toward ${packet.moonNextSign}. ` +
+        `The old rule is that nothing started now comes to anything. Let that ` +
+        `tilt the reading rather than become its subject - a lean toward ` +
+        `letting the day be small, not an instruction to do nothing. Never ` +
+        `name the condition or explain the rule.`,
+    );
+  }
+
+  // A station is rare enough that it deserves to displace the usual material.
+  for (const st of packet.stations.slice(0, 1)) {
+    lines.push(
+      st.daysAway === 0
+        ? `${st.body} is STATIONARY today, turning ${st.direction} - motionless before it changes its mind`
+        : `${st.body} turns ${st.direction} in ${st.daysAway} days, and is barely moving now`,
+    );
+  }
+
+  // "Mars enters your sign on Thursday" is the most legible sentence in the
+  // genre, so the reader's own sign gets first call on the ingress slot.
+  const mine = packet.ingresses.filter((g) =>
+    g.into === sky.signName || g.from === sky.signName
+  );
+  for (const g of (mine.length ? mine : packet.ingresses).slice(0, 1)) {
+    const own = g.into === sky.signName
+      ? " (the reader's own sign)"
+      : g.from === sky.signName
+      ? " (leaving the reader's own sign)"
+      : "";
+    lines.push(
+      g.daysAway < 0
+        ? `${g.body} crossed from ${g.from} into ${g.into}${own} ${-g
+          .daysAway} days ago`
+        : `${g.body} crosses from ${g.from} into ${g.into}${own} in ${g.daysAway} days`,
+    );
+  }
+
   if (sky.inSign.length) {
     lines.push(
       `moving through your own sign right now: ${
@@ -126,17 +171,17 @@ function transitLines(packet: Packet): string {
     }`,
   );
 
-  // supporting cast: live aspects only, and never the two already named
+  // ONE supporting aspect, not three. The reading is 140 words; handing the
+  // model eight lines of evidence buys mush, not richness. Retrograde rosters
+  // went with it - a station says something, a list of four slow planets
+  // walking backwards for months does not.
   const supporting = [...sky.rulerAspects, ...sky.cuspAspects]
     .filter((a) =>
       a !== sky.fastAnchor && a !== sky.slowAnchor && a.power >= POWER_FLOOR
     )
-    .slice(0, 3);
+    .slice(0, 1);
   for (const a of supporting) lines.push(`also in play: ${aspectLine(a)}`);
 
-  if (packet.retrogrades.length) {
-    lines.push(`walking backwards today: ${packet.retrogrades.join(", ")}`);
-  }
   return lines.join("\n");
 }
 

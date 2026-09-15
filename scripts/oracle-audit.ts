@@ -55,12 +55,26 @@ function riteMoment(dayOffset: number): Date {
 
 const EMPTY_LIVE: LiveSky = { weather: null, visitor: null };
 
+// computeSky now walks the Moon forward to test void-of-course, so it is far
+// too heavy to call twelve times for the same instant. One sky per moment.
+const skyCache = new Map<number, ReturnType<typeof computeSky>>();
+function skyAt(now: Date) {
+  const k = now.getTime();
+  let sky = skyCache.get(k);
+  if (!sky) {
+    sky = computeSky(now);
+    if (skyCache.size > 400) skyCache.clear();
+    skyCache.set(k, sky);
+  }
+  return sky;
+}
+
 function packetFor(
   sign: ZodiacSign,
   now: Date,
   live: LiveSky,
 ): Packet {
-  const sky = computeSky(now);
+  const sky = skyAt(now);
   const dateKey = periodKey(PERIOD, now);
   return {
     dateKey,
@@ -72,6 +86,11 @@ function packetFor(
     draw: dailyDraw(`${PERIOD}:${dateKey}`, sign.name),
     sigil: "", // never reaches the prompt; skipped so the sweep stays fast
     retrogrades: sky.placements.filter((p) => p.retrograde).map((p) => p.body),
+    moonVoid: PERIOD === "daily" && sky.moonVoid && sky.moonSignHoursLeft >= 6,
+    moonSignHoursLeft: sky.moonSignHoursLeft,
+    moonNextSign: sky.moonNextSign,
+    stations: sky.stations,
+    ingresses: sky.ingresses,
     live,
   };
 }
@@ -135,6 +154,9 @@ type Row = {
   structure: string;
   anchorIsFast: boolean;
   anchorBodies: string;
+  moonVoid: boolean;
+  hasStation: boolean;
+  hasIngress: boolean;
   prompt: string;
   fallback: string;
 };
@@ -166,6 +188,9 @@ for (let d = 0; d < DAYS; d++) {
       structure: prompt.match(/STRUCTURE - ([a-z ]+):/)?.[1] ?? "(none)",
       anchorIsFast: packet.signSky.fastAnchor !== null,
       anchorBodies: top ? `${top.a}/${top.b}` : "(none)",
+      moonVoid: packet.moonVoid,
+      hasStation: packet.stations.length > 0,
+      hasIngress: packet.ingresses.length > 0,
       prompt,
       fallback: composeFallback(packet, sign),
     });
@@ -456,6 +481,21 @@ if (!AS_JSON) {
     );
     console.log(
       `   readings whose anchor involves the Moon: ${pct(moonShare)}`,
+    );
+    const dayRows = [...byDay.values()];
+    const voidDays = dayRows.filter((rs) => rs[0].moonVoid).length;
+    const stationDays = dayRows.filter((rs) => rs[0].hasStation).length;
+    const ingressDays = dayRows.filter((rs) => rs[0].hasIngress).length;
+    console.log(
+      `   days the Moon is void of course: ${voidDays}/${dayRows.length} (${
+        pct(voidDays / dayRows.length)
+      })`,
+    );
+    console.log(
+      `   days with a planet stationing inside a week: ${stationDays}/${dayRows.length}`,
+    );
+    console.log(
+      `   days with a sign ingress in range: ${ingressDays}/${dayRows.length}`,
     );
     console.log(
       `   image domains: 12 available, mean ${
