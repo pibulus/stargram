@@ -80,7 +80,12 @@ function packetFor(
     dateKey,
     period: PERIOD,
     sign: sign.name,
-    signSky: skyForSign(sky, sign.rulingPlanet, sign.name),
+    signSky: skyForSign(
+      sky,
+      sign.rulingPlanet,
+      sign.name,
+      PERIOD === "daily" ? "day" : PERIOD === "weekly" ? "week" : "month",
+    ),
     moon: moonState(now),
     hour: planetaryHour(now),
     draw: dailyDraw(`${PERIOD}:${dateKey}`, sign.name),

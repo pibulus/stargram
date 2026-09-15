@@ -96,8 +96,16 @@ function transitLines(packet: Packet): string {
   const p = sky.rulerPlacement;
   const lines: string[] = [];
 
+  // The label used to read TODAY on every span, so a monthly prompt told the
+  // model to lead with "today" and the prose came back saying "today" and
+  // "before bedtime" in a reading about a month.
+  const leadLabel = packet.period === "daily"
+    ? "TODAY"
+    : packet.period === "weekly"
+    ? "THIS WEEK"
+    : "THIS MONTH";
   if (sky.fastAnchor) {
-    lines.push(`TODAY (lead with this): ${aspectLine(sky.fastAnchor)}`);
+    lines.push(`${leadLabel} (lead with this): ${aspectLine(sky.fastAnchor)}`);
   }
   if (sky.slowAnchor) {
     lines.push(
@@ -106,7 +114,7 @@ function transitLines(packet: Packet): string {
   }
   if (!sky.fastAnchor && !sky.slowAnchor) {
     lines.push(
-      "TODAY: nothing is in aspect. A quiet sky is a real reading - write the quiet.",
+      `${leadLabel}: nothing is in aspect. A quiet sky is a real reading - write the quiet.`,
     );
   }
 

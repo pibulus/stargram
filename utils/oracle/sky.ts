@@ -394,8 +394,25 @@ export interface SignSky {
   slowAnchor: Aspect | null;
 }
 
-/** Below this relative speed an aspect is a season, not a day. */
-const FAST_THRESHOLD = 0.5; // deg/day
+/**
+ * What counts as the LEAD aspect depends on the span being written.
+ *
+ * The lead anchor was originally period-blind: any aspect above 0.5 deg/day
+ * could take it, so the Moon (13 deg/day) won the lead on 40% of MONTHLY
+ * readings with aspects that had a third of a day left to run. A reading that
+ * describes a month cannot be built on something that is over by lunchtime.
+ *
+ * The upper bound is what does the work - it prices the Moon out of the longer
+ * spans without special-casing it, while leaving the Sun, Mercury, Venus and
+ * Mars (roughly 0.3 to 1.5 deg/day) eligible everywhere.
+ */
+export type Span = "day" | "week" | "month";
+
+const LEAD_BAND: Record<Span, { min: number; max: number }> = {
+  day: { min: 0.5, max: Infinity },
+  week: { min: 0.15, max: 3 },
+  month: { min: 0.02, max: 1.5 },
+};
 
 /** Aspects from every body to a fixed point on the ecliptic. */
 function aspectsToPoint(
@@ -449,6 +466,7 @@ export function skyForSign(
   sky: Sky,
   rulingPlanet: string,
   signName?: string,
+  span: Span = "day",
 ): SignSky {
   const find = (b: string) => sky.placements.find((p) => p.body === b)!;
   const rulerAspects = sky.aspects.filter(
@@ -470,11 +488,13 @@ export function skyForSign(
   // scorpio had no fast news at all until its own sector could be transited.
   const pool = [...rulerAspects, ...cuspAspects]
     .sort((x, y) => y.power - x.power);
-  const fastAnchor =
-    pool.find((a) => a.relSpeed >= FAST_THRESHOLD && a.power >= POWER_FLOOR) ??
-      pool.find((a) => a.relSpeed >= FAST_THRESHOLD) ?? null;
+  const band = LEAD_BAND[span];
+  const inBand = (a: Aspect) =>
+    a.relSpeed >= band.min && a.relSpeed <= band.max;
+  const fastAnchor = pool.find((a) => inBand(a) && a.power >= POWER_FLOOR) ??
+    pool.find(inBand) ?? null;
   const slowAnchor =
-    pool.find((a) => a.relSpeed < FAST_THRESHOLD && a !== fastAnchor) ?? null;
+    pool.find((a) => a.relSpeed < band.min && a !== fastAnchor) ?? null;
 
   return {
     ruler: rulingPlanet,

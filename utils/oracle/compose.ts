@@ -166,7 +166,12 @@ export async function buildPacket(
     dateKey,
     period,
     sign: sign.name,
-    signSky: skyForSign(periodSky, sign.rulingPlanet, sign.name),
+    signSky: skyForSign(
+      periodSky,
+      sign.rulingPlanet,
+      sign.name,
+      period === "daily" ? "day" : period === "weekly" ? "week" : "month",
+    ),
     moon: moonState(at),
     moonArc: moonArcFor(period, now),
     // Void-of-course is an hours-long condition, so it only means anything to
