@@ -99,6 +99,29 @@ function liveliness(relSpeed: number): number {
 /** Aspects below this are listed as context at most, never as a theme. */
 export const POWER_FLOOR = 2;
 
+// Direction is sampled a tenth of a day out, not a whole day. Orb is an
+// absolute value, so it is a V around the exact moment: a full-day step over
+// an aspect that perfects inside the window straddles the vertex, reports a
+// near-flat slope, and blows the remaining-days estimate up (Venus square
+// Pluto, exact, once claimed 29 days left when the true answer was 12).
+const PEEK = 0.1;
+
+/**
+ * Days until the orb leaves range, at the current relative speed. An applying
+ * aspect has to reach exact first and then open up the far side, so it gets
+ * the whole width plus its current orb; a separating one only has what is left.
+ */
+function daysOfOrbLeft(
+  orb: number,
+  maxOrb: number,
+  relSpeed: number,
+  applying: boolean,
+): number {
+  if (relSpeed <= 0.0001) return Infinity;
+  const distance = applying ? maxOrb + orb : maxOrb - orb;
+  return Math.round((distance / relSpeed) * 10) / 10;
+}
+
 function geoLongitude(body: Astronomy.Body, date: Date): number {
   if (body === Astronomy.Body.Sun) {
     return Astronomy.SunPosition(date).elon;
@@ -144,13 +167,14 @@ export function computeSky(date: Date): Sky {
       const sep = separation(p.lon, q.lon);
       // where the pair sits tomorrow tells us applying vs separating without
       // a second ephemeris pass — the speeds are already measured
-      const sepNext = separation(p.lon + p.speed, q.lon + q.speed);
+      const sepSoon = separation(
+        p.lon + p.speed * PEEK,
+        q.lon + q.speed * PEEK,
+      );
       for (const [type, angle, maxOrb, weight] of ASPECTS) {
         const orb = Math.abs(sep - angle);
         if (orb <= maxOrb) {
-          const orbNext = Math.abs(sepNext - angle);
-          const applying = orbNext < orb;
-          const drift = Math.abs(orbNext - orb);
+          const applying = Math.abs(sepSoon - angle) < orb;
           const relSpeed = Math.abs(p.speed - q.speed);
           const tightness = 1 - orb / maxOrb;
           const power = weight * tightness *
@@ -163,9 +187,7 @@ export function computeSky(date: Date): Sky {
             power: Math.round(power * 100) / 100,
             relSpeed: Math.round(relSpeed * 100) / 100,
             applying,
-            daysLeft: drift > 0.0001
-              ? Math.round((maxOrb - orb) / drift * 10) / 10
-              : Infinity,
+            daysLeft: daysOfOrbLeft(orb, maxOrb, relSpeed, applying),
           });
           break; // a pair forms at most one aspect
         }
@@ -216,12 +238,13 @@ function aspectsToPoint(
   const out: Aspect[] = [];
   for (const p of sky.placements) {
     const sep = Math.abs(((p.lon - pointLon + 540) % 360) - 180);
-    const sepNext = Math.abs(((p.lon + p.speed - pointLon + 540) % 360) - 180);
+    const sepSoon = Math.abs(
+      ((p.lon + p.speed * PEEK - pointLon + 540) % 360) - 180,
+    );
     for (const [type, angle, maxOrb, weight] of CUSP_ASPECTS) {
       const orb = Math.abs(sep - angle);
       if (orb <= maxOrb) {
-        const orbNext = Math.abs(sepNext - angle);
-        const drift = Math.abs(orbNext - orb);
+        const applying = Math.abs(sepSoon - angle) < orb;
         const relSpeed = Math.abs(p.speed);
         const tightness = 1 - orb / maxOrb;
         out.push({
@@ -235,10 +258,8 @@ function aspectsToPoint(
               100,
           ) / 100,
           relSpeed: Math.round(relSpeed * 100) / 100,
-          applying: orbNext < orb,
-          daysLeft: drift > 0.0001
-            ? Math.round((maxOrb - orb) / drift * 10) / 10
-            : Infinity,
+          applying,
+          daysLeft: daysOfOrbLeft(orb, maxOrb, relSpeed, applying),
         });
         break;
       }

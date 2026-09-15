@@ -81,27 +81,49 @@ function periodSpan(period: Period, now = new Date()): [Date, Date] {
   ];
 }
 
-/** How the moon actually moves across a week or a month. */
+/** Where in a span something falls, in words rather than dates. */
+function whereInSpan(fraction: number): string {
+  if (fraction < 0.2) return "right at the start";
+  if (fraction < 0.4) return "early on";
+  if (fraction < 0.6) return "around the middle";
+  if (fraction < 0.8) return "later on";
+  return "near the end";
+}
+
+/**
+ * How the moon actually moves across a week or a month.
+ *
+ * A week is short enough to read as a line from one phase to another. A month
+ * is a full synodic cycle, so its endpoints land on nearly the same phase and
+ * describing them as an arc says nothing — what matters there is WHERE the new
+ * and full moons fall inside the span.
+ */
 function moonArcFor(period: Period, now: Date): string | undefined {
   if (period === "daily") return undefined;
   const [start, end] = periodSpan(period, now);
-  const a = moonState(start), b = moonState(end);
+  const total = end.getTime() - start.getTime();
+  const steps = period === "weekly" ? 14 : 60;
+
   const marks: string[] = [];
-  const steps = period === "weekly" ? 7 : 30;
   const seen = new Set<string>();
   for (let i = 0; i <= steps; i++) {
-    const t = new Date(
-      start.getTime() + (end.getTime() - start.getTime()) * (i / steps),
-    );
+    const t = new Date(start.getTime() + total * (i / steps));
     const phase = moonState(t).phase;
     if ((phase === "New Moon" || phase === "Full Moon") && !seen.has(phase)) {
       seen.add(phase);
-      marks.push(phase.toLowerCase());
+      marks.push(`a ${phase.toLowerCase()} ${whereInSpan(i / steps)}`);
     }
   }
-  return `across this span the moon goes from ${a.phase.toLowerCase()} (${a.illum}% lit) to ${b.phase.toLowerCase()} (${b.illum}% lit)${
-    marks.length ? `, passing ${marks.join(" and ")}` : ""
-  }`;
+
+  if (period === "weekly") {
+    const a = moonState(start), b = moonState(end);
+    return `across this week the moon goes from ${a.phase.toLowerCase()} (${a.illum}% lit) to ${b.phase.toLowerCase()} (${b.illum}% lit)${
+      marks.length ? `, with ${marks.join(" and ")}` : ""
+    }`;
+  }
+  return marks.length
+    ? `this month runs a full lunar cycle: ${marks.join(", then ")}`
+    : "this month runs a full lunar cycle";
 }
 
 export async function buildPacket(
