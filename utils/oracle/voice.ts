@@ -161,7 +161,8 @@ function hashStr(s: string): number {
   return h >>> 0;
 }
 
-function buildPrompt(
+/** Exported for scripts/oracle-audit.ts — the audit measures the real prompt. */
+export function buildPrompt(
   packet: Packet,
   sign: ZodiacSign,
   recentJournal: string[],

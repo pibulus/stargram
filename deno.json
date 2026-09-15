@@ -13,6 +13,7 @@
     "start": "PORT=8002 deno run -A --unstable-kv --unstable-cron --watch=static/,routes/ dev.ts",
     "dev": "PORT=8002 deno run -A --unstable-kv --unstable-cron --watch=static/,routes/ dev.ts",
     "build": "deno run -A dev.ts build",
+    "audit": "deno run -A --unstable-kv scripts/oracle-audit.ts",
     "preview": "deno run -A --unstable-kv --unstable-cron main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update ."
   },
