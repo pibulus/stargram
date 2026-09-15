@@ -36,7 +36,23 @@ const EXPIRE_MS: Record<Period, number> = {
 };
 
 const JOURNAL_KEY = ["oracle-journal"];
-const JOURNAL_DEPTH = 6;
+// One line per rite used to mean one line for ARIES per rite — the other
+// eleven signs were never recorded, so the Oracle's memory of itself was a
+// twelfth of what it had written (docs/ORACLE_AUDIT.md). All twelve are
+// journaled now, so the depth covers roughly the last two rites.
+const JOURNAL_DEPTH = 24;
+
+// Openers spoken by THIS isolate, newest last. nightlyRite() always had a
+// cross-sign dedupe list; the self-heal path (getReading -> divineSign) did
+// not, so the twelve signs generated after a fresh deploy or a KV miss — the
+// path that actually runs in production — had none at all.
+const recentOpeners: string[] = [];
+const OPENER_MEMORY = 12;
+
+function rememberOpener(text: string): void {
+  recentOpeners.push(text.split(/\s+/).slice(0, 8).join(" "));
+  if (recentOpeners.length > OPENER_MEMORY) recentOpeners.shift();
+}
 
 // KV needs a database ATTACHED to the app on Deploy (deno deploy database
 // assign <db> --app stargram), plus --unstable-kv locally.
@@ -84,7 +100,23 @@ export async function divineSign(
   const packet = await buildPacket(sky, sign, period, now);
   const journal = await readJournal(kv);
 
-  const spoken = await speakReading(packet, sign, journal);
+  const spoken = await speakReading(packet, sign, [
+    ...journal,
+    ...recentOpeners,
+  ]);
+  if (spoken) {
+    rememberOpener(spoken);
+  } else {
+    // The fallback is 64 sentence skeletons. Shipping it is not a neutral
+    // outcome and it used to be completely silent — a missing
+    // STARGRAM_GEMINI_KEY looked identical to a healthy oracle from outside.
+    console.error(
+      `Oracle: voice failed for ${period}/${sign.name}, serving the fallback composer. ` +
+        `STARGRAM_GEMINI_KEY ${
+          Deno.env.get("STARGRAM_GEMINI_KEY") ? "is set" : "is NOT SET"
+        }.`,
+    );
+  }
   const horoscope = spoken ?? composeFallback(packet, sign);
 
   return {
@@ -174,6 +206,7 @@ export async function nightlyRite(now = new Date()): Promise<void> {
   // openers already used THIS rite — so twelve signs don't all get the same
   // kitchen drawer
   const riteOpeners: string[] = [];
+  const riteLines: string[] = [];
   let firstReading: Reading | null = null;
 
   for (const sign of ZODIAC_SIGNS) {
@@ -184,6 +217,7 @@ export async function nightlyRite(now = new Date()): Promise<void> {
     ]);
     if (spoken) {
       riteOpeners.push(spoken.split(/\s+/).slice(0, 8).join(" "));
+      rememberOpener(spoken);
     }
     const horoscope = spoken ?? composeFallback(packet, sign);
     const reading: Reading = {
@@ -197,6 +231,11 @@ export async function nightlyRite(now = new Date()): Promise<void> {
       generatedAt: new Date().toISOString(),
     };
     firstReading ??= reading;
+    riteLines.push(
+      `${reading.date} ${sign.name}: "${
+        horoscope.split(/\s+/).slice(0, 10).join(" ")
+      }..."`,
+    );
     if (kv) {
       await kv.set(
         ["reading", "daily", packet.dateKey, sign.name],
@@ -213,15 +252,17 @@ export async function nightlyRite(now = new Date()): Promise<void> {
     }
   }
 
-  // journal: one line per rite — the dominant aspect + a breath of the prose,
-  // so tomorrow's Oracle knows what it said and moves somewhere new
+  // journal: the sky's headline plus a breath of every sign's prose, so
+  // tomorrow's Oracle knows what it said — all of what it said — and moves
+  // somewhere new. Old KV entries hold the legacy single-line shape; readers
+  // treat the journal as opaque strings, so both shapes coexist safely.
   if (firstReading) {
-    const top = firstReading.packet.signSky.rulerAspects[0];
-    const glimpse = firstReading.horoscope.split(/\s+/).slice(0, 10).join(" ");
-    const line = `${firstReading.date}: ${
+    const top = firstReading.packet.signSky.fastAnchor ??
+      firstReading.packet.signSky.rulerAspects?.[0];
+    const header = `${firstReading.date}: ${
       top ? `${top.a} ${top.type} ${top.b}` : "a quiet sky"
-    }, ${firstReading.packet.moon.phase} - "${glimpse}..."`;
-    const next = [...journal, line].slice(-JOURNAL_DEPTH);
+    }, ${firstReading.packet.moon.phase}`;
+    const next = [...journal, header, ...riteLines].slice(-JOURNAL_DEPTH);
     if (kv) await kv.set(JOURNAL_KEY, next);
   }
 

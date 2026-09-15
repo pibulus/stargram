@@ -29,6 +29,8 @@ export interface Packet {
   moon: MoonState;
   hour: PlanetHour; // planetary hour at rite time — tunes the voice register
   draw: DailyDraw;
+  /** For weekly/monthly: the moon's arc across the span, not one frozen instant. */
+  moonArc?: string;
   sigil: string; // braille talisman
   retrogrades: string[]; // bodies walking backwards right now
   live: LiveSky; // the measured sky: geomagnetic field, solar flux, visitor
@@ -52,6 +54,56 @@ export function periodKey(period: Period, now = new Date()): string {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * The instant a period should be read from. A monthly reading divined at 1:33am
+ * on the 3rd used to describe the 3rd's sky and moon phase, then call itself a
+ * month (docs/ORACLE_AUDIT.md) — consecutive monthly prompts came out 97.8%
+ * identical. Reading from the middle of the span is the cheap honest fix.
+ */
+export function periodMidpoint(period: Period, now = new Date()): Date {
+  if (period === "daily") return now;
+  const key = periodKey(period, now);
+  if (period === "weekly") {
+    // key is the Monday; the middle of the week is three and a half days on
+    return new Date(new Date(`${key}T00:00:00Z`).getTime() + 3.5 * 86400000);
+  }
+  // monthly: key is "YYYY-MM"
+  return new Date(`${key}-15T12:00:00Z`);
+}
+
+/** Boundaries of the period, for describing an arc rather than an instant. */
+function periodSpan(period: Period, now = new Date()): [Date, Date] {
+  const mid = periodMidpoint(period, now);
+  const half = period === "weekly" ? 3.5 : 15;
+  return [
+    new Date(mid.getTime() - half * 86400000),
+    new Date(mid.getTime() + half * 86400000),
+  ];
+}
+
+/** How the moon actually moves across a week or a month. */
+function moonArcFor(period: Period, now: Date): string | undefined {
+  if (period === "daily") return undefined;
+  const [start, end] = periodSpan(period, now);
+  const a = moonState(start), b = moonState(end);
+  const marks: string[] = [];
+  const steps = period === "weekly" ? 7 : 30;
+  const seen = new Set<string>();
+  for (let i = 0; i <= steps; i++) {
+    const t = new Date(
+      start.getTime() + (end.getTime() - start.getTime()) * (i / steps),
+    );
+    const phase = moonState(t).phase;
+    if ((phase === "New Moon" || phase === "Full Moon") && !seen.has(phase)) {
+      seen.add(phase);
+      marks.push(phase.toLowerCase());
+    }
+  }
+  return `across this span the moon goes from ${a.phase.toLowerCase()} (${a.illum}% lit) to ${b.phase.toLowerCase()} (${b.illum}% lit)${
+    marks.length ? `, passing ${marks.join(" and ")}` : ""
+  }`;
+}
+
 export async function buildPacket(
   sky: Sky,
   sign: ZodiacSign,
@@ -60,16 +112,22 @@ export async function buildPacket(
 ): Promise<Packet> {
   const dateKey = periodKey(period, now);
   const seed = `${period}:${dateKey}:${sign.name}`;
+  // daily reads the sky it was handed; longer periods re-cut it at their middle
+  const at = periodMidpoint(period, now);
+  const periodSky = period === "daily" ? sky : computeSky(at);
   return {
     dateKey,
     period,
     sign: sign.name,
-    signSky: skyForSign(sky, sign.rulingPlanet),
-    moon: moonState(now),
+    signSky: skyForSign(periodSky, sign.rulingPlanet, sign.name),
+    moon: moonState(at),
+    moonArc: moonArcFor(period, now),
     hour: planetaryHour(now),
     draw: dailyDraw(`${period}:${dateKey}`, sign.name),
     sigil: await mintSigil(seed),
-    retrogrades: sky.placements.filter((p) => p.retrograde).map((p) => p.body),
+    retrogrades: periodSky.placements.filter((p) => p.retrograde).map((p) =>
+      p.body
+    ),
     live: await liveSky(),
   };
 }
@@ -133,6 +191,10 @@ export function composeFallback(packet: Packet, sign: ZodiacSign): string {
     `${cap(span)} has a particular lean to it, ${cap(sign.name)}.`,
     `A few things about ${span}, ${cap(sign.name)}.`,
     `${cap(span)} reads clearer than most, ${cap(sign.name)}.`,
+    `Something is worth saying plainly about ${span}, ${cap(sign.name)}.`,
+    `${cap(sign.name)}: ${span} is not complicated, but it is specific.`,
+    `Short version of ${span}, ${cap(sign.name)}.`,
+    `${cap(span)} asks one thing of you, ${cap(sign.name)}.`,
   ];
   parts.push(pickBy(seed, openers));
 
@@ -143,21 +205,42 @@ export function composeFallback(packet: Packet, sign: ZodiacSign): string {
         : "."),
   );
 
-  const top = signSky.rulerAspects[0];
-  if (top) {
-    const other = top.a === ruler.body ? top.b : top.a;
+  // the sign's own sector, when something is actually transiting it — this is
+  // the line that stops taurus and libra reading identically
+  if (signSky.inSign?.length) {
+    const visitor = signSky.inSign[0];
+    parts.push(
+      `${visitor.body} is moving through your own sign right now${
+        visitor.retrograde ? ", backwards" : ""
+      } — which puts the spotlight on ${
+        PLANET_DOMAIN[visitor.body] ?? "something of yours"
+      }.`,
+    );
+  }
+
+  // lead on the fast anchor (what is true today), not the slowest thing in orb
+  const top = signSky.fastAnchor ?? signSky.slowAnchor ??
+    signSky.rulerAspects[0];
+  if (top && PLANET_DOMAIN[top.a] && ASPECT_VERB[top.type]) {
+    const other = top.b === ruler.body ? top.a : top.b;
     const tails = [
       "worth noticing what surfaces there",
       "keep half an eye on it",
       "no drama, just useful to know",
       "it explains a lot if the day feels off",
+      "you do not have to do anything about it",
+      "it passes, but not before it is noticed",
     ];
+    const motion = top.applying ? "building" : "easing off";
+    // a cusp aspect's partner is the sign itself, which has no planetary domain
+    const isCusp = !PLANET_DOMAIN[top.b];
+    const lands = isCusp
+      ? "which lands close to home"
+      : `which tends to show up in ${PLANET_DOMAIN[other]}`;
     parts.push(
-      `It ${
-        ASPECT_VERB[top.type]
-      } ${other} right now, which tends to show up in ${
-        PLANET_DOMAIN[other]
-      } — ${pickBy(seed >>> 5, tails)}.`,
+      `${top.a} ${ASPECT_VERB[top.type]} ${
+        isCusp ? "your sign" : top.b
+      } right now and ${motion}, ${lands} — ${pickBy(seed >>> 5, tails)}.`,
     );
   }
 
@@ -174,6 +257,10 @@ export function composeFallback(packet: Packet, sign: ZodiacSign): string {
     "Small moves count double under this sky.",
     "Give it a little room; it tends to sort itself sooner than you'd think.",
     `For what it's worth: ${lowerFirst(sign.motto)}`,
+    "You already know which part of this is the real part.",
+    "Nothing here needs deciding today.",
+    "Take the easier of the two options; it is not a cop-out this time.",
+    `${cap(sign.keywords[0])} is not a flaw here, it is the method.`,
   ];
   parts.push(pickBy(seed >>> 3, closers));
 
