@@ -12,9 +12,12 @@ load live context. Share the vibe.
 
 - 12 zodiac signs with dates, elements, bios, and dossier details.
 - Daily, weekly, and monthly readings.
-- Daily readings from the bundled `scripts/horoscope.sh` oracle, with
-  `freehoroscopeapi.com` as fallback.
-- Weekly/monthly readings from `freehoroscopeapi.com`.
+- Daily, weekly, and monthly readings, sourced in this order: Ohmanda (real
+  astrologers reading the actual transits; it publishes empty strings right
+  now, so it only wins when it has something to say), then
+  `freehoroscopeapi.com`, then the local Oracle voice off the computed sky,
+  then a deterministic composer as the floor. The chain lives in
+  `utils/oracle/sources.ts`.
 - Live cosmic context from moon phase, Discordian calendar, NOAA SWPC, NASA/JPL
   close-approach data, and a crypto-random d23 roll.
 - Terminal-style ASCII horoscope display with typed header/body choreography:
@@ -58,8 +61,9 @@ stargram/
 │   ├── _app.tsx              # SEO, PWA, analytics env, SW registration
 │   ├── thanks.tsx            # Supporter thank-you page
 │   └── api/
-│       ├── horoscope.ts      # Horoscope oracle + upstream fallback
-│       └── cosmic-context.ts # Moon/calendar/NOAA/JPL/dice context
+│       ├── horoscope.ts      # Reading endpoint + validation (source chain)
+│       ├── cosmic-context.ts # Moon/calendar/NOAA/JPL/dice context
+│       └── version.json.ts   # Deploy stamp: deployment id, commit when known
 ├── islands/
 │   ├── ZodiacPicker.tsx      # Main live app flow
 │   ├── HomeIsland.tsx        # Main page layout wrapper

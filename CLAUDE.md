@@ -57,14 +57,20 @@ the terminal does.
 
 - `routes/_app.tsx` owns SEO, PWA metadata, analytics env injection, global CSS,
   and service worker registration.
-- `routes/api/horoscope.ts` owns horoscope source selection and validation.
+- `routes/api/horoscope.ts` owns the reading endpoint: sign/period validation
+  and caching headers. The source chain itself is `utils/oracle/sources.ts`
+  (external APIs first), then `utils/oracle/voice.ts` (Gemini off the computed
+  sky), then `utils/oracle/compose.ts`'s deterministic composer as the floor.
 - `routes/api/cosmic-context.ts` owns live sky/context signals.
 - `static/manifest.json`, `static/sw.js`, and `static/icons/` own PWA behavior.
   **Bump `CACHE_NAME` in `sw.js` on any deploy that changes an unhashed asset**
   (`styles.css`, `modal-shell.css`, icons) — they're served cache-first, so
   installed-PWA users keep the old copy until the name changes. Hashed JS chunks
   are fine.
-- `scripts/horoscope.sh` is the bundled daily oracle.
+- `routes/version.json.ts` is the deploy stamp. Deno Deploy runs `main.ts`
+  directly and never builds, so it reports `deploymentId` at runtime and a
+  commit only when the environment supplies one. Never make it claim `current`
+  from a guess.
 
 ## House Style
 

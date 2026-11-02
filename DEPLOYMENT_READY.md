@@ -8,8 +8,12 @@ had a real-device or browser-device pass.
 ```bash
 deno task check
 deno task build
-bash scripts/horoscope.sh --json --day today aries
+curl -s "http://localhost:8002/api/horoscope?sign=aries&period=daily" | jq -r '.data.source'
 ```
+
+`source` should read `api-ohmanda`, `api-freehoroscope`, `oracle-voice`, or
+`oracle-fallback`. Any of the four is a working app; the first two mean a real
+external reading is being served.
 
 Manual smoke test:
 
@@ -40,7 +44,19 @@ Optional production env vars:
 
 - `POSTHOG_KEY` - optional analytics key.
 - `POSTHOG_HOST` - PostHog host, usually `https://us.i.posthog.com`.
-- `HOROSCOPE_SCRIPT_PATH` - override path for the bundled daily oracle.
+- `STARGRAM_GEMINI_KEY` - the Oracle voice. Without it, readings fall to the
+  deterministic composer and every response logs a warning.
+
+## Proving what is live
+
+```bash
+curl -s https://stargram.app/version.json
+```
+
+Deno Deploy never runs `deno task build`, so nothing can stamp a commit at
+build time on this lane. The route reports `deploymentId` (changes on every
+deploy, proves which build is serving) plus `commit` when a build system
+supplies one. `"commit": "unknown"` on Deploy is honest, not a failure.
 
 ## Production URLs
 
@@ -52,8 +68,8 @@ Optional production env vars:
 ## Current Feature Surface
 
 - 12 zodiac signs.
-- Daily readings from the bundled `scripts/horoscope.sh` oracle.
-- Weekly/monthly readings from `freehoroscopeapi.com`.
+- Daily/weekly/monthly readings, external APIs first (`utils/oracle/sources.ts`),
+  then the Oracle voice off the computed sky, then the composer floor.
 - Live cosmic context from local moon/Discordian calculations plus NOAA SWPC and
   NASA/JPL close-approach APIs when reachable.
 - Terminal-style ASCII horoscope display with typed header/body.
