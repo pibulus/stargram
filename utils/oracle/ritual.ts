@@ -47,6 +47,13 @@ const EXPIRE_MS: Record<Period, number> = {
 };
 
 const JOURNAL_KEY = ["oracle-journal"];
+
+// Bumping this orphans every locked reading and makes the next request divine
+// afresh. It is the lever for "the canon is wrong now": change the source
+// chain, change the voice, change this, and the fix is live in seconds instead
+// of waiting for 1:33am. The old keys age out on their own expiresIn.
+//   v2 — external reading APIs lead (2026-11-02)
+const READING_SCHEMA = "v2";
 // One line per rite used to mean one line for ARIES per rite — the other
 // eleven signs were never recorded, so the Oracle's memory of itself was a
 // twelfth of what it had written (docs/ORACLE_AUDIT.md). All twelve are
@@ -180,6 +187,7 @@ export async function getReading(
   }:${signName.toLowerCase()}`;
   const key = [
     "reading",
+    READING_SCHEMA,
     period,
     periodKey(period, now),
     signName.toLowerCase(),
@@ -255,7 +263,7 @@ export async function nightlyRite(now = new Date()): Promise<void> {
     );
     if (kv) {
       await kv.set(
-        ["reading", "daily", reading.date, sign.name],
+        ["reading", READING_SCHEMA, "daily", reading.date, sign.name],
         reading,
         { expireIn: EXPIRE_MS.daily },
       );
