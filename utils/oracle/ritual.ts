@@ -16,7 +16,18 @@ import {
   type Period,
   periodKey,
 } from "./compose.ts";
+import { type ExternalSource, fetchExternalReading } from "./sources.ts";
+import { type Sky } from "./sky.ts";
 import { speakReading } from "./voice.ts";
+
+/**
+ * Where a reading came from. The outside sources lead now (2026-11-02): the
+ * readings Pablo actually reads are the ones his `horoscope` alias prints, and
+ * the local voice had drifted into samey "let it be" poetry. Order of
+ * preference lives in sources.ts; the oracle still owns the sky packet and
+ * still speaks whenever the APIs are quiet.
+ */
+type ReadingSource = ExternalSource | "oracle-voice" | "oracle-fallback";
 
 export interface Reading {
   date: string;
@@ -24,7 +35,7 @@ export interface Reading {
   sign: string;
   horoscope: string;
   horoscope_data: string;
-  source: "oracle-voice" | "oracle-fallback";
+  source: ReadingSource;
   packet: Packet;
   generatedAt: string;
 }
@@ -86,22 +97,40 @@ async function readJournal(kv: Deno.Kv | null): Promise<string[]> {
   return entry.value ?? [];
 }
 
-/** Divine one (period, sign) reading right now. Voice first, fallback floor. */
+/** Divine one (period, sign) reading right now. APIs first, voice second, floor last. */
 export async function divineSign(
   period: Period,
   signName: string,
   now = new Date(),
+  options: { sky?: Sky; recent?: string[] } = {},
 ): Promise<Reading | null> {
   const sign = findSign(signName);
   if (!sign) return null;
 
   const kv = await getKv();
-  const sky = buildSky(now);
+  const sky = options.sky ?? buildSky(now);
   const packet = await buildPacket(sky, sign, period, now);
-  const journal = await readJournal(kv);
 
+  // 1. A working astrologer already wrote today's reading.
+  const external = await fetchExternalReading(period, sign.name, now);
+  if (external) {
+    return {
+      date: packet.dateKey,
+      period,
+      sign: sign.name,
+      horoscope: external.text,
+      horoscope_data: external.text,
+      source: external.source,
+      packet,
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  // 2. The Oracle speaks from the sky.
+  const journal = await readJournal(kv);
   const spoken = await speakReading(packet, sign, [
     ...journal,
+    ...(options.recent ?? []),
     ...recentOpeners,
   ]);
   if (spoken) {
@@ -210,35 +239,23 @@ export async function nightlyRite(now = new Date()): Promise<void> {
   let firstReading: Reading | null = null;
 
   for (const sign of ZODIAC_SIGNS) {
-    const packet = await buildPacket(sky, sign, "daily", now);
-    const spoken = await speakReading(packet, sign, [
-      ...journal,
-      ...riteOpeners,
-    ]);
-    if (spoken) {
-      riteOpeners.push(spoken.split(/\s+/).slice(0, 8).join(" "));
-      rememberOpener(spoken);
+    const reading = await divineSign("daily", sign.name, now, {
+      sky,
+      recent: [...journal, ...riteOpeners],
+    });
+    if (!reading) continue;
+    if (reading.source === "oracle-voice") {
+      riteOpeners.push(reading.horoscope.split(/\s+/).slice(0, 8).join(" "));
     }
-    const horoscope = spoken ?? composeFallback(packet, sign);
-    const reading: Reading = {
-      date: packet.dateKey,
-      period: "daily",
-      sign: sign.name,
-      horoscope,
-      horoscope_data: horoscope,
-      source: spoken ? "oracle-voice" : "oracle-fallback",
-      packet,
-      generatedAt: new Date().toISOString(),
-    };
     firstReading ??= reading;
     riteLines.push(
       `${reading.date} ${sign.name}: "${
-        horoscope.split(/\s+/).slice(0, 10).join(" ")
+        reading.horoscope.split(/\s+/).slice(0, 10).join(" ")
       }..."`,
     );
     if (kv) {
       await kv.set(
-        ["reading", "daily", packet.dateKey, sign.name],
+        ["reading", "daily", reading.date, sign.name],
         reading,
         { expireIn: EXPIRE_MS.daily },
       );
