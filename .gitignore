@@ -12,5 +12,14 @@ node_modules/
 
 # Browser-testing artifacts (Playwright MCP)
 .playwright-mcp/
+
+# OS noise
+.DS_Store
+
+# Local machine settings (allow-lists are per-machine, never shared)
+.claude/settings.local.json
+
+# Loose screenshots and visual checks; reference shots live in docs/screenshots/
 /*.jpeg
 /*.png
+/docs/screenshots/

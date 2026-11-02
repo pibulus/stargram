@@ -8,10 +8,13 @@
 // actually wants to see, so they come FIRST here and the local voice becomes
 // the fallback rather than the whole show (2026-11-02).
 //
-// Measured that day: Ohmanda answers 200 with an EMPTY string for every sign,
-// so freehoroscopeapi wins in practice. The chain is written as a chain
-// anyway, so the good source reclaims the slot the day it starts publishing
-// again. No key, no vendor, no scrape.
+// ☠️ OHMANDA IS DEAD (verified 2026-11-02): ohmanda.com now serves its
+// author's personal portfolio, and the API path answers 200 with an empty
+// `horoscope` string for every sign. That was the good source — real
+// astrologers, real transits — so the branch stays as a tombstone with a
+// length check: if it ever comes back, it reclaims first place with no code
+// change. Do not delete it without deciding where the "better API" question
+// goes instead.
 //
 // Never throws. A network problem must never be the reason a reading is blank.
 

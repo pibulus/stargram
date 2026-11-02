@@ -11,12 +11,12 @@ load live context. Share the vibe.
 ## Features
 
 - 12 zodiac signs with dates, elements, bios, and dossier details.
-- Daily, weekly, and monthly readings.
 - Daily, weekly, and monthly readings, sourced in this order: Ohmanda (real
-  astrologers reading the actual transits; it publishes empty strings right now,
-  so it only wins when it has something to say), then `freehoroscopeapi.com`,
-  then the local Oracle voice off the computed sky, then a deterministic
-  composer as the floor. The chain lives in `utils/oracle/sources.ts`.
+  astrologers reading actual transits; the API is dead, and every response came
+  back empty, so it currently never wins), then `freehoroscopeapi.com`, then the
+  local Oracle voice writing from the computed sky, then a deterministic
+  composer as the floor. The chain lives in `utils/oracle/sources.ts` and every
+  response names which source answered.
 - Live cosmic context from moon phase, Discordian calendar, NOAA SWPC, NASA/JPL
   close-approach data, and a crypto-random d23 roll.
 - Terminal-style ASCII horoscope display with typed header/body choreography:
@@ -53,42 +53,12 @@ PORT=8012 deno run -A --watch=static/,routes/ dev.ts
 
 ## Project Map
 
-```text
-stargram/
-├── routes/
-│   ├── index.tsx             # Home app shell
-│   ├── _app.tsx              # SEO, PWA, analytics env, SW registration
-│   ├── thanks.tsx            # Supporter thank-you page
-│   └── api/
-│       ├── horoscope.ts      # Reading endpoint + validation (source chain)
-│       ├── cosmic-context.ts # Moon/calendar/NOAA/JPL/dice context
-│       └── version.json.ts   # Deploy stamp: deployment id, commit when known
-├── islands/
-│   ├── ZodiacPicker.tsx      # Main live app flow
-│   ├── HomeIsland.tsx        # Main page layout wrapper
-│   ├── BackgroundCanvas.tsx  # Animated starfield
-│   ├── WelcomeChecker.tsx    # First-visit detection
-│   ├── WelcomeModal.tsx      # First-visit modal
-│   ├── InstallPrompt.tsx     # PWA install prompt
-│   ├── KofiModal.tsx         # Support modal
-│   └── AboutModal.tsx        # About modal
-├── components/
-│   ├── TypedWriter.tsx       # typed.js wrapper + keyboard sounds
-│   └── StructuredData.tsx    # JSON-LD schema
-├── utils/
-│   ├── zodiac.ts             # Zodiac data + localStorage
-│   ├── asciiArtGenerator.ts  # Figlet formatter
-│   ├── colorEffects.ts       # ASCII colorization and responsive sizing
-│   ├── sounds.ts             # Web Audio sound engine
-│   └── analytics.ts          # Optional PostHog wrapper
-└── static/
-    ├── manifest.json
-    ├── sw.js
-    ├── og-image.jpg
-    ├── robots.txt
-    ├── sitemap.xml
-    └── icons/
-```
+The tree, the folder rules, and the traps live in one place now:
+[`docs/INDEX.md`](docs/INDEX.md).
+
+The short version: `routes/` is the HTTP surface, `islands/` is the interactive
+Preact, `utils/oracle/` is the reading brain, `data/oracle/` is the draw tables,
+`static/` is PWA shell and art, `docs/` is documentation.
 
 ## Main Flow
 
@@ -141,12 +111,25 @@ deno task build && DENO_DEPLOY_TOKEN="$DENO_DEPLOY_TOKEN_NEW" deno deploy --prod
 
 Canonical URL: `https://stargram.app`
 
+Prove what is live:
+
+```bash
+curl -s https://stargram.app/version.json
+```
+
+`deploymentId` changes on every deploy. `commit` reads `unknown` on this lane,
+because Deno Deploy runs `main.ts` and never executes a build step — that is
+honest, not broken.
+
 ## Docs
 
-- `CLAUDE.md` - agent orientation and current flow.
-- `GLOSSARY.md` - glossary of modules, APIs, and concepts.
-- `TINKER.md` - practical quick reference for local changes.
-- `DEPLOYMENT_READY.md` - deploy and post-deploy checklist.
+- [`docs/INDEX.md`](docs/INDEX.md) - where everything lives, plus the traps.
+- [`docs/TINKER.md`](docs/TINKER.md) - cold-start quick reference.
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) - deploy and post-deploy checklist.
+- [`docs/GLOSSARY.md`](docs/GLOSSARY.md) - modules, APIs, and concepts.
+- [`docs/ORACLE_AUDIT.md`](docs/ORACLE_AUDIT.md) - how the readings were
+  measured.
+- [`CLAUDE.md`](CLAUDE.md) - agent orientation for this repo.
 
 ## Built by Pablo
 

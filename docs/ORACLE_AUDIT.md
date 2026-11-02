@@ -1,5 +1,9 @@
 # Oracle entropy audit
 
+_Snapshot from September 2026. The findings below were acted on (#1-#5, merged
+2026-09-15), and the parts about missing docs or missing env vars have since
+been fixed — read [`INDEX.md`](INDEX.md) for where things live now._
+
 _Run it yourself: `deno task audit` (add `--days=365`, `--live`, `--speak`,
 `--json`). Source: `scripts/oracle-audit.ts`._
 

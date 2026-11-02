@@ -13,11 +13,14 @@
 
 ## API Routes
 
-- `GET /api/horoscope?sign=aries&period=daily` - Validates sign/period, uses the
-  bundled oracle for daily readings, and falls back to `freehoroscopeapi.com`.
+- `GET /api/horoscope?sign=aries&period=daily` - Validates sign and period,
+  returns the locked reading and names its `source`: `api-ohmanda`,
+  `api-freehoroscope`, `oracle-voice`, or `oracle-fallback`.
 - `GET /api/cosmic-context?sign=aries&period=daily` - Builds the "Signal Room"
   packet from moon phase, Discordian date, NOAA space weather, NASA/JPL close
   approach data, and a crypto-random d23 roll.
+- `GET /version.json` - Deploy stamp: `deploymentId` always, `commit` only when
+  the environment supplies one.
 
 ## Important Utilities
 
@@ -71,8 +74,13 @@ Captured by `utils/analytics.ts` from `ZodiacPicker` (no-op unless a `phc_...`
 - **Cosmic Context** - The non-horoscope "signal room" packet shown before the
   reading: moon, calendar, space weather, JPL visitor, d23 roll, glitch level,
   charm.
-- **Oracle Script** - `scripts/horoscope.sh`, used for daily readings before
-  falling back to the external API.
+- **Oracle Script** - Gone. `scripts/horoscope.sh` was removed in the Sep 2026
+  rewrite; the live equivalent is `utils/oracle/ritual.ts` plus `sources.ts`.
+- **Reading chain** - The order of who gets to speak: external APIs, then the
+  Oracle voice, then the deterministic composer. Defined in `sources.ts`.
+- **Reading schema** - `READING_SCHEMA` in `ritual.ts`, part of every KV key.
+  Bumping it orphans the locked readings and forces fresh ones.
+- **Signal Room** - The live context panel above the reading.
 - **Typed ASCII Header** - The sign/date header generated with Figlet and typed
   into a reserved box so mobile layout does not grow sideways.
 - **Typing Choreography** - The terminal snaps to the top when a reading

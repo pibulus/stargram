@@ -11,9 +11,9 @@ deno task build
 curl -s "http://localhost:8002/api/horoscope?sign=aries&period=daily" | jq -r '.data.source'
 ```
 
-`source` should read `api-ohmanda`, `api-freehoroscope`, `oracle-voice`, or
-`oracle-fallback`. Any of the four is a working app; the first two mean a real
-external reading is being served.
+`source` should read `api-freehoroscope`, `oracle-voice`, or `oracle-fallback`.
+All three are working apps. `api-ohmanda` would appear only if that API comes
+back from the dead (see the tombstone in `utils/oracle/sources.ts`).
 
 Manual smoke test:
 
@@ -80,12 +80,16 @@ proves which build is serving) plus `commit` when a build system supplies one.
 
 ## Post-Deploy Checks
 
-1. Open `https://stargram.app`.
-2. Confirm title/OG metadata with a link preview debugger.
-3. Confirm `/manifest.json`, `/sw.js`, `/robots.txt`, and `/sitemap.xml`.
-4. On iOS Safari: Share -> Add to Home Screen.
-5. After first load, enable airplane mode and reopen from the icon.
-6. Check console for service worker or API errors.
+1. Confirm the new build is the one serving:
+   `curl -s https://stargram.app/version.json` — `deploymentId` must differ from
+   the previous deploy's.
+2. Confirm a reading still arrives, and note its `source`.
+3. Open `https://stargram.app`.
+4. Confirm title/OG metadata with a link preview debugger.
+5. Confirm `/manifest.json`, `/sw.js`, `/robots.txt`, and `/sitemap.xml`.
+6. On iOS Safari: Share -> Add to Home Screen.
+7. After first load, enable airplane mode and reopen from the icon.
+8. Check console for service worker or API errors.
 
 ## Service Worker Migration (v3 -> v4, Jul 2026)
 
@@ -104,4 +108,4 @@ user action and no announcement needed — one visit fixes them.
 - Daily PWA notifications.
 - Tarot or Chinese zodiac expansion.
 
-Last updated: 2026-07-10 (legacy display/theme files pruned in the v1.0 pass).
+Last updated: 2026-11-02 (source chain, deploy stamp, docs moved into `docs/`).

@@ -14,8 +14,15 @@ deno task build    # Fresh production build
 When port `8002` is busy:
 
 ```bash
-PORT=8012 deno run -A --watch=static/,routes/ dev.ts
+PORT=8012 deno run -A --unstable-kv --unstable-cron --watch=static/,routes/ dev.ts
 ```
+
+The unstable flags are not decoration: without `--unstable-kv` the oracle has no
+canon (it divines on every request), and without `--unstable-cron` the 1:33am
+rite never fires.
+
+Where everything lives: [`docs/INDEX.md`](docs/INDEX.md). Cold-start map:
+[`docs/TINKER.md`](docs/TINKER.md).
 
 ## Primary Flow
 
@@ -71,6 +78,9 @@ the terminal does.
   directly and never builds, so it reports `deploymentId` at runtime and a
   commit only when the environment supplies one. Never make it claim `current`
   from a guess.
+- `utils/oracle/ritual.ts` owns the KV canon and `READING_SCHEMA`. Bump the
+  schema after changing the source chain or the voice, or the old locked reading
+  keeps serving until the next rite. Do not clear the database by hand.
 
 ## House Style
 
@@ -87,3 +97,8 @@ The legacy alternate surfaces (`HoroscopeDisplay`, `TerminalDisplay`,
 `ThemeIsland`, `TabSwitcher`, `MagicDropdown`, and friends) were pruned in the
 v1.0 cleanup pass. Everything in `islands/`, `components/`, and `utils/` is
 live; recover old experiments from git history if ever needed.
+
+The 2026-11-02 housekeeping pass moved the prose into `docs/`, removed the dead
+Supabase schema (`supabase/oracle.sql`, replaced by Deno KV), the copied
+`scripts/codex/init.sh` session initializer, and the tracked local
+`.claude/settings.local.json`. All recoverable from git history.
