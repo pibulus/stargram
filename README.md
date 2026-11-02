@@ -13,11 +13,10 @@ load live context. Share the vibe.
 - 12 zodiac signs with dates, elements, bios, and dossier details.
 - Daily, weekly, and monthly readings.
 - Daily, weekly, and monthly readings, sourced in this order: Ohmanda (real
-  astrologers reading the actual transits; it publishes empty strings right
-  now, so it only wins when it has something to say), then
-  `freehoroscopeapi.com`, then the local Oracle voice off the computed sky,
-  then a deterministic composer as the floor. The chain lives in
-  `utils/oracle/sources.ts`.
+  astrologers reading the actual transits; it publishes empty strings right now,
+  so it only wins when it has something to say), then `freehoroscopeapi.com`,
+  then the local Oracle voice off the computed sky, then a deterministic
+  composer as the floor. The chain lives in `utils/oracle/sources.ts`.
 - Live cosmic context from moon phase, Discordian calendar, NOAA SWPC, NASA/JPL
   close-approach data, and a crypto-random d23 roll.
 - Terminal-style ASCII horoscope display with typed header/body choreography:

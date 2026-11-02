@@ -53,10 +53,10 @@ Optional production env vars:
 curl -s https://stargram.app/version.json
 ```
 
-Deno Deploy never runs `deno task build`, so nothing can stamp a commit at
-build time on this lane. The route reports `deploymentId` (changes on every
-deploy, proves which build is serving) plus `commit` when a build system
-supplies one. `"commit": "unknown"` on Deploy is honest, not a failure.
+Deno Deploy never runs `deno task build`, so nothing can stamp a commit at build
+time on this lane. The route reports `deploymentId` (changes on every deploy,
+proves which build is serving) plus `commit` when a build system supplies one.
+`"commit": "unknown"` on Deploy is honest, not a failure.
 
 ## Production URLs
 
@@ -68,8 +68,9 @@ supplies one. `"commit": "unknown"` on Deploy is honest, not a failure.
 ## Current Feature Surface
 
 - 12 zodiac signs.
-- Daily/weekly/monthly readings, external APIs first (`utils/oracle/sources.ts`),
-  then the Oracle voice off the computed sky, then the composer floor.
+- Daily/weekly/monthly readings, external APIs first
+  (`utils/oracle/sources.ts`), then the Oracle voice off the computed sky, then
+  the composer floor.
 - Live cosmic context from local moon/Discordian calculations plus NOAA SWPC and
   NASA/JPL close-approach APIs when reachable.
 - Terminal-style ASCII horoscope display with typed header/body.
